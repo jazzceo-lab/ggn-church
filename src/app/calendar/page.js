@@ -32,12 +32,14 @@ export default function CalendarPage() {
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const [formDate, setFormDate] = useState(selected);
   const [formTitle, setFormTitle] = useState("");
   const [formTime, setFormTime] = useState("");
   const [formLink, setFormLink] = useState("");
   const [formImage, setFormImage] = useState(null);
+  const [formExistingImageUrl, setFormExistingImageUrl] = useState(null);
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -80,6 +82,37 @@ export default function CalendarPage() {
     setFormDate(key);
   }
 
+  function resetForm() {
+    setEditingId(null);
+    setFormTitle("");
+    setFormTime("");
+    setFormLink("");
+    setFormImage(null);
+    setFormExistingImageUrl(null);
+    setFormError("");
+  }
+
+  function toggleForm() {
+    if (showForm) {
+      resetForm();
+    } else {
+      setFormDate(selected);
+    }
+    setShowForm((v) => !v);
+  }
+
+  function startEdit(ev) {
+    setEditingId(ev.id);
+    setFormDate(ev.event_date);
+    setFormTitle(ev.title);
+    setFormTime(ev.time_label ?? "");
+    setFormLink(ev.link_url ?? "");
+    setFormImage(null);
+    setFormExistingImageUrl(ev.image_url);
+    setFormError("");
+    setShowForm(true);
+  }
+
   function handleImageChange(e) {
     const f = e.target.files?.[0] ?? null;
     if (f && f.size > MAX_IMAGE_SIZE) {
@@ -92,12 +125,12 @@ export default function CalendarPage() {
     setFormImage(f);
   }
 
-  async function handleAddEvent(e) {
+  async function handleSubmitEvent(e) {
     e.preventDefault();
     setFormError("");
     setSubmitting(true);
 
-    let imageUrl = null;
+    let imageUrl = formExistingImageUrl;
     if (formImage) {
       const path = safeStoragePath("calendar", formImage.name);
       const { error: uploadError } = await supabase.storage
@@ -112,24 +145,24 @@ export default function CalendarPage() {
       imageUrl = supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl;
     }
 
-    const { error } = await supabase.from("calendar_events").insert({
+    const payload = {
       event_date: formDate,
       title: formTitle,
       time_label: formTime || null,
       link_url: formLink || null,
       image_url: imageUrl,
-      created_by: user.id,
-    });
+    };
+
+    const { error } = editingId
+      ? await supabase.from("calendar_events").update(payload).eq("id", editingId)
+      : await supabase.from("calendar_events").insert({ ...payload, created_by: user.id });
 
     setSubmitting(false);
     if (error) {
-      setFormError("일정 등록에 실패했어요: " + error.message);
+      setFormError((editingId ? "일정 수정에 실패했어요: " : "일정 등록에 실패했어요: ") + error.message);
       return;
     }
-    setFormTitle("");
-    setFormTime("");
-    setFormLink("");
-    setFormImage(null);
+    resetForm();
     setShowForm(false);
     loadEvents();
   }
@@ -213,7 +246,7 @@ export default function CalendarPage() {
           <h2 className="font-serif font-semibold text-foreground">{selected} 일정</h2>
           {isAdmin && (
             <button
-              onClick={() => setShowForm((v) => !v)}
+              onClick={toggleForm}
               className="rounded-full bg-brand px-3 py-1.5 text-xs text-white transition-colors hover:bg-brand-dark"
             >
               {showForm ? "닫기" : "+ 일정 추가"}
@@ -223,9 +256,12 @@ export default function CalendarPage() {
 
         {showForm && (
           <form
-            onSubmit={handleAddEvent}
+            onSubmit={handleSubmitEvent}
             className="mt-4 space-y-3 rounded-lg border border-black/10 p-4 dark:border-white/10"
           >
+            <p className="text-sm font-semibold text-foreground/80">
+              {editingId ? "일정 수정" : "새 일정"}
+            </p>
             <div>
               <label className="block text-xs font-medium text-foreground/60">날짜</label>
               <input
@@ -278,15 +314,42 @@ export default function CalendarPage() {
                 {formImage && <span className="text-foreground/70">{formImage.name}</span>}
               </label>
               <p className="mt-1 text-xs text-foreground/40">최대 5MB</p>
+              {formExistingImageUrl && !formImage && (
+                <div className="mt-2 flex items-center gap-2">
+                  <img
+                    src={formExistingImageUrl}
+                    alt=""
+                    className="h-12 w-12 rounded-md border border-black/10 object-cover dark:border-white/10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormExistingImageUrl(null)}
+                    className="text-xs text-red-600 underline"
+                  >
+                    이미지 제거
+                  </button>
+                </div>
+              )}
             </div>
             {formError && <p className="text-sm text-red-600">{formError}</p>}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
-            >
-              {submitting ? "등록 중..." : "등록"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+              >
+                {submitting ? "저장 중..." : editingId ? "수정 저장" : "등록"}
+              </button>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={toggleForm}
+                  className="rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/60 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                >
+                  취소
+                </button>
+              )}
+            </div>
           </form>
         )}
 
@@ -306,12 +369,20 @@ export default function CalendarPage() {
                     )}
                   </div>
                   {isAdmin && (
-                    <button
-                      onClick={() => handleDeleteEvent(e.id)}
-                      className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
-                    >
-                      삭제
-                    </button>
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        onClick={() => startEdit(e)}
+                        className="text-xs text-foreground/40 hover:text-brand-dark"
+                      >
+                        수정
+                      </button>
+                      <button
+                        onClick={() => handleDeleteEvent(e.id)}
+                        className="text-xs text-foreground/40 hover:text-red-600"
+                      >
+                        삭제
+                      </button>
+                    </div>
                   )}
                 </div>
                 {e.image_url && (
