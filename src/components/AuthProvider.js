@@ -26,9 +26,18 @@ export function AuthProvider({ children }) {
     }
     const { data } = await supabase
       .from("profiles")
-      .select("is_admin")
+      .select("is_admin, is_suspended")
       .eq("id", currentUser.id)
       .single();
+
+    if (data?.is_suspended) {
+      await supabase.auth.signOut();
+      setIsAdmin(false);
+      setUser(null);
+      window.alert("이용이 정지된 계정입니다. 문의사항은 교회 사무실로 연락해주세요.");
+      return;
+    }
+
     setIsAdmin(data?.is_admin ?? false);
   }
 

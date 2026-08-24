@@ -100,6 +100,11 @@ export default function NavBar() {
           <Link href="/board" className="transition-colors hover:text-brand-dark">
             게시판
           </Link>
+          {isAdmin && (
+            <Link href="/admin/members" className="transition-colors hover:text-brand-dark">
+              회원 관리
+            </Link>
+          )}
         </nav>
       </div>
     </header>

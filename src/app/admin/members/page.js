@@ -1,0 +1,118 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/lib/supabaseClient";
+
+export default function AdminMembersPage() {
+  const { user, loading: authLoading, isAdmin } = useAuth();
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function loadMembers() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, email, display_name, district, is_admin, is_suspended, created_at")
+      .order("created_at", { ascending: false });
+
+    if (!error) setMembers(data);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    if (isAdmin) loadMembers();
+  }, [isAdmin]);
+
+  async function toggleSuspend(member) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_suspended: !member.is_suspended })
+      .eq("id", member.id);
+    if (error) {
+      window.alert("변경에 실패했어요: " + error.message);
+      return;
+    }
+    loadMembers();
+  }
+
+  async function handleDelete(member) {
+    if (
+      !window.confirm(
+        `${member.display_name ?? member.email} 님을 명단에서 삭제할까요?\n(로그인 계정 자체는 남아있어요. 완전 삭제는 Supabase 대시보드에서 해주세요.)`
+      )
+    )
+      return;
+    const { error } = await supabase.from("profiles").delete().eq("id", member.id);
+    if (error) {
+      window.alert("삭제에 실패했어요: " + error.message);
+      return;
+    }
+    loadMembers();
+  }
+
+  if (!authLoading && !isAdmin) {
+    return (
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 text-center">
+        <h1 className="font-serif text-2xl font-bold text-foreground">회원 관리</h1>
+        <p className="mt-3 text-sm text-foreground/60">관리자만 볼 수 있는 페이지예요.</p>
+        {!user && (
+          <Link href="/login" className="mt-6 inline-block text-brand-dark underline">
+            로그인하러 가기
+          </Link>
+        )}
+      </main>
+    );
+  }
+
+  return (
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
+      <h1 className="font-serif text-2xl font-bold text-foreground">회원 관리</h1>
+      <p className="mt-2 text-sm text-foreground/50">가입한 교인 목록입니다.</p>
+
+      <ul className="mt-6 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
+        {loading && <li className="p-4 text-sm text-foreground/50">불러오는 중...</li>}
+        {!loading && members.length === 0 && (
+          <li className="p-4 text-sm text-foreground/50">가입한 교인이 없어요.</li>
+        )}
+        {members.map((m) => (
+          <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="font-medium text-foreground">
+                {m.display_name ?? "(이름 없음)"}
+                {m.is_admin && (
+                  <span className="ml-2 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
+                    관리자
+                  </span>
+                )}
+                {m.is_suspended && (
+                  <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                    정지됨
+                  </span>
+                )}
+              </p>
+              <p className="mt-1 text-xs text-foreground/50">
+                {m.email} · {m.district ?? "구역 미배정"}
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <button
+                onClick={() => toggleSuspend(m)}
+                className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                {m.is_suspended ? "정지 해제" : "정지"}
+              </button>
+              <button
+                onClick={() => handleDelete(m)}
+                className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-red-50 hover:text-red-600 dark:border-white/10 dark:hover:bg-red-900/20"
+              >
+                삭제
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}

@@ -14,7 +14,7 @@ const CATEGORIES = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function BoardPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const [category, setCategory] = useState(CATEGORIES[0].key);
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
@@ -28,7 +28,7 @@ export default function BoardPage() {
     setLoadingPosts(true);
     const { data, error } = await supabase
       .from("posts")
-      .select("id, title, body, author_name, created_at, attachment_url, attachment_name")
+      .select("id, title, body, author_name, created_at, attachment_url, attachment_name, user_id")
       .eq("category", cat)
       .order("created_at", { ascending: false });
 
@@ -94,6 +94,16 @@ export default function BoardPage() {
     setTitle("");
     setBody("");
     setFile(null);
+    loadPosts(category);
+  }
+
+  async function handleDelete(postId) {
+    if (!window.confirm("이 글을 삭제할까요?")) return;
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
+    if (error) {
+      window.alert("삭제에 실패했어요: " + error.message);
+      return;
+    }
     loadPosts(category);
   }
 
@@ -177,7 +187,17 @@ export default function BoardPage() {
         )}
         {posts.map((post) => (
           <li key={post.id} className="p-4">
-            <p className="font-medium text-foreground">{post.title}</p>
+            <div className="flex items-start justify-between gap-2">
+              <p className="font-medium text-foreground">{post.title}</p>
+              {(isAdmin || post.user_id === user?.id) && (
+                <button
+                  onClick={() => handleDelete(post.id)}
+                  className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+                >
+                  삭제
+                </button>
+              )}
+            </div>
             <p className="mt-1 text-sm text-foreground/70">{post.body}</p>
             {post.attachment_url && (
               <a
