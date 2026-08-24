@@ -12,7 +12,7 @@ const links = [
   { href: "/", label: "교회소개" },
   { href: "/bulletin", label: "주보/공지" },
   { href: "/calendar", label: "교회일정" },
-  { href: "/teams", label: "사역팀" },
+  { href: "/teams", label: "제직명단" },
 ];
 
 const gridLinks = [
