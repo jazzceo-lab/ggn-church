@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { safeStoragePath } from "@/lib/storagePath";
 
 const CATEGORIES = [
   { key: "prayer", label: "기도게시판" },
@@ -128,7 +129,7 @@ export default function BoardPage() {
     let attachmentName = null;
 
     if (file) {
-      const path = `${user.id}/${Date.now()}-${file.name}`;
+      const path = safeStoragePath(user.id, file.name);
       const { error: uploadError } = await supabase.storage
         .from("attachments")
         .upload(path, file);

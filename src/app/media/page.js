@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { safeStoragePath } from "@/lib/storagePath";
 
 const TABS = [
   { key: "audio", label: "설교 음성" },
@@ -55,7 +56,7 @@ export default function MediaPage() {
     setUploading(true);
     setError("");
 
-    const path = `${tab}/${Date.now()}-${file.name}`;
+    const path = safeStoragePath(tab, file.name);
     const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
     if (uploadError) {
       setUploading(false);

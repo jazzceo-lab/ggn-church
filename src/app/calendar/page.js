@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { safeStoragePath } from "@/lib/storagePath";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -98,7 +99,7 @@ export default function CalendarPage() {
 
     let imageUrl = null;
     if (formImage) {
-      const path = `calendar/${Date.now()}-${formImage.name}`;
+      const path = safeStoragePath("calendar", formImage.name);
       const { error: uploadError } = await supabase.storage
         .from("attachments")
         .upload(path, formImage);
