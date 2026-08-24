@@ -21,10 +21,14 @@ export default function Home() {
       <div className="mx-auto w-full max-w-4xl px-4 py-12">
         <section className="text-center">
           <h1 className="font-serif text-3xl font-bold text-foreground">
-            길가는교회에 오신 것을 환영합니다
+            길가는교회에 오신 것을
+            <br />
+            환영합니다
           </h1>
           <p className="mt-3 text-foreground/60">
-            매일, 매사에 겸손히 하나님과 동행하는 신앙 공동체입니다.
+            매일, 매사에 겸손히 하나님과 동행하는
+            <br />
+            신앙 공동체입니다.
           </p>
         </section>
 
