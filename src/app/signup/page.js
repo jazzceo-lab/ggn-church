@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { DISTRICT_NAMES } from "@/lib/teamRoster";
+import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -64,14 +64,14 @@ export default function SignupPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground/80">소속 구역</label>
+          <label className="block text-sm font-medium text-foreground/80">소속 구분</label>
           <select
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
             className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
           >
             <option value="">선택 안 함 / 잘 모르겠어요</option>
-            {DISTRICT_NAMES.map((d) => (
+            {SIGNUP_GROUP_OPTIONS.map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>

@@ -21,3 +21,9 @@ export const districts = [
 
 // 쪽지 대상 분류, 회원가입 시 소속 구역 선택에 쓰는 구역 이름 목록
 export const DISTRICT_NAMES = districts.map(([name]) => name);
+
+// 구역 외에 회원가입 시 선택할 수 있는 부서 구분
+export const DEPARTMENT_GROUPS = ["청소년부", "청년부"];
+
+// 회원가입/쪽지 대상 선택 화면에서 실제로 보여줄 전체 구분 목록
+export const SIGNUP_GROUP_OPTIONS = [...DISTRICT_NAMES, ...DEPARTMENT_GROUPS];

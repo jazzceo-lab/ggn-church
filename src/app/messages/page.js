@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
-import { DISTRICT_NAMES } from "@/lib/teamRoster";
+import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
 
 const UNASSIGNED = "미배정";
 
@@ -90,7 +90,7 @@ export default function MessagesPage() {
           {members.length === 0 && (
             <p className="mt-2 text-sm text-foreground/50">다른 교인이 아직 없어요.</p>
           )}
-          {[...DISTRICT_NAMES, UNASSIGNED].map((district) => {
+          {[...SIGNUP_GROUP_OPTIONS, UNASSIGNED].map((district) => {
             const group = members.filter((m) => (m.district ?? UNASSIGNED) === district);
             if (group.length === 0) return null;
             return (
