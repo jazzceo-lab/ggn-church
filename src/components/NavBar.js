@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import FontSizeControl from "@/components/FontSizeControl";
+import PushSubscribeButton from "@/components/PushSubscribeButton";
 
 const links = [
   { href: "/", label: "교회소개" },
@@ -52,6 +53,7 @@ export default function NavBar() {
             {!loading && user ? (
               <div className="flex items-center gap-2 text-sm">
                 <span className="hidden text-xs text-foreground/50 sm:inline">{user.email}</span>
+                <PushSubscribeButton />
                 {isAdmin && (
                   <span className="rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
                     관리자
