@@ -8,17 +8,16 @@ import { supabase } from "@/lib/supabaseClient";
 import FontSizeControl from "@/components/FontSizeControl";
 
 const links = [
-  { href: "/", label: "홈" },
-  { href: "/about", label: "교회소개" },
+  { href: "/", label: "교회소개" },
   { href: "/bulletin", label: "주보/공지" },
   { href: "/calendar", label: "교회일정" },
   { href: "/teams", label: "사역팀" },
 ];
 
 const gridLinks = [
-  { href: "/board", label: "게시판" },
   { href: "/media", label: "설교·찬양" },
   { href: "/scripture", label: "성경·찬송가" },
+  { href: "/donate", label: "헌금안내" },
 ];
 
 export default function NavBar() {
@@ -97,6 +96,9 @@ export default function NavBar() {
                 {unreadCount}
               </span>
             )}
+          </Link>
+          <Link href="/board" className="transition-colors hover:text-brand-dark">
+            게시판
           </Link>
         </nav>
       </div>
