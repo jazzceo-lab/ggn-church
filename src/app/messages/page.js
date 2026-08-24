@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { DISTRICT_NAMES } from "@/lib/teamRoster";
+
+const UNASSIGNED = "미배정";
 
 export default function MessagesPage() {
   const { user, loading: authLoading } = useAuth();
@@ -26,7 +29,7 @@ export default function MessagesPage() {
 
       const { data: dir } = await supabase
         .from("member_directory")
-        .select("id, display_name")
+        .select("id, display_name, district")
         .neq("id", user.id);
 
       const nameOf = (id) => dir?.find((m) => m.id === id)?.display_name ?? "알 수 없음";
@@ -87,18 +90,27 @@ export default function MessagesPage() {
           {members.length === 0 && (
             <p className="mt-2 text-sm text-foreground/50">다른 교인이 아직 없어요.</p>
           )}
-          <ul className="mt-2 flex flex-wrap gap-2">
-            {members.map((m) => (
-              <li key={m.id}>
-                <Link
-                  href={`/messages/${m.id}`}
-                  className="rounded-full border border-black/10 px-3 py-1 text-sm text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-                >
-                  {m.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {[...DISTRICT_NAMES, UNASSIGNED].map((district) => {
+            const group = members.filter((m) => (m.district ?? UNASSIGNED) === district);
+            if (group.length === 0) return null;
+            return (
+              <div key={district} className="mt-3">
+                <p className="text-xs font-semibold text-brand-dark">{district}</p>
+                <ul className="mt-1 flex flex-wrap gap-2">
+                  {group.map((m) => (
+                    <li key={m.id}>
+                      <Link
+                        href={`/messages/${m.id}`}
+                        className="rounded-full border border-black/10 px-3 py-1 text-sm text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                      >
+                        {m.display_name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       )}
 

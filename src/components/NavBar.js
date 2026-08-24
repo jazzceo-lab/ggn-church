@@ -13,7 +13,12 @@ const links = [
   { href: "/bulletin", label: "주보/공지" },
   { href: "/calendar", label: "교회일정" },
   { href: "/teams", label: "사역팀" },
+];
+
+const gridLinks = [
   { href: "/board", label: "게시판" },
+  { href: "/media", label: "설교·찬양" },
+  { href: "/scripture", label: "성경·찬송가" },
 ];
 
 export default function NavBar() {
@@ -77,21 +82,22 @@ export default function NavBar() {
               {link.label}
             </Link>
           ))}
-          {user && (
-            <>
-              <Link href="/media" className="transition-colors hover:text-brand-dark">
-                설교·찬양
-              </Link>
-              <Link href="/messages" className="relative transition-colors hover:text-brand-dark">
-                쪽지함
-                {unreadCount > 0 && (
-                  <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </Link>
-            </>
-          )}
+        </nav>
+
+        <nav className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-foreground/70 sm:flex sm:flex-wrap sm:gap-x-5">
+          {gridLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="transition-colors hover:text-brand-dark">
+              {link.label}
+            </Link>
+          ))}
+          <Link href="/messages" className="relative transition-colors hover:text-brand-dark">
+            쪽지함
+            {user && unreadCount > 0 && (
+              <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                {unreadCount}
+              </span>
+            )}
+          </Link>
         </nav>
       </div>
     </header>

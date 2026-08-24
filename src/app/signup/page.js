@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { DISTRICT_NAMES } from "@/lib/teamRoster";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [district, setDistrict] = useState("");
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName } },
+      options: { data: { display_name: displayName, district: district || null } },
     });
 
     setLoading(false);
@@ -60,6 +62,21 @@ export default function SignupPage() {
             placeholder="홍길동"
             className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground/80">소속 구역</label>
+          <select
+            value={district}
+            onChange={(e) => setDistrict(e.target.value)}
+            className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
+          >
+            <option value="">선택 안 함 / 잘 모르겠어요</option>
+            {DISTRICT_NAMES.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground/80">이메일</label>
