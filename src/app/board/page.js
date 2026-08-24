@@ -24,6 +24,11 @@ export default function BoardPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [comments, setComments] = useState({});
+  const [expandedPosts, setExpandedPosts] = useState([]);
+  const [commentInputs, setCommentInputs] = useState({});
+  const [commentSubmitting, setCommentSubmitting] = useState(null);
+
   async function loadPosts(cat) {
     setLoadingPosts(true);
     const { data, error } = await supabase
@@ -34,6 +39,68 @@ export default function BoardPage() {
 
     if (!error) setPosts(data);
     setLoadingPosts(false);
+
+    if (!error && data?.length > 0) {
+      loadComments(data.map((p) => p.id));
+    } else {
+      setComments({});
+    }
+  }
+
+  async function loadComments(postIds) {
+    const { data, error } = await supabase
+      .from("comments")
+      .select("id, post_id, user_id, author_name, body, created_at")
+      .in("post_id", postIds)
+      .order("created_at", { ascending: true });
+
+    if (error) return;
+
+    const grouped = {};
+    for (const c of data) {
+      if (!grouped[c.post_id]) grouped[c.post_id] = [];
+      grouped[c.post_id].push(c);
+    }
+    setComments(grouped);
+  }
+
+  function toggleExpanded(postId) {
+    setExpandedPosts((prev) =>
+      prev.includes(postId) ? prev.filter((id) => id !== postId) : [...prev, postId]
+    );
+  }
+
+  async function handleAddComment(e, postId) {
+    e.preventDefault();
+    const text = (commentInputs[postId] ?? "").trim();
+    if (!text) return;
+
+    setCommentSubmitting(postId);
+    const authorName = user.user_metadata?.display_name || user.email;
+    const { error } = await supabase.from("comments").insert({
+      post_id: postId,
+      user_id: user.id,
+      author_name: authorName,
+      body: text,
+    });
+    setCommentSubmitting(null);
+
+    if (error) {
+      window.alert("댓글 등록에 실패했어요: " + error.message);
+      return;
+    }
+    setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
+    loadComments(posts.map((p) => p.id));
+  }
+
+  async function handleDeleteComment(commentId) {
+    if (!window.confirm("이 댓글을 삭제할까요?")) return;
+    const { error } = await supabase.from("comments").delete().eq("id", commentId);
+    if (error) {
+      window.alert("삭제에 실패했어요: " + error.message);
+      return;
+    }
+    loadComments(posts.map((p) => p.id));
   }
 
   useEffect(() => {
@@ -212,6 +279,64 @@ export default function BoardPage() {
             <p className="mt-2 text-xs text-foreground/50">
               {post.author_name} · {new Date(post.created_at).toLocaleDateString("ko-KR")}
             </p>
+
+            <button
+              onClick={() => toggleExpanded(post.id)}
+              className="mt-3 text-xs font-medium text-brand-dark"
+            >
+              💬 댓글 {comments[post.id]?.length ?? 0}개{" "}
+              {expandedPosts.includes(post.id) ? "숨기기" : "보기"}
+            </button>
+
+            {expandedPosts.includes(post.id) && (
+              <div className="mt-2 space-y-2 border-t border-black/10 pt-3 dark:border-white/10">
+                {(comments[post.id] ?? []).map((c) => (
+                  <div key={c.id} className="flex items-start justify-between gap-2 text-sm">
+                    <div>
+                      <p className="text-foreground/80">{c.body}</p>
+                      <p className="mt-0.5 text-xs text-foreground/40">
+                        {c.author_name} · {new Date(c.created_at).toLocaleDateString("ko-KR")}
+                      </p>
+                    </div>
+                    {(isAdmin || c.user_id === user?.id) && (
+                      <button
+                        onClick={() => handleDeleteComment(c.id)}
+                        className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {(comments[post.id] ?? []).length === 0 && (
+                  <p className="text-xs text-foreground/40">아직 댓글이 없어요.</p>
+                )}
+
+                {user && (
+                  <form
+                    onSubmit={(e) => handleAddComment(e, post.id)}
+                    className="mt-2 flex items-center gap-2"
+                  >
+                    <input
+                      type="text"
+                      value={commentInputs[post.id] ?? ""}
+                      onChange={(e) =>
+                        setCommentInputs((prev) => ({ ...prev, [post.id]: e.target.value }))
+                      }
+                      placeholder="댓글을 입력하세요"
+                      className="flex-1 rounded-md border border-black/10 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-white/10"
+                    />
+                    <button
+                      type="submit"
+                      disabled={commentSubmitting === post.id}
+                      className="shrink-0 rounded-full bg-brand px-3 py-1.5 text-xs text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+                    >
+                      등록
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
           </li>
         ))}
       </ul>
