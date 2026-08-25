@@ -9,12 +9,6 @@ const apps = [
     description: "성경 읽기 앱으로 이동합니다.",
     packageId: "com.sirma.mobile.bible.android",
   },
-  {
-    key: "hymn",
-    title: "찬송가",
-    description: "찬송가 앱으로 이동합니다.",
-    packageId: "com.new_hymn.data",
-  },
 ];
 
 function playStoreUrl(packageId) {
@@ -35,13 +29,13 @@ export default function ScripturePage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
-      <h1 className="font-serif text-2xl font-bold text-foreground">성경·찬송가</h1>
+      <h1 className="font-serif text-2xl font-bold text-foreground">성경</h1>
       <p className="mt-2 text-sm text-foreground/50">
         아래 버튼을 누르면 이미 앱이 설치되어 있는 경우 바로 앱이 열리고, 설치되어 있지 않다면
         Play 스토어로 이동해요.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4">
         {apps.map((app) => (
           <a
             key={app.key}

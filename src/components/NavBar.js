@@ -17,7 +17,7 @@ const links = [
 
 const gridLinks = [
   { href: "/media", label: "설교·찬양" },
-  { href: "/scripture", label: "성경·찬송가" },
+  { href: "/scripture", label: "성경" },
   { href: "/donate", label: "헌금안내" },
 ];
 
