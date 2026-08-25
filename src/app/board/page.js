@@ -13,6 +13,14 @@ const CATEGORIES = [
   { key: "help", label: "앱사용관련" },
 ];
 
+const REACTIONS = [
+  { key: "like", emoji: "❤️", label: "좋아요" },
+  { key: "pray", emoji: "🙏", label: "기도해요" },
+  { key: "grace", emoji: "😊", label: "은혜돼요" },
+  { key: "agree", emoji: "👍", label: "공감" },
+  { key: "comfort", emoji: "😢", label: "위로해요" },
+];
+
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function BoardPage() {
@@ -57,28 +65,35 @@ export default function BoardPage() {
   async function loadLikes(postIds) {
     const { data, error } = await supabase
       .from("post_likes")
-      .select("post_id, user_id")
+      .select("post_id, user_id, reaction_type")
       .in("post_id", postIds);
 
     if (error) return;
 
     const grouped = {};
     for (const l of data) {
-      if (!grouped[l.post_id]) grouped[l.post_id] = { count: 0, likedByMe: false };
-      grouped[l.post_id].count += 1;
-      if (l.user_id === user?.id) grouped[l.post_id].likedByMe = true;
+      if (!grouped[l.post_id]) grouped[l.post_id] = { counts: {}, myReaction: null };
+      const entry = grouped[l.post_id];
+      entry.counts[l.reaction_type] = (entry.counts[l.reaction_type] ?? 0) + 1;
+      if (l.user_id === user?.id) entry.myReaction = l.reaction_type;
     }
     setLikes(grouped);
   }
 
-  async function handleToggleLike(postId) {
+  async function handleToggleLike(postId, reactionType) {
     if (!user) return;
     setLikeSubmitting(postId);
-    const likedByMe = likes[postId]?.likedByMe;
+    const myReaction = likes[postId]?.myReaction;
 
-    const { error } = likedByMe
-      ? await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", user.id)
-      : await supabase.from("post_likes").insert({ post_id: postId, user_id: user.id });
+    const { error } =
+      myReaction === reactionType
+        ? await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", user.id)
+        : await supabase
+            .from("post_likes")
+            .upsert(
+              { post_id: postId, user_id: user.id, reaction_type: reactionType },
+              { onConflict: "post_id,user_id" }
+            );
 
     setLikeSubmitting(null);
     if (error) {
@@ -322,18 +337,26 @@ export default function BoardPage() {
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleToggleLike(post.id)}
-                disabled={!user || likeSubmitting === post.id}
-                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition-colors disabled:opacity-50 ${
-                  likes[post.id]?.likedByMe
-                    ? "border-brand bg-brand-tint text-brand-dark"
-                    : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-                }`}
-              >
-                {likes[post.id]?.likedByMe ? "❤️" : "🤍"} 좋아요 {likes[post.id]?.count ?? 0}
-              </button>
+              {REACTIONS.map((r) => {
+                const count = likes[post.id]?.counts?.[r.key] ?? 0;
+                const mine = likes[post.id]?.myReaction === r.key;
+                return (
+                  <button
+                    key={r.key}
+                    type="button"
+                    onClick={() => handleToggleLike(post.id, r.key)}
+                    disabled={!user || likeSubmitting === post.id}
+                    title={r.label}
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors disabled:opacity-50 ${
+                      mine
+                        ? "border-brand bg-brand-tint text-brand-dark"
+                        : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                    }`}
+                  >
+                    {r.emoji} {count > 0 ? count : ""}
+                  </button>
+                );
+              })}
               <KakaoShareButton
                 title={post.title}
                 description={post.body}
