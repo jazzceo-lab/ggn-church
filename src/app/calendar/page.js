@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import KakaoShareButton from "@/components/KakaoShareButton";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -404,6 +405,13 @@ export default function CalendarPage() {
                     🔗 관련 링크 바로가기
                   </a>
                 )}
+                <div className="mt-2">
+                  <KakaoShareButton
+                    title={e.title}
+                    description={`${e.event_date}${e.time_label ? ` · ${e.time_label}` : ""}`}
+                    url="https://ggnch.shop/calendar"
+                  />
+                </div>
               </li>
             ))}
           </ul>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import KakaoShareButton from "@/components/KakaoShareButton";
 
 const CATEGORIES = [
   { key: "prayer", label: "기도게시판" },
@@ -280,6 +281,14 @@ export default function BoardPage() {
             <p className="mt-2 text-xs text-foreground/50">
               {post.author_name} · {new Date(post.created_at).toLocaleDateString("ko-KR")}
             </p>
+
+            <div className="mt-2">
+              <KakaoShareButton
+                title={post.title}
+                description={post.body}
+                url="https://ggnch.shop/board"
+              />
+            </div>
 
             <button
               onClick={() => toggleExpanded(post.id)}

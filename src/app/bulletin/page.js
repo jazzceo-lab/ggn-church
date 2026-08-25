@@ -1,3 +1,5 @@
+import KakaoShareButton from "@/components/KakaoShareButton";
+
 const bulletin = {
   issue: "27권 34호",
   date: "2026. 8. 23",
@@ -57,11 +59,18 @@ const bulletin = {
 export default function BulletinPage() {
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12">
-      <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline justify-between gap-3">
         <h1 className="font-serif text-2xl font-bold text-foreground">주보</h1>
-        <p className="text-sm text-foreground/50">
-          {bulletin.issue} · {bulletin.date}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-foreground/50">
+            {bulletin.issue} · {bulletin.date}
+          </p>
+          <KakaoShareButton
+            title={`길가는교회 주보 (${bulletin.issue})`}
+            description={bulletin.theme.verse}
+            url="https://ggnch.shop/bulletin"
+          />
+        </div>
       </div>
 
       <section className="mt-8 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10">
