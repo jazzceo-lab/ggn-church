@@ -38,6 +38,7 @@ export default function CalendarPage() {
 
   const [formDate, setFormDate] = useState(selected);
   const [formTitle, setFormTitle] = useState("");
+  const [formDescription, setFormDescription] = useState("");
   const [formTime, setFormTime] = useState("");
   const [formLink, setFormLink] = useState("");
   const [formImage, setFormImage] = useState(null);
@@ -53,7 +54,7 @@ export default function CalendarPage() {
     setLoadingEvents(true);
     const { data, error } = await supabase
       .from("calendar_events")
-      .select("id, event_date, title, time_label, link_url, image_url")
+      .select("id, event_date, title, description, time_label, link_url, image_url")
       .order("event_date", { ascending: true });
 
     if (!error) setEvents(data);
@@ -87,6 +88,7 @@ export default function CalendarPage() {
   function resetForm() {
     setEditingId(null);
     setFormTitle("");
+    setFormDescription("");
     setFormTime("");
     setFormLink("");
     setFormImage(null);
@@ -107,6 +109,7 @@ export default function CalendarPage() {
     setEditingId(ev.id);
     setFormDate(ev.event_date);
     setFormTitle(ev.title);
+    setFormDescription(ev.description ?? "");
     setFormTime(ev.time_label ?? "");
     setFormLink(ev.link_url ?? "");
     setFormImage(null);
@@ -150,6 +153,7 @@ export default function CalendarPage() {
     const payload = {
       event_date: formDate,
       title: formTitle,
+      description: formDescription || null,
       time_label: formTime || null,
       link_url: formLink || null,
       image_url: imageUrl,
@@ -286,6 +290,16 @@ export default function CalendarPage() {
               />
             </div>
             <div>
+              <label className="block text-xs font-medium text-foreground/60">설명 (선택)</label>
+              <textarea
+                rows={3}
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="일정에 대한 자세한 설명을 입력하세요"
+                className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+              />
+            </div>
+            <div>
               <label className="block text-xs font-medium text-foreground/60">시간</label>
               <input
                 type="text"
@@ -369,6 +383,11 @@ export default function CalendarPage() {
                     {e.time_label && (
                       <p className="mt-0.5 text-sm text-foreground/60">{e.time_label}</p>
                     )}
+                    {e.description && (
+                      <p className="mt-1 text-sm whitespace-pre-line text-foreground/70">
+                        {e.description}
+                      </p>
+                    )}
                   </div>
                   {isAdmin && (
                     <div className="flex shrink-0 gap-2">
@@ -409,7 +428,9 @@ export default function CalendarPage() {
                 <div className="mt-2 flex flex-wrap gap-2">
                   <KakaoShareButton
                     title={e.title}
-                    description={`${e.event_date}${e.time_label ? ` · ${e.time_label}` : ""}`}
+                    description={`${e.event_date}${e.time_label ? ` · ${e.time_label}` : ""}${
+                      e.description ? ` — ${e.description}` : ""
+                    }`}
                     url="https://ggnch.shop/calendar"
                   />
                   <button
