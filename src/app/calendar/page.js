@@ -227,7 +227,7 @@ export default function CalendarPage() {
               <button
                 key={i}
                 onClick={() => selectDate(key)}
-                className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-lg text-sm transition-colors ${
+                className={`flex min-h-[56px] flex-col items-center gap-0.5 rounded-lg pt-1 text-sm transition-colors sm:min-h-[68px] ${
                   isSelected
                     ? "bg-brand text-white"
                     : isToday
@@ -237,9 +237,14 @@ export default function CalendarPage() {
               >
                 <span>{day}</span>
                 {dayEvents.length > 0 && (
-                  <span
-                    className={`h-1 w-1 rounded-full ${isSelected ? "bg-white" : "bg-brand"}`}
-                  />
+                  <span className="w-full px-0.5 text-center text-[9px] leading-tight sm:text-[10px]">
+                    <span className="block truncate">{dayEvents[0].title}</span>
+                    {dayEvents.length > 1 && (
+                      <span className={isSelected ? "text-white/80" : "text-foreground/50"}>
+                        +{dayEvents.length - 1}
+                      </span>
+                    )}
+                  </span>
                 )}
               </button>
             );
