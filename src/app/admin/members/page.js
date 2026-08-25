@@ -37,6 +37,21 @@ export default function AdminMembersPage() {
     loadMembers();
   }
 
+  async function toggleAdmin(member) {
+    const action = member.is_admin ? "해제" : "지정";
+    if (!window.confirm(`${member.display_name ?? member.email} 님의 관리자 권한을 ${action}할까요?`))
+      return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_admin: !member.is_admin })
+      .eq("id", member.id);
+    if (error) {
+      window.alert("변경에 실패했어요: " + error.message);
+      return;
+    }
+    loadMembers();
+  }
+
   async function handleDelete(member) {
     if (
       !window.confirm(
@@ -97,6 +112,12 @@ export default function AdminMembersPage() {
               </p>
             </div>
             <div className="flex shrink-0 gap-2">
+              <button
+                onClick={() => toggleAdmin(m)}
+                className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                {m.is_admin ? "관리자 해제" : "관리자 지정"}
+              </button>
               <button
                 onClick={() => toggleSuspend(m)}
                 className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
