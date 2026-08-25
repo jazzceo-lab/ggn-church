@@ -139,6 +139,17 @@ export default function MediaPage() {
     loadItems();
   }
 
+  async function handleDeleteItem(item) {
+    if (!window.confirm(`"${item.title}"을(를) 삭제할까요?`)) return;
+    await supabase.storage.from("media").remove([item.file_path]);
+    const { error } = await supabase.from("media_items").delete().eq("id", item.id);
+    if (error) {
+      window.alert("삭제에 실패했어요: " + error.message);
+      return;
+    }
+    loadItems();
+  }
+
   if (!authLoading && !user) {
     return (
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
@@ -228,7 +239,17 @@ export default function MediaPage() {
           {!loading && items.length > 0 && (
             <>
               <div className="rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
-                <p className="text-xs font-medium text-brand-dark">이번 주 설교</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-medium text-brand-dark">이번 주 설교</p>
+                  {isAdmin && (
+                    <button
+                      onClick={() => handleDeleteItem(items[0])}
+                      className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+                    >
+                      삭제
+                    </button>
+                  )}
+                </div>
                 <p className="mt-1 font-medium text-foreground">{items[0].title}</p>
                 <p className="mt-1 text-xs text-foreground/40">
                   {new Date(items[0].created_at).toLocaleDateString("ko-KR")}
@@ -246,20 +267,30 @@ export default function MediaPage() {
                   <ul className="mt-3 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
                     {items.slice(1).map((item) => (
                       <li key={item.id}>
-                        <button
-                          onClick={() => toggleExpandedItem(item.id)}
-                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10"
-                        >
-                          <span>
-                            <span className="font-medium text-foreground">{item.title}</span>
-                            <span className="ml-2 text-xs text-foreground/40">
-                              {new Date(item.created_at).toLocaleDateString("ko-KR")}
+                        <div className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-black/5 dark:hover:bg-white/10">
+                          <button
+                            onClick={() => toggleExpandedItem(item.id)}
+                            className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+                          >
+                            <span className="min-w-0 truncate">
+                              <span className="font-medium text-foreground">{item.title}</span>
+                              <span className="ml-2 text-xs text-foreground/40">
+                                {new Date(item.created_at).toLocaleDateString("ko-KR")}
+                              </span>
                             </span>
-                          </span>
-                          <span className="shrink-0 text-foreground/40">
-                            {expandedItems.includes(item.id) ? "숨기기" : "듣기"}
-                          </span>
-                        </button>
+                            <span className="shrink-0 text-foreground/40">
+                              {expandedItems.includes(item.id) ? "숨기기" : "듣기"}
+                            </span>
+                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDeleteItem(item)}
+                              className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+                            >
+                              삭제
+                            </button>
+                          )}
+                        </div>
                         {expandedItems.includes(item.id) && (
                           <div className="px-4 pb-4">
                             {urls[item.id] ? (
@@ -320,7 +351,17 @@ export default function MediaPage() {
             key={item.id}
             className="rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5"
           >
-            <p className="font-medium text-foreground">{item.title}</p>
+            <div className="flex items-start justify-between gap-2">
+              <p className="font-medium text-foreground">{item.title}</p>
+              {isAdmin && (
+                <button
+                  onClick={() => handleDeleteItem(item)}
+                  className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+                >
+                  삭제
+                </button>
+              )}
+            </div>
             <p className="mt-1 text-xs text-foreground/40">
               {new Date(item.created_at).toLocaleDateString("ko-KR")}
             </p>
