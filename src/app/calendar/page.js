@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import KakaoShareButton from "@/components/KakaoShareButton";
+import { downloadIcs } from "@/lib/ics";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -405,12 +406,19 @@ export default function CalendarPage() {
                     🔗 관련 링크 바로가기
                   </a>
                 )}
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   <KakaoShareButton
                     title={e.title}
                     description={`${e.event_date}${e.time_label ? ` · ${e.time_label}` : ""}`}
                     url="https://ggnch.shop/calendar"
                   />
+                  <button
+                    type="button"
+                    onClick={() => downloadIcs(e)}
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-black/10 px-3 py-1.5 text-xs text-foreground/70 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                  >
+                    📅 캘린더에 담기
+                  </button>
                 </div>
               </li>
             ))}
