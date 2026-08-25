@@ -31,6 +31,9 @@ export default function BoardPage() {
   const [commentInputs, setCommentInputs] = useState({});
   const [commentSubmitting, setCommentSubmitting] = useState(null);
 
+  const [likes, setLikes] = useState({});
+  const [likeSubmitting, setLikeSubmitting] = useState(null);
+
   async function loadPosts(cat) {
     setLoadingPosts(true);
     const { data, error } = await supabase
@@ -44,9 +47,45 @@ export default function BoardPage() {
 
     if (!error && data?.length > 0) {
       loadComments(data.map((p) => p.id));
+      loadLikes(data.map((p) => p.id));
     } else {
       setComments({});
+      setLikes({});
     }
+  }
+
+  async function loadLikes(postIds) {
+    const { data, error } = await supabase
+      .from("post_likes")
+      .select("post_id, user_id")
+      .in("post_id", postIds);
+
+    if (error) return;
+
+    const grouped = {};
+    for (const l of data) {
+      if (!grouped[l.post_id]) grouped[l.post_id] = { count: 0, likedByMe: false };
+      grouped[l.post_id].count += 1;
+      if (l.user_id === user?.id) grouped[l.post_id].likedByMe = true;
+    }
+    setLikes(grouped);
+  }
+
+  async function handleToggleLike(postId) {
+    if (!user) return;
+    setLikeSubmitting(postId);
+    const likedByMe = likes[postId]?.likedByMe;
+
+    const { error } = likedByMe
+      ? await supabase.from("post_likes").delete().eq("post_id", postId).eq("user_id", user.id)
+      : await supabase.from("post_likes").insert({ post_id: postId, user_id: user.id });
+
+    setLikeSubmitting(null);
+    if (error) {
+      window.alert("처리에 실패했어요: " + error.message);
+      return;
+    }
+    loadLikes(posts.map((p) => p.id));
   }
 
   async function loadComments(postIds) {
@@ -282,7 +321,19 @@ export default function BoardPage() {
               {post.author_name} · {new Date(post.created_at).toLocaleDateString("ko-KR")}
             </p>
 
-            <div className="mt-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleToggleLike(post.id)}
+                disabled={!user || likeSubmitting === post.id}
+                className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition-colors disabled:opacity-50 ${
+                  likes[post.id]?.likedByMe
+                    ? "border-brand bg-brand-tint text-brand-dark"
+                    : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                }`}
+              >
+                {likes[post.id]?.likedByMe ? "❤️" : "🤍"} 좋아요 {likes[post.id]?.count ?? 0}
+              </button>
               <KakaoShareButton
                 title={post.title}
                 description={post.body}
