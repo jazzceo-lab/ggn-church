@@ -44,7 +44,7 @@ export default function Home() {
             </ul>
           </div>
           <div className="rounded-xl border border-black/10 bg-white/60 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-            <h2 className="font-serif font-semibold text-foreground">이번 주 표어</h2>
+            <h2 className="font-serif font-semibold text-foreground">2026년 표어</h2>
             <p className="mt-2 text-sm leading-6 text-foreground/70">
               &ldquo;매일, 매사에 겸손히 하나님과 동행하자!&rdquo; (미가 6:8)
             </p>
