@@ -107,6 +107,16 @@ export default function ConversationPage() {
     loadThread();
   }
 
+  async function handleDeleteMessage(id) {
+    if (!window.confirm("이 쪽지를 삭제할까요?")) return;
+    const { error } = await supabase.from("messages").delete().eq("id", id);
+    if (error) {
+      window.alert("삭제에 실패했어요: " + error.message);
+      return;
+    }
+    setThread((prev) => prev.filter((m) => m.id !== id));
+  }
+
   if (!authLoading && !user) {
     return (
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
@@ -135,7 +145,15 @@ export default function ConversationPage() {
         {thread.map((m) => {
           const mine = m.sender_id === user?.id;
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+            <div key={m.id} className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}>
+              {mine && (
+                <button
+                  onClick={() => handleDeleteMessage(m.id)}
+                  className="text-xs text-foreground/30 hover:text-red-600"
+                >
+                  삭제
+                </button>
+              )}
               <div
                 className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                   mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"

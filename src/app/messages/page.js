@@ -64,6 +64,21 @@ export default function MessagesPage() {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
+  async function handleDeleteConversation(partnerId, partnerName) {
+    if (!window.confirm(`${partnerName}님과 나눈 쪽지를 모두 삭제할까요?`)) return;
+    const { error } = await supabase
+      .from("messages")
+      .delete()
+      .or(
+        `and(sender_id.eq.${user.id},recipient_id.eq.${partnerId}),and(sender_id.eq.${partnerId},recipient_id.eq.${user.id})`
+      );
+    if (error) {
+      window.alert("삭제에 실패했어요: " + error.message);
+      return;
+    }
+    load();
+  }
+
   async function handleSend(e) {
     e.preventDefault();
     if (selectedIds.length === 0 || !composeBody.trim()) return;
@@ -192,14 +207,20 @@ export default function MessagesPage() {
           <li className="p-4 text-sm text-foreground/50">아직 나눈 쪽지가 없어요.</li>
         )}
         {conversations.map((c) => (
-          <li key={c.partnerId}>
-            <Link href={`/messages/${c.partnerId}`} className="block p-4 hover:bg-black/5 dark:hover:bg-white/10">
+          <li key={c.partnerId} className="flex items-center gap-2 p-4 hover:bg-black/5 dark:hover:bg-white/10">
+            <Link href={`/messages/${c.partnerId}`} className="min-w-0 flex-1">
               <p className="font-medium text-foreground">{c.name}</p>
               <p className="mt-1 truncate text-sm text-foreground/60">{c.lastBody}</p>
               <p className="mt-1 text-xs text-foreground/40">
                 {new Date(c.lastAt).toLocaleString("ko-KR")}
               </p>
             </Link>
+            <button
+              onClick={() => handleDeleteConversation(c.partnerId, c.name)}
+              className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+            >
+              삭제
+            </button>
           </li>
         ))}
       </ul>
