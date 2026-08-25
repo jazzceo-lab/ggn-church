@@ -12,6 +12,10 @@ const TABS = [
   { key: "youtube", label: "유튜브 영상" },
 ];
 
+// 설교 음성은 파일 용량이 커서 무료 저장공간을 아끼기 위해
+// 새로 업로드하면 최신 2개(이번 주 + 지난주)만 남기고 이전 파일은 자동 삭제
+const MAX_KEPT_AUDIO = 2;
+
 export default function MediaPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [tab, setTab] = useState("audio");
@@ -84,6 +88,23 @@ export default function MediaPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, tab]);
 
+  async function pruneOldAudio() {
+    const { data } = await supabase
+      .from("media_items")
+      .select("id, file_path")
+      .eq("media_type", "audio")
+      .order("created_at", { ascending: false });
+
+    if (!data || data.length <= MAX_KEPT_AUDIO) return;
+
+    const toDelete = data.slice(MAX_KEPT_AUDIO);
+    await supabase.storage.from("media").remove(toDelete.map((d) => d.file_path));
+    await supabase
+      .from("media_items")
+      .delete()
+      .in("id", toDelete.map((d) => d.id));
+  }
+
   async function handleUpload(e) {
     e.preventDefault();
     if (!file) return;
@@ -102,11 +123,17 @@ export default function MediaPage() {
       .from("media_items")
       .insert({ title, media_type: tab, file_path: path });
 
-    setUploading(false);
     if (insertError) {
+      setUploading(false);
       setError("등록에 실패했어요: " + insertError.message);
       return;
     }
+
+    if (tab === "audio") {
+      await pruneOldAudio();
+    }
+
+    setUploading(false);
     setTitle("");
     setFile(null);
     loadItems();
