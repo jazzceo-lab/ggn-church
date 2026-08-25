@@ -132,13 +132,21 @@ export default function MediaPage() {
             placeholder="제목 (예: 2026.8.24 주일설교 - 은혜)"
             className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
           />
-          <input
-            type="file"
-            accept={tab === "audio" ? "audio/*" : "video/*"}
-            required
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="w-full text-sm"
-          />
+          <div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
+              <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                📎 {tab === "audio" ? "음성" : "영상"} 파일 선택
+              </span>
+              <input
+                type="file"
+                accept={tab === "audio" ? "audio/*" : "video/*"}
+                required
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                className="hidden"
+              />
+              {file && <span className="text-foreground/70">{file.name}</span>}
+            </label>
+          </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
