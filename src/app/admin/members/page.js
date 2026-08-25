@@ -14,7 +14,7 @@ export default function AdminMembersPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, email, display_name, district, is_admin, is_suspended, created_at")
+      .select("id, email, display_name, district, is_admin, is_board_admin, is_suspended, created_at")
       .order("created_at", { ascending: false });
 
     if (!error) setMembers(data);
@@ -50,6 +50,26 @@ export default function AdminMembersPage() {
       return;
     }
     window.alert(`${member.display_name ?? member.email} 님의 관리자 권한을 ${action}했어요.`);
+    loadMembers();
+  }
+
+  async function toggleBoardAdmin(member) {
+    const action = member.is_board_admin ? "해제" : "지정";
+    if (
+      !window.confirm(
+        `${member.display_name ?? member.email} 님의 게시판 서브관리자 권한을 ${action}할까요?`
+      )
+    )
+      return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_board_admin: !member.is_board_admin })
+      .eq("id", member.id);
+    if (error) {
+      window.alert("변경에 실패했어요: " + error.message);
+      return;
+    }
+    window.alert(`${member.display_name ?? member.email} 님의 게시판 서브관리자 권한을 ${action}했어요.`);
     loadMembers();
   }
 
@@ -102,6 +122,11 @@ export default function AdminMembersPage() {
                     관리자
                   </span>
                 )}
+                {m.is_board_admin && (
+                  <span className="ml-2 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
+                    게시판 서브관리자
+                  </span>
+                )}
                 {m.is_suspended && (
                   <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
                     정지됨
@@ -118,6 +143,12 @@ export default function AdminMembersPage() {
                 className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
               >
                 {m.is_admin ? "관리자 해제" : "관리자 지정"}
+              </button>
+              <button
+                onClick={() => toggleBoardAdmin(m)}
+                className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                {m.is_board_admin ? "서브관리자 해제" : "서브관리자 지정"}
               </button>
               <button
                 onClick={() => toggleSuspend(m)}

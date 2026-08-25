@@ -15,7 +15,7 @@ const CATEGORIES = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function BoardPage() {
-  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { user, loading: authLoading, isAdmin, isBoardAdmin } = useAuth();
   const [category, setCategory] = useState(CATEGORIES[0].key);
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
@@ -257,7 +257,7 @@ export default function BoardPage() {
           <li key={post.id} className="p-4">
             <div className="flex items-start justify-between gap-2">
               <p className="font-medium text-foreground">{post.title}</p>
-              {(isAdmin || post.user_id === user?.id) && (
+              {(isAdmin || isBoardAdmin || post.user_id === user?.id) && (
                 <button
                   onClick={() => handleDelete(post.id)}
                   className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
@@ -299,7 +299,7 @@ export default function BoardPage() {
                         {c.author_name} · {new Date(c.created_at).toLocaleDateString("ko-KR")}
                       </p>
                     </div>
-                    {(isAdmin || c.user_id === user?.id) && (
+                    {(isAdmin || isBoardAdmin || c.user_id === user?.id) && (
                       <button
                         onClick={() => handleDeleteComment(c.id)}
                         className="shrink-0 text-xs text-foreground/40 hover:text-red-600"

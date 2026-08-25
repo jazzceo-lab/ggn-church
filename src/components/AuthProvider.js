@@ -7,6 +7,7 @@ const AuthContext = createContext({
   user: null,
   loading: true,
   isAdmin: false,
+  isBoardAdmin: false,
   unreadCount: 0,
   refreshUnreadCount: () => {},
 });
@@ -14,6 +15,7 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isBoardAdmin, setIsBoardAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState(null);
@@ -22,23 +24,26 @@ export function AuthProvider({ children }) {
   async function loadProfile(currentUser) {
     if (!currentUser) {
       setIsAdmin(false);
+      setIsBoardAdmin(false);
       return;
     }
     const { data } = await supabase
       .from("profiles")
-      .select("is_admin, is_suspended")
+      .select("is_admin, is_board_admin, is_suspended")
       .eq("id", currentUser.id)
       .single();
 
     if (data?.is_suspended) {
       await supabase.auth.signOut();
       setIsAdmin(false);
+      setIsBoardAdmin(false);
       setUser(null);
       window.alert("이용이 정지된 계정입니다. 문의사항은 교회 사무실로 연락해주세요.");
       return;
     }
 
     setIsAdmin(data?.is_admin ?? false);
+    setIsBoardAdmin(data?.is_board_admin ?? false);
   }
 
   async function refreshUnreadCount(currentUser) {
@@ -122,7 +127,14 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, isAdmin, unreadCount, refreshUnreadCount: () => refreshUnreadCount() }}
+      value={{
+        user,
+        loading,
+        isAdmin,
+        isBoardAdmin,
+        unreadCount,
+        refreshUnreadCount: () => refreshUnreadCount(),
+      }}
     >
       {children}
       {toast && (
