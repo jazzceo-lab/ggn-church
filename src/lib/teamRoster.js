@@ -23,7 +23,7 @@ export const districts = [
 export const DISTRICT_NAMES = districts.map(([name]) => name);
 
 // 구역 외에 회원가입 시 선택할 수 있는 부서 구분
-export const DEPARTMENT_GROUPS = ["청소년부", "청년부"];
+export const DEPARTMENT_GROUPS = ["목회자", "청소년부", "청년부"];
 
 // 회원가입/쪽지 대상 선택 화면에서 실제로 보여줄 전체 구분 목록
 export const SIGNUP_GROUP_OPTIONS = [...DISTRICT_NAMES, ...DEPARTMENT_GROUPS];
