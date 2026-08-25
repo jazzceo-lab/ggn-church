@@ -49,7 +49,6 @@ export default function NavBar() {
           </Link>
 
           <div className="flex shrink-0 items-center gap-2">
-            <FontSizeControl />
             {!loading && user ? (
               <div className="flex items-center gap-2 text-sm">
                 <span className="hidden text-xs text-foreground/50 sm:inline">{user.email}</span>
@@ -108,6 +107,10 @@ export default function NavBar() {
             </Link>
           )}
         </nav>
+
+        <div className="mt-2 flex items-center">
+          <FontSizeControl />
+        </div>
       </div>
     </header>
   );
