@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import FontSizeControl from "@/components/FontSizeControl";
+import ThemeToggle from "@/components/ThemeToggle";
 import PushSubscribeButton from "@/components/PushSubscribeButton";
 
 const links = [
@@ -108,8 +109,9 @@ export default function NavBar() {
           )}
         </nav>
 
-        <div className="mt-2 flex items-center">
+        <div className="mt-2 flex items-center gap-2">
           <FontSizeControl />
+          <ThemeToggle />
         </div>
       </div>
     </header>
