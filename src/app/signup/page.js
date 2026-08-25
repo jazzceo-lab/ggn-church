@@ -41,7 +41,7 @@ export default function SignupPage() {
           입력하신 이메일함을 확인해서 인증 링크를 눌러주세요. 인증 후 로그인하실 수 있어요.
         </p>
         <p className="mt-3 text-xs text-foreground/40">
-          TEST 기간는 인증메일 확인없이 회원가입이 가능합니다.
+          TEST 기간에는 인증메일 확인없이 회원가입이 가능합니다.
         </p>
         <Link href="/login" className="mt-6 font-medium text-brand-dark underline">
           로그인 화면으로
