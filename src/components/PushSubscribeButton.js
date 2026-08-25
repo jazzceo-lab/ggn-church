@@ -74,15 +74,36 @@ export default function PushSubscribeButton() {
     setLoading(false);
   }
 
-  if (!supported || !user || subscribed) return null;
+  async function handleDisable() {
+    setLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await supabase
+          .from("push_subscriptions")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("endpoint", sub.endpoint);
+        await sub.unsubscribe();
+      }
+      setSubscribed(false);
+    } catch (e) {
+      window.alert("알림 끄기에 실패했어요: " + e.message);
+    }
+    setLoading(false);
+  }
+
+  if (!supported || !user) return null;
 
   return (
     <button
-      onClick={handleEnable}
+      onClick={subscribed ? handleDisable : handleEnable}
       disabled={loading}
       className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 transition-colors hover:bg-black/5 disabled:opacity-50 dark:border-white/10 dark:hover:bg-white/10"
     >
-      🔔 {loading ? "설정 중..." : "쪽지 알림 켜기"}
+      {subscribed ? "🔕" : "🔔"}{" "}
+      {loading ? "설정 중..." : subscribed ? "쪽지 알림 끄기" : "쪽지 알림 켜기"}
     </button>
   );
 }
