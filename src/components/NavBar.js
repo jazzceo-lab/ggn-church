@@ -34,7 +34,7 @@ export default function NavBar() {
   return (
     <header className="sticky top-0 z-10 border-b border-black/5 bg-background/80 backdrop-blur-md dark:border-white/10">
       <div className="mx-auto max-w-5xl px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <Image
               src="/images/logo-mark.jpg"
@@ -48,9 +48,9 @@ export default function NavBar() {
             </span>
           </Link>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex items-center gap-2">
             {!loading && user ? (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
                 <span className="hidden text-xs text-foreground/50 sm:inline">{user.email}</span>
                 <PushSubscribeButton />
                 {isAdmin && (
