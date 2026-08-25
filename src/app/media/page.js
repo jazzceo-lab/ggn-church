@@ -8,7 +8,7 @@ import { safeStoragePath } from "@/lib/storagePath";
 
 const TABS = [
   { key: "audio", label: "설교 음성" },
-  { key: "video", label: "찬양팀 영상" },
+  { key: "video", label: "찬양팀" },
   { key: "youtube", label: "유튜브 영상" },
 ];
 
