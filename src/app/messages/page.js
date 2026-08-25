@@ -9,7 +9,7 @@ import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
 const UNASSIGNED = "미배정";
 
 export default function MessagesPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshUnreadCount } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +77,7 @@ export default function MessagesPage() {
       return;
     }
     load();
+    refreshUnreadCount();
   }
 
   async function handleSend(e) {

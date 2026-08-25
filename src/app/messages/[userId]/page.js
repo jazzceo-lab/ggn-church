@@ -115,6 +115,7 @@ export default function ConversationPage() {
       return;
     }
     setThread((prev) => prev.filter((m) => m.id !== id));
+    refreshUnreadCount();
   }
 
   if (!authLoading && !user) {
