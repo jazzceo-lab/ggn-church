@@ -9,6 +9,7 @@ import { safeStoragePath } from "@/lib/storagePath";
 const TABS = [
   { key: "audio", label: "설교 음성" },
   { key: "video", label: "찬양팀 영상" },
+  { key: "youtube", label: "유튜브 영상" },
 ];
 
 export default function MediaPage() {
@@ -22,6 +23,28 @@ export default function MediaPage() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+
+  const [youtubeVideos, setYoutubeVideos] = useState([]);
+  const [youtubeError, setYoutubeError] = useState("");
+  const [youtubeLoading, setYoutubeLoading] = useState(true);
+
+  async function loadYoutubeVideos() {
+    setYoutubeLoading(true);
+    setYoutubeError("");
+    try {
+      const res = await fetch("/api/youtube-videos");
+      const data = await res.json();
+      if (!res.ok) {
+        setYoutubeError(data.error ?? "영상을 불러오지 못했어요.");
+        setYoutubeVideos([]);
+      } else {
+        setYoutubeVideos(data.videos ?? []);
+      }
+    } catch {
+      setYoutubeError("영상을 불러오지 못했어요.");
+    }
+    setYoutubeLoading(false);
+  }
 
   async function loadItems() {
     setLoading(true);
@@ -46,7 +69,12 @@ export default function MediaPage() {
   }
 
   useEffect(() => {
-    if (user) loadItems();
+    if (!user) return;
+    if (tab === "youtube") {
+      loadYoutubeVideos();
+    } else {
+      loadItems();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, tab]);
 
@@ -115,7 +143,7 @@ export default function MediaPage() {
         ))}
       </div>
 
-      {isAdmin && (
+      {isAdmin && tab !== "youtube" && (
         <form
           key={tab}
           onSubmit={handleUpload}
@@ -158,6 +186,39 @@ export default function MediaPage() {
         </form>
       )}
 
+      {tab === "youtube" ? (
+        <div className="mt-6">
+          {youtubeLoading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
+          {!youtubeLoading && youtubeError && (
+            <p className="text-sm text-red-600">{youtubeError}</p>
+          )}
+          {!youtubeLoading && !youtubeError && youtubeVideos.length === 0 && (
+            <p className="text-sm text-foreground/50">불러올 영상이 없어요.</p>
+          )}
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {youtubeVideos.map((v) => (
+              <li key={v.id}>
+                <a
+                  href={`https://www.youtube.com/watch?v=${v.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block overflow-hidden rounded-xl border border-black/10 bg-white/60 transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+                >
+                  {v.thumbnail && (
+                    <img src={v.thumbnail} alt={v.title} className="w-full object-cover" />
+                  )}
+                  <div className="p-3">
+                    <p className="text-sm font-medium text-foreground">{v.title}</p>
+                    <p className="mt-1 text-xs text-foreground/40">
+                      {new Date(v.publishedAt).toLocaleDateString("ko-KR")}
+                    </p>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
       <ul className="mt-6 space-y-4">
         {loading && <li className="text-sm text-foreground/50">불러오는 중...</li>}
         {!loading && items.length === 0 && (
@@ -184,6 +245,7 @@ export default function MediaPage() {
           </li>
         ))}
       </ul>
+      )}
     </main>
   );
 }
