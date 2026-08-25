@@ -8,7 +8,7 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="relative h-[220px] w-full sm:h-[300px]">
           <Image
-            src="/images/hero-banner.jpg"
+            src="/images/hero-banner.png"
             alt="길가는교회"
             fill
             priority
