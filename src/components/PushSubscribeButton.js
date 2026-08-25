@@ -19,7 +19,17 @@ export default function PushSubscribeButton() {
     if (!supported || !user) return;
     navigator.serviceWorker.ready.then(async (reg) => {
       const sub = await reg.pushManager.getSubscription();
-      setSubscribed(!!sub);
+      if (!sub) {
+        setSubscribed(false);
+        return;
+      }
+      const { data } = await supabase
+        .from("push_subscriptions")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("endpoint", sub.endpoint)
+        .maybeSingle();
+      setSubscribed(!!data);
     });
   }, [supported, user]);
 
