@@ -49,6 +49,7 @@ export default function AdminMembersPage() {
       window.alert("변경에 실패했어요: " + error.message);
       return;
     }
+    window.alert(`${member.display_name ?? member.email} 님의 관리자 권한을 ${action}했어요.`);
     loadMembers();
   }
 
