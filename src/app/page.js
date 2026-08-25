@@ -26,6 +26,12 @@ export default function Home() {
           <p className="mt-3 break-keep text-foreground/60">
             매일, 매사에 겸손히 하나님과 동행하는 신앙 공동체입니다.
           </p>
+          <Link
+            href="/bulletin"
+            className="mt-5 inline-block rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
+          >
+            이번 주 주보 보기 →
+          </Link>
         </section>
 
         <section className="mt-12 grid gap-4 sm:grid-cols-2">
@@ -103,15 +109,6 @@ export default function Home() {
           <div className="mt-4">
             <NaverMap />
           </div>
-        </section>
-
-        <section className="mt-6">
-          <Link
-            href="/bulletin"
-            className="inline-block rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
-          >
-            이번 주 주보 보기 →
-          </Link>
         </section>
 
         <section className="mt-12 border-t border-black/10 pt-8 text-center dark:border-white/10">
