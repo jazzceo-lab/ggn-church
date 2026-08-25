@@ -28,7 +28,7 @@ export async function GET() {
     }
 
     const videosRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=8&playlistId=${uploadsPlaylistId}&key=${apiKey}`,
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=20&playlistId=${uploadsPlaylistId}&key=${apiKey}`,
       { next: { revalidate: 3600 } }
     );
     const videosData = await videosRes.json();
