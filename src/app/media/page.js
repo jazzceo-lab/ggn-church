@@ -28,6 +28,12 @@ export default function MediaPage() {
   const [youtubeError, setYoutubeError] = useState("");
   const [youtubeLoading, setYoutubeLoading] = useState(true);
 
+  const [expandedItems, setExpandedItems] = useState([]);
+
+  function toggleExpandedItem(id) {
+    setExpandedItems((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
   async function loadYoutubeVideos() {
     setYoutubeLoading(true);
     setYoutubeError("");
@@ -186,7 +192,65 @@ export default function MediaPage() {
         </form>
       )}
 
-      {tab === "youtube" ? (
+      {tab === "audio" ? (
+        <div className="mt-6">
+          {loading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
+          {!loading && items.length === 0 && (
+            <p className="text-sm text-foreground/50">아직 등록된 설교가 없어요.</p>
+          )}
+          {!loading && items.length > 0 && (
+            <>
+              <div className="rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
+                <p className="text-xs font-medium text-brand-dark">이번 주 설교</p>
+                <p className="mt-1 font-medium text-foreground">{items[0].title}</p>
+                <p className="mt-1 text-xs text-foreground/40">
+                  {new Date(items[0].created_at).toLocaleDateString("ko-KR")}
+                </p>
+                {urls[items[0].id] ? (
+                  <audio controls className="mt-3 w-full" src={urls[items[0].id]} />
+                ) : (
+                  <p className="mt-2 text-xs text-foreground/40">재생 링크를 불러오는 중...</p>
+                )}
+              </div>
+
+              {items.length > 1 && (
+                <div className="mt-6 border-t border-black/10 pt-6 dark:border-white/10">
+                  <h2 className="font-serif text-lg font-semibold text-foreground">지난 설교</h2>
+                  <ul className="mt-3 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
+                    {items.slice(1).map((item) => (
+                      <li key={item.id}>
+                        <button
+                          onClick={() => toggleExpandedItem(item.id)}
+                          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10"
+                        >
+                          <span>
+                            <span className="font-medium text-foreground">{item.title}</span>
+                            <span className="ml-2 text-xs text-foreground/40">
+                              {new Date(item.created_at).toLocaleDateString("ko-KR")}
+                            </span>
+                          </span>
+                          <span className="shrink-0 text-foreground/40">
+                            {expandedItems.includes(item.id) ? "숨기기" : "듣기"}
+                          </span>
+                        </button>
+                        {expandedItems.includes(item.id) && (
+                          <div className="px-4 pb-4">
+                            {urls[item.id] ? (
+                              <audio controls className="w-full" src={urls[item.id]} />
+                            ) : (
+                              <p className="text-xs text-foreground/40">재생 링크를 불러오는 중...</p>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      ) : tab === "youtube" ? (
         <div className="mt-6">
           {youtubeLoading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
           {!youtubeLoading && youtubeError && (
@@ -234,11 +298,7 @@ export default function MediaPage() {
               {new Date(item.created_at).toLocaleDateString("ko-KR")}
             </p>
             {urls[item.id] ? (
-              tab === "audio" ? (
-                <audio controls className="mt-3 w-full" src={urls[item.id]} />
-              ) : (
-                <video controls className="mt-3 w-full rounded-lg" src={urls[item.id]} />
-              )
+              <video controls className="mt-3 w-full rounded-lg" src={urls[item.id]} />
             ) : (
               <p className="mt-2 text-xs text-foreground/40">재생 링크를 불러오는 중...</p>
             )}
