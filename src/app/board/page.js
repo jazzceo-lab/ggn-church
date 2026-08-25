@@ -9,7 +9,7 @@ import { safeStoragePath } from "@/lib/storagePath";
 const CATEGORIES = [
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
-  { key: "help", label: "앱사용문의" },
+  { key: "help", label: "앱사용관련" },
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
