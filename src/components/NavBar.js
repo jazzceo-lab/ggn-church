@@ -10,7 +10,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import PushSubscribeButton from "@/components/PushSubscribeButton";
 
 const publicLinks = [
-  { href: "/", label: "교회소개" },
+  { href: "/", label: "소개" },
   { href: "/bulletin", label: "주보/공지" },
   { href: "/calendar", label: "교회일정" },
   { href: "/scripture", label: "성경" },
@@ -79,7 +79,7 @@ export default function NavBar() {
           </div>
         </div>
 
-        <nav className="mt-2 flex gap-x-5 gap-y-1 overflow-x-auto text-sm whitespace-nowrap text-foreground/70">
+        <nav className="mt-2 flex gap-x-3 gap-y-1 overflow-x-auto text-sm tracking-tight whitespace-nowrap text-foreground/70">
           {publicLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors hover:text-brand-dark">
               {link.label}
