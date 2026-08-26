@@ -9,17 +9,19 @@ import FontSizeControl from "@/components/FontSizeControl";
 import ThemeToggle from "@/components/ThemeToggle";
 import PushSubscribeButton from "@/components/PushSubscribeButton";
 
-const links = [
+const publicLinks = [
   { href: "/", label: "교회소개" },
   { href: "/bulletin", label: "주보/공지" },
   { href: "/calendar", label: "교회일정" },
-  { href: "/teams", label: "제직명단" },
-];
-
-const gridLinks = [
-  { href: "/media", label: "설교·찬양" },
   { href: "/scripture", label: "성경" },
   { href: "/donate", label: "헌금안내" },
+];
+
+const memberLinks = [
+  { href: "/teams", label: "제직명단" },
+  { href: "/media", label: "설교·찬양" },
+  { href: "/board", label: "게시판" },
+  { href: "/messages", label: "쪽지함", showUnread: true },
 ];
 
 export default function NavBar() {
@@ -78,36 +80,41 @@ export default function NavBar() {
         </div>
 
         <nav className="mt-2 flex gap-x-5 gap-y-1 overflow-x-auto text-sm whitespace-nowrap text-foreground/70">
-          {links.map((link) => (
+          {publicLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors hover:text-brand-dark">
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <nav className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-sm text-foreground/70 sm:flex sm:flex-wrap sm:gap-x-5">
-          {gridLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="transition-colors hover:text-brand-dark">
-              {link.label}
-            </Link>
-          ))}
-          <Link href="/messages" className="relative transition-colors hover:text-brand-dark">
-            쪽지함
-            {user && unreadCount > 0 && (
-              <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                {unreadCount}
-              </span>
+        <div className="mt-3 border-t border-black/5 pt-2 dark:border-white/10">
+          <p className="text-xs font-medium text-brand-dark">
+            교인전용{!user && " · 로그인 후 이용"}
+          </p>
+          <nav className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-sm sm:flex sm:flex-wrap sm:gap-x-5">
+            {memberLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative transition-colors hover:text-brand-dark ${
+                  user ? "text-foreground/70" : "text-foreground/40"
+                }`}
+              >
+                {link.label}
+                {link.showUnread && user && unreadCount > 0 && (
+                  <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </Link>
+            ))}
+            {isAdmin && (
+              <Link href="/admin/members" className="text-foreground/70 transition-colors hover:text-brand-dark">
+                회원 관리
+              </Link>
             )}
-          </Link>
-          <Link href="/board" className="transition-colors hover:text-brand-dark">
-            게시판
-          </Link>
-          {isAdmin && (
-            <Link href="/admin/members" className="transition-colors hover:text-brand-dark">
-              회원 관리
-            </Link>
-          )}
-        </nav>
+          </nav>
+        </div>
 
         <div className="mt-2 flex items-center gap-2">
           <FontSizeControl />
