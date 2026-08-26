@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import NaverMap from "@/components/NaverMap";
+import InstallAppButton from "@/components/InstallAppButton";
 
 export default function Home() {
   return (
@@ -33,6 +34,8 @@ export default function Home() {
             이번 주 주보 보기 →
           </Link>
         </section>
+
+        <InstallAppButton />
 
         <section className="mt-12 grid gap-4 sm:grid-cols-2">
           <div className="rounded-xl border border-black/10 bg-white/60 p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
