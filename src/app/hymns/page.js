@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
@@ -27,22 +28,17 @@ function pad(n) {
 export default function HymnsPage() {
   const { user, loading: authLoading } = useAuth();
   const [openRange, setOpenRange] = useState(null);
-  const [openHymn, setOpenHymn] = useState(null);
+  const [fullscreenHymn, setFullscreenHymn] = useState(null);
   const [imageUrls, setImageUrls] = useState({});
   const [loadingHymn, setLoadingHymn] = useState(null);
   const [hymnError, setHymnError] = useState({});
 
   function toggleRange(idx) {
     setOpenRange((prev) => (prev === idx ? null : idx));
-    setOpenHymn(null);
   }
 
-  async function toggleHymn(num) {
-    if (openHymn === num) {
-      setOpenHymn(null);
-      return;
-    }
-    setOpenHymn(num);
+  async function openHymn(num) {
+    setFullscreenHymn(num);
     setHymnError((prev) => ({ ...prev, [num]: false }));
     if (imageUrls[num]) return;
 
@@ -57,6 +53,10 @@ export default function HymnsPage() {
       return;
     }
     setImageUrls((prev) => ({ ...prev, [num]: data.signedUrl }));
+  }
+
+  function closeHymn() {
+    setFullscreenHymn(null);
   }
 
   if (!authLoading && !user) {
@@ -99,34 +99,11 @@ export default function HymnsPage() {
                   (num) => (
                     <li key={num}>
                       <button
-                        onClick={() => toggleHymn(num)}
-                        className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
-                          openHymn === num
-                            ? "bg-brand-tint text-brand-dark"
-                            : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
-                        }`}
+                        onClick={() => openHymn(num)}
+                        className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm text-foreground/80 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
                       >
                         {num}장{HYMN_TITLES[num] ? ` - ${HYMN_TITLES[num]}` : ""}
                       </button>
-                      {openHymn === num && (
-                        <div className="border-t border-black/5 p-4 dark:border-white/10">
-                          {loadingHymn === num && (
-                            <p className="text-sm text-foreground/50">불러오는 중...</p>
-                          )}
-                          {hymnError[num] && (
-                            <p className="text-sm text-red-600">
-                              아직 등록되지 않은 악보이거나 불러오지 못했어요.
-                            </p>
-                          )}
-                          {imageUrls[num] && (
-                            <img
-                              src={imageUrls[num]}
-                              alt={`${num}장 악보`}
-                              className="w-full rounded-lg border border-black/10 dark:border-white/10"
-                            />
-                          )}
-                        </div>
-                      )}
                     </li>
                   )
                 )}
@@ -135,6 +112,54 @@ export default function HymnsPage() {
           </div>
         ))}
       </div>
+
+      {fullscreenHymn && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+          <div className="border-b border-black/5 bg-background px-4 py-3 dark:border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/images/logo-mark.jpg"
+                  alt="길가는교회 로고"
+                  width={32}
+                  height={32}
+                  className="rounded-full ring-1 ring-black/5"
+                />
+                <span className="font-serif text-lg font-bold tracking-tight text-foreground">
+                  길가는교회
+                </span>
+              </div>
+              <button
+                onClick={closeHymn}
+                className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-sm text-foreground/80 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                ← 되돌아가기
+              </button>
+            </div>
+            <p className="mt-2 text-sm font-medium text-foreground">
+              {fullscreenHymn}장{HYMN_TITLES[fullscreenHymn] ? ` - ${HYMN_TITLES[fullscreenHymn]}` : ""}
+            </p>
+          </div>
+
+          <div className="flex flex-1 items-center justify-center overflow-auto p-2">
+            {loadingHymn === fullscreenHymn && (
+              <p className="text-sm text-foreground/50">불러오는 중...</p>
+            )}
+            {hymnError[fullscreenHymn] && (
+              <p className="text-sm text-red-600">
+                아직 등록되지 않은 악보이거나 불러오지 못했어요.
+              </p>
+            )}
+            {imageUrls[fullscreenHymn] && (
+              <img
+                src={imageUrls[fullscreenHymn]}
+                alt={`${fullscreenHymn}장 악보`}
+                className="max-w-full"
+              />
+            )}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
