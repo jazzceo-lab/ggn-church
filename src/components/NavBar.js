@@ -22,6 +22,7 @@ const memberLinks = [
   { href: "/media", label: "설교·찬양" },
   { href: "/hymns", label: "찬송가" },
   { href: "/board", label: "게시판" },
+  { href: "/messages", label: "쪽지함", showUnread: true },
 ];
 
 export default function NavBar() {
@@ -118,11 +119,16 @@ export default function NavBar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`transition-colors hover:text-brand-dark ${
+                className={`relative transition-colors hover:text-brand-dark ${
                   user ? "text-foreground/70" : "text-foreground/40"
                 }`}
               >
                 {link.label}
+                {link.showUnread && user && unreadCount > 0 && (
+                  <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             ))}
             {isAdmin && (
