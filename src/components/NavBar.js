@@ -20,6 +20,7 @@ const publicLinks = [
 const memberLinks = [
   { href: "/teams", label: "제직명단" },
   { href: "/media", label: "설교·찬양" },
+  { href: "/hymns", label: "찬송가" },
   { href: "/board", label: "게시판" },
   { href: "/messages", label: "쪽지함", showUnread: true },
 ];
