@@ -100,10 +100,15 @@ export default function PushSubscribeButton() {
     <button
       onClick={subscribed ? handleDisable : handleEnable}
       disabled={loading}
-      className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 transition-colors hover:bg-black/5 disabled:opacity-50 dark:border-white/10 dark:hover:bg-white/10"
+      aria-label={subscribed ? "쪽지 알림 끄기" : "쪽지 알림 켜기"}
+      title={subscribed ? "쪽지 알림 끄기" : "쪽지 알림 켜기"}
+      className={`flex items-center justify-center rounded-full border p-2 text-sm transition-colors disabled:opacity-50 ${
+        subscribed
+          ? "border-brand bg-brand-tint text-brand-dark"
+          : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+      }`}
     >
-      {subscribed ? "🔕" : "🔔"}{" "}
-      {loading ? "설정 중..." : subscribed ? "쪽지 알림 끄기" : "쪽지 알림 켜기"}
+      {subscribed ? "🔕" : "🔔"}
     </button>
   );
 }
