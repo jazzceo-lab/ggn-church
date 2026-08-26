@@ -17,6 +17,23 @@ const publicLinks = [
   { href: "/donate", label: "헌금안내" },
 ];
 
+function PowerIcon({ className }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+      <line x1="12" y1="2" x2="12" y2="12" />
+    </svg>
+  );
+}
+
 const memberLinks = [
   { href: "/teams", label: "제직명단" },
   { href: "/media", label: "설교·찬양" },
@@ -86,17 +103,21 @@ export default function NavBar() {
                 )}
                 <button
                   onClick={handleLogout}
-                  className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-foreground/80 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                  aria-label="로그아웃"
+                  title="로그아웃"
+                  className="flex items-center justify-center rounded-full border border-brand bg-brand p-2 text-white transition-colors hover:bg-brand-dark"
                 >
-                  로그아웃
+                  <PowerIcon className="h-4 w-4" />
                 </button>
               </div>
             ) : (
               <Link
                 href="/login"
-                className="whitespace-nowrap rounded-full bg-brand px-3 py-1 text-sm text-white transition-colors hover:bg-brand-dark"
+                aria-label="로그인"
+                title="로그인"
+                className="flex items-center justify-center rounded-full border border-black/10 p-2 text-foreground/30 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
               >
-                로그인
+                <PowerIcon className="h-4 w-4" />
               </Link>
             )}
           </div>
