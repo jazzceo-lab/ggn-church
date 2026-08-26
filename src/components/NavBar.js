@@ -38,12 +38,13 @@ const memberLinks = [
   { href: "/teams", label: "제직명단" },
   { href: "/media", label: "설교·찬양" },
   { href: "/hymns", label: "찬송가" },
-  { href: "/board", label: "게시판" },
-  { href: "/messages", label: "쪽지함", showUnread: true },
+  { href: "/board", label: "게시판", countKey: "board" },
+  { href: "/messages", label: "쪽지함", countKey: "messages" },
 ];
 
 export default function NavBar() {
-  const { user, loading, isAdmin, unreadCount } = useAuth();
+  const { user, loading, isAdmin, unreadCount, boardNewCount } = useAuth();
+  const counts = { messages: unreadCount, board: boardNewCount };
   const router = useRouter();
 
   async function handleLogout() {
@@ -145,9 +146,9 @@ export default function NavBar() {
                 }`}
               >
                 {link.label}
-                {link.showUnread && user && unreadCount > 0 && (
+                {link.countKey && user && counts[link.countKey] > 0 && (
                   <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                    {unreadCount}
+                    {counts[link.countKey]}
                   </span>
                 )}
               </Link>

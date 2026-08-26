@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+const BOARD_SEEN_KEY = "church_app_board_last_seen";
+
 const AuthContext = createContext({
   user: null,
   loading: true,
@@ -11,6 +13,8 @@ const AuthContext = createContext({
   district: null,
   unreadCount: 0,
   refreshUnreadCount: () => {},
+  boardNewCount: 0,
+  markBoardSeen: () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -20,8 +24,10 @@ export function AuthProvider({ children }) {
   const [district, setDistrict] = useState(null);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [boardNewCount, setBoardNewCount] = useState(0);
   const [toast, setToast] = useState(null);
   const channelRef = useRef(null);
+  const boardChannelRef = useRef(null);
 
   async function loadProfile(currentUser) {
     if (!currentUser) {
@@ -65,12 +71,38 @@ export function AuthProvider({ children }) {
     setUnreadCount(count ?? 0);
   }
 
+  async function refreshBoardNewCount(currentUser) {
+    const u = currentUser ?? user;
+    if (!u) {
+      setBoardNewCount(0);
+      return;
+    }
+    const lastSeen = window.localStorage.getItem(BOARD_SEEN_KEY);
+    if (!lastSeen) {
+      window.localStorage.setItem(BOARD_SEEN_KEY, new Date().toISOString());
+      setBoardNewCount(0);
+      return;
+    }
+    const { count } = await supabase
+      .from("posts")
+      .select("id", { count: "exact", head: true })
+      .gt("created_at", lastSeen)
+      .neq("user_id", u.id);
+    setBoardNewCount(count ?? 0);
+  }
+
+  function markBoardSeen() {
+    window.localStorage.setItem(BOARD_SEEN_KEY, new Date().toISOString());
+    setBoardNewCount(0);
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       const currentUser = data.session?.user ?? null;
       setUser(currentUser);
       await loadProfile(currentUser);
       await refreshUnreadCount(currentUser);
+      await refreshBoardNewCount(currentUser);
       setLoading(false);
     });
 
@@ -79,6 +111,7 @@ export function AuthProvider({ children }) {
       setUser(currentUser);
       await loadProfile(currentUser);
       await refreshUnreadCount(currentUser);
+      await refreshBoardNewCount(currentUser);
     });
 
     return () => listener.subscription.unsubscribe();
@@ -125,6 +158,31 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   useEffect(() => {
+    if (boardChannelRef.current) {
+      supabase.removeChannel(boardChannelRef.current);
+      boardChannelRef.current = null;
+    }
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`board-posts-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "posts" },
+        (payload) => {
+          if (payload.new.user_id === user.id) return;
+          setBoardNewCount((c) => c + 1);
+        }
+      )
+      .subscribe();
+
+    boardChannelRef.current = channel;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
@@ -140,6 +198,8 @@ export function AuthProvider({ children }) {
         district,
         unreadCount,
         refreshUnreadCount: () => refreshUnreadCount(),
+        boardNewCount,
+        markBoardSeen,
       }}
     >
       {children}

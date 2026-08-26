@@ -32,7 +32,8 @@ const REACTIONS = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function BoardPage() {
-  const { user, loading: authLoading, isAdmin, isBoardAdmin, district: myDistrict } = useAuth();
+  const { user, loading: authLoading, isAdmin, isBoardAdmin, district: myDistrict, markBoardSeen } =
+    useAuth();
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const [districtView, setDistrictView] = useState(null);
   const resolvedDistrictView =
@@ -198,6 +199,11 @@ export default function BoardPage() {
     loadPosts(category, activeDistrict);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, activeDistrict]);
+
+  useEffect(() => {
+    markBoardSeen();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function handleFileChange(e) {
     const f = e.target.files?.[0] ?? null;
