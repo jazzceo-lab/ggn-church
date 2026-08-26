@@ -15,7 +15,7 @@ const CATEGORIES = [
   { key: "help", label: "앱사용문의" },
 ];
 
-const DEFAULT_CATEGORY = "prayer";
+const DEFAULT_CATEGORY = "district";
 
 // 구역게시판에서 다루는 소속 목록. 정식 "구역"(teamRoster.districts)에
 // 청년부를 게시판 전용으로 추가한 목록 — 제직명단 구역 편성표에는 영향 없음.
@@ -62,6 +62,7 @@ export default function BoardPage() {
       setPosts([]);
       setComments({});
       setLikes({});
+      setLoadingPosts(false);
       return;
     }
 
