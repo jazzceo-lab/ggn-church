@@ -488,7 +488,7 @@ export default function BoardPage() {
                 </div>
               </div>
             ) : (
-              <p className="mt-1 text-sm text-foreground/70">{post.body}</p>
+              <p className="mt-1 text-sm whitespace-pre-line text-foreground/70">{post.body}</p>
             )}
             {post.attachment_url && (
               <a
