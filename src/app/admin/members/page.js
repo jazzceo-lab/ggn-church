@@ -91,13 +91,24 @@ export default function AdminMembersPage() {
   async function handleDelete(member) {
     if (
       !window.confirm(
-        `${member.display_name ?? member.email} 님을 명단에서 삭제할까요?\n(로그인 계정 자체는 남아있어요. 완전 삭제는 Supabase 대시보드에서 해주세요.)`
+        `${member.display_name ?? member.email} 님을 완전히 삭제할까요?\n로그인 계정까지 함께 삭제되어, 같은 이메일로 다시 가입할 수 있게 돼요.`
       )
     )
       return;
-    const { error } = await supabase.from("profiles").delete().eq("id", member.id);
-    if (error) {
-      window.alert("삭제에 실패했어요: " + error.message);
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/delete-member", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
+      },
+      body: JSON.stringify({ targetUserId: member.id }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      window.alert("삭제에 실패했어요: " + (data.error ?? "알 수 없는 오류"));
       return;
     }
     loadMembers();
