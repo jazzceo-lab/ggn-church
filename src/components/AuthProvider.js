@@ -8,6 +8,7 @@ const AuthContext = createContext({
   loading: true,
   isAdmin: false,
   isBoardAdmin: false,
+  district: null,
   unreadCount: 0,
   refreshUnreadCount: () => {},
 });
@@ -16,6 +17,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isBoardAdmin, setIsBoardAdmin] = useState(false);
+  const [district, setDistrict] = useState(null);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [toast, setToast] = useState(null);
@@ -25,11 +27,12 @@ export function AuthProvider({ children }) {
     if (!currentUser) {
       setIsAdmin(false);
       setIsBoardAdmin(false);
+      setDistrict(null);
       return;
     }
     const { data } = await supabase
       .from("profiles")
-      .select("is_admin, is_board_admin, is_suspended")
+      .select("is_admin, is_board_admin, is_suspended, district")
       .eq("id", currentUser.id)
       .single();
 
@@ -37,6 +40,7 @@ export function AuthProvider({ children }) {
       await supabase.auth.signOut();
       setIsAdmin(false);
       setIsBoardAdmin(false);
+      setDistrict(null);
       setUser(null);
       window.alert("이용이 정지된 계정입니다. 문의사항은 교회 사무실로 연락해주세요.");
       return;
@@ -44,6 +48,7 @@ export function AuthProvider({ children }) {
 
     setIsAdmin(data?.is_admin ?? false);
     setIsBoardAdmin(data?.is_board_admin ?? false);
+    setDistrict(data?.district ?? null);
   }
 
   async function refreshUnreadCount(currentUser) {
@@ -132,6 +137,7 @@ export function AuthProvider({ children }) {
         loading,
         isAdmin,
         isBoardAdmin,
+        district,
         unreadCount,
         refreshUnreadCount: () => refreshUnreadCount(),
       }}

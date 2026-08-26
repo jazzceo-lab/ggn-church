@@ -6,12 +6,18 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import KakaoShareButton from "@/components/KakaoShareButton";
+import { DISTRICT_NAMES } from "@/lib/teamRoster";
 
 const CATEGORIES = [
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
   { key: "help", label: "앱사용관련" },
+  { key: "district", label: "구역게시판" },
 ];
+
+// 구역게시판에서 다루는 소속 목록. 정식 "구역"(teamRoster.districts)에
+// 청년부를 게시판 전용으로 추가한 목록 — 제직명단 구역 편성표에는 영향 없음.
+const BOARD_DISTRICTS = [...DISTRICT_NAMES, "청년부"];
 
 const REACTIONS = [
   { key: "like", emoji: "❤️", label: "좋아요" },
@@ -24,8 +30,15 @@ const REACTIONS = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function BoardPage() {
-  const { user, loading: authLoading, isAdmin, isBoardAdmin } = useAuth();
+  const { user, loading: authLoading, isAdmin, isBoardAdmin, district: myDistrict } = useAuth();
   const [category, setCategory] = useState(CATEGORIES[0].key);
+  const [districtView, setDistrictView] = useState(null);
+  const resolvedDistrictView =
+    districtView ?? (BOARD_DISTRICTS.includes(myDistrict) ? myDistrict : BOARD_DISTRICTS[0]);
+  const activeDistrict =
+    category === "district" ? (isAdmin ? resolvedDistrictView : myDistrict) : null;
+  const canUseDistrictBoard =
+    category !== "district" || isAdmin || BOARD_DISTRICTS.includes(myDistrict);
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [title, setTitle] = useState("");
@@ -42,13 +55,24 @@ export default function BoardPage() {
   const [likes, setLikes] = useState({});
   const [likeSubmitting, setLikeSubmitting] = useState(null);
 
-  async function loadPosts(cat) {
+  async function loadPosts(cat, districtFilter) {
+    if (cat === "district" && !districtFilter) {
+      setPosts([]);
+      setComments({});
+      setLikes({});
+      return;
+    }
+
     setLoadingPosts(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from("posts")
       .select("id, title, body, author_name, created_at, attachment_url, attachment_name, user_id")
       .eq("category", cat)
       .order("created_at", { ascending: false });
+    if (cat === "district") {
+      query = query.eq("district", districtFilter);
+    }
+    const { data, error } = await query;
 
     if (!error) setPosts(data);
     setLoadingPosts(false);
@@ -160,8 +184,9 @@ export default function BoardPage() {
   }
 
   useEffect(() => {
-    loadPosts(category);
-  }, [category]);
+    loadPosts(category, activeDistrict);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category, activeDistrict]);
 
   function handleFileChange(e) {
     const f = e.target.files?.[0] ?? null;
@@ -205,6 +230,7 @@ export default function BoardPage() {
       user_id: user.id,
       author_name: authorName,
       category,
+      district: activeDistrict,
       attachment_url: attachmentUrl,
       attachment_name: attachmentName,
     });
@@ -217,7 +243,7 @@ export default function BoardPage() {
     setTitle("");
     setBody("");
     setFile(null);
-    loadPosts(category);
+    loadPosts(category, activeDistrict);
   }
 
   async function handleDelete(postId) {
@@ -227,7 +253,7 @@ export default function BoardPage() {
       window.alert("삭제에 실패했어요: " + error.message);
       return;
     }
-    loadPosts(category);
+    loadPosts(category, activeDistrict);
   }
 
   return (
@@ -260,12 +286,40 @@ export default function BoardPage() {
         </p>
       )}
 
-      {user && (
+      {category === "district" && user && isAdmin && (
+        <div className="mt-4 flex items-center gap-2 text-sm">
+          <label className="text-foreground/60">구역 선택</label>
+          <select
+            value={resolvedDistrictView}
+            onChange={(e) => setDistrictView(e.target.value)}
+            className="rounded-md border border-black/10 px-2 py-1 text-sm dark:border-white/10 dark:bg-white/10"
+          >
+            {BOARD_DISTRICTS.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {category === "district" && user && !isAdmin && !canUseDistrictBoard && (
+        <p className="mt-4 text-sm text-foreground/50">
+          소속 구역이 지정되지 않아 구역게시판을 이용할 수 없어요. 관리자에게 문의해주세요.
+        </p>
+      )}
+
+      {user && canUseDistrictBoard && (
         <form
           key={category}
           onSubmit={handleSubmit}
           className="mt-4 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
         >
+          {category === "district" && (
+            <p className="text-xs text-foreground/50">
+              {activeDistrict} 구역원에게만 보이는 글이에요.
+            </p>
+          )}
           <input
             type="text"
             required
