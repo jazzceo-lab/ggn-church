@@ -25,7 +25,7 @@ export default function MessagesPage() {
 
     const { data: msgs } = await supabase
       .from("messages")
-      .select("sender_id, recipient_id, body, created_at")
+      .select("sender_id, recipient_id, body, created_at, read_at")
       .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
 
@@ -45,11 +45,19 @@ export default function MessagesPage() {
           name: nameOf(partnerId),
           lastBody: m.body,
           lastAt: m.created_at,
+          unread: false,
         });
+      }
+      if (m.recipient_id === user.id && !m.read_at) {
+        byPartner.get(partnerId).unread = true;
       }
     }
 
-    setConversations(Array.from(byPartner.values()));
+    const list = Array.from(byPartner.values()).sort((a, b) => {
+      if (a.unread !== b.unread) return a.unread ? -1 : 1;
+      return new Date(b.lastAt) - new Date(a.lastAt);
+    });
+    setConversations(list);
     setMembers(dir ?? []);
     setLoading(false);
   }
@@ -210,8 +218,17 @@ export default function MessagesPage() {
         {conversations.map((c) => (
           <li key={c.partnerId} className="flex items-center gap-2 p-4 hover:bg-black/5 dark:hover:bg-white/10">
             <Link href={`/messages/${c.partnerId}`} className="min-w-0 flex-1">
-              <p className="font-medium text-foreground">{c.name}</p>
-              <p className="mt-1 truncate text-sm text-foreground/60">{c.lastBody}</p>
+              <p className="flex items-center gap-1.5 font-medium text-foreground">
+                {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden />}
+                {c.name}
+              </p>
+              <p
+                className={`mt-1 truncate text-sm ${
+                  c.unread ? "font-medium text-foreground" : "text-foreground/60"
+                }`}
+              >
+                {c.lastBody}
+              </p>
               <p className="mt-1 text-xs text-foreground/40">
                 {new Date(c.lastAt).toLocaleString("ko-KR")}
               </p>
