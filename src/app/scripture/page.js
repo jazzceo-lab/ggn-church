@@ -21,8 +21,6 @@ export default function ScripturePage() {
           <a
             key={app.key}
             href={app.url}
-            target="_blank"
-            rel="noopener noreferrer"
             className="rounded-xl border border-black/10 bg-white/60 p-5 transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
           >
             <h2 className="font-serif font-semibold text-foreground">{app.title}</h2>
