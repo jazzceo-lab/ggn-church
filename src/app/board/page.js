@@ -69,8 +69,11 @@ export default function BoardPage() {
     setLoadingPosts(true);
     let query = supabase
       .from("posts")
-      .select("id, title, body, author_name, created_at, attachment_url, attachment_name, user_id")
+      .select(
+        "id, title, body, author_name, created_at, attachment_url, attachment_name, user_id, is_pinned"
+      )
       .eq("category", cat)
+      .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
     if (cat === "district") {
       query = query.eq("district", districtFilter);
@@ -249,6 +252,18 @@ export default function BoardPage() {
     loadPosts(category, activeDistrict);
   }
 
+  async function togglePin(post) {
+    const { error } = await supabase
+      .from("posts")
+      .update({ is_pinned: !post.is_pinned })
+      .eq("id", post.id);
+    if (error) {
+      window.alert("고정 처리에 실패했어요: " + error.message);
+      return;
+    }
+    loadPosts(category, activeDistrict);
+  }
+
   async function handleDelete(postId) {
     if (!window.confirm("이 글을 삭제할까요?")) return;
     const { error } = await supabase.from("posts").delete().eq("id", postId);
@@ -366,17 +381,37 @@ export default function BoardPage() {
           <li className="p-4 text-sm text-foreground/50">아직 등록된 글이 없어요.</li>
         )}
         {posts.map((post) => (
-          <li key={post.id} className="p-4">
+          <li
+            key={post.id}
+            className={`p-4 ${post.is_pinned ? "bg-brand-tint/50 dark:bg-brand-tint/10" : ""}`}
+          >
             <div className="flex items-start justify-between gap-2">
-              <p className="font-medium text-foreground">{post.title}</p>
-              {(isAdmin || isBoardAdmin || post.user_id === user?.id) && (
-                <button
-                  onClick={() => handleDelete(post.id)}
-                  className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
-                >
-                  삭제
-                </button>
-              )}
+              <p className="font-medium text-foreground">
+                {post.is_pinned && (
+                  <span className="mr-1.5 rounded-full bg-brand px-2 py-0.5 text-xs font-medium text-white">
+                    📌 공지
+                  </span>
+                )}
+                {post.title}
+              </p>
+              <div className="flex shrink-0 items-center gap-2">
+                {(isAdmin || isBoardAdmin) && (
+                  <button
+                    onClick={() => togglePin(post)}
+                    className="text-xs text-foreground/40 hover:text-brand-dark"
+                  >
+                    {post.is_pinned ? "고정 해제" : "고정"}
+                  </button>
+                )}
+                {(isAdmin || isBoardAdmin || post.user_id === user?.id) && (
+                  <button
+                    onClick={() => handleDelete(post.id)}
+                    className="text-xs text-foreground/40 hover:text-red-600"
+                  >
+                    삭제
+                  </button>
+                )}
+              </div>
             </div>
             <p className="mt-1 text-sm text-foreground/70">{post.body}</p>
             {post.attachment_url && (
