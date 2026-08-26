@@ -66,7 +66,7 @@ export default function NavBar() {
                     : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
                 }`}
               >
-                💬
+                ✉️
                 {unreadCount > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white">
                     {unreadCount}

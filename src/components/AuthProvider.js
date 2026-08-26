@@ -148,7 +148,7 @@ export function AuthProvider({ children }) {
           href={`/messages/${toast.senderId}`}
           className="fixed bottom-4 right-4 z-50 max-w-xs rounded-xl border border-black/10 bg-background p-4 shadow-lg transition-opacity dark:border-white/10"
         >
-          <p className="text-sm font-semibold text-foreground">💬 {toast.name}님의 새 쪽지</p>
+          <p className="text-sm font-semibold text-foreground">✉️ {toast.name}님의 새 쪽지</p>
           <p className="mt-1 truncate text-sm text-foreground/60">{toast.body}</p>
         </a>
       )}
