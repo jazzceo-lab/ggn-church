@@ -22,7 +22,6 @@ const memberLinks = [
   { href: "/media", label: "설교·찬양" },
   { href: "/hymns", label: "찬송가" },
   { href: "/board", label: "게시판" },
-  { href: "/messages", label: "쪽지함", showUnread: true },
 ];
 
 export default function NavBar() {
@@ -52,7 +51,29 @@ export default function NavBar() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <FontSizeControl />
+            <ThemeToggle />
+
+            {!loading && user && (
+              <Link
+                href="/messages"
+                aria-label="쪽지함"
+                className={`relative rounded-full border px-2 py-1.5 text-sm transition-colors ${
+                  unreadCount > 0
+                    ? "border-brand bg-brand-tint text-brand-dark"
+                    : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                }`}
+              >
+                💬
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {!loading && user ? (
               <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
                 <span className="hidden text-xs text-foreground/50 sm:inline">{user.email}</span>
@@ -92,21 +113,16 @@ export default function NavBar() {
           <p className="text-xs font-medium text-brand-dark">
             교인전용{!user && " · 로그인 후 이용"}
           </p>
-          <nav className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-sm sm:flex sm:flex-wrap sm:gap-x-5">
+          <nav className="mt-1 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
             {memberLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`relative transition-colors hover:text-brand-dark ${
+                className={`transition-colors hover:text-brand-dark ${
                   user ? "text-foreground/70" : "text-foreground/40"
                 }`}
               >
                 {link.label}
-                {link.showUnread && user && unreadCount > 0 && (
-                  <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                    {unreadCount}
-                  </span>
-                )}
               </Link>
             ))}
             {isAdmin && (
@@ -115,11 +131,6 @@ export default function NavBar() {
               </Link>
             )}
           </nav>
-        </div>
-
-        <div className="mt-2 flex items-center gap-2">
-          <FontSizeControl />
-          <ThemeToggle />
         </div>
       </div>
     </header>

@@ -32,6 +32,7 @@ export default function HymnsPage() {
   const [imageUrls, setImageUrls] = useState({});
   const [loadingHymn, setLoadingHymn] = useState(null);
   const [hymnError, setHymnError] = useState({});
+  const [rotated, setRotated] = useState(false);
 
   function toggleRange(idx) {
     setOpenRange((prev) => (prev === idx ? null : idx));
@@ -57,6 +58,7 @@ export default function HymnsPage() {
 
   function closeHymn() {
     setFullscreenHymn(null);
+    setRotated(false);
   }
 
   if (!authLoading && !user) {
@@ -154,10 +156,26 @@ export default function HymnsPage() {
               <img
                 src={imageUrls[fullscreenHymn]}
                 alt={`${fullscreenHymn}장 악보`}
-                className="max-w-full"
+                className="transition-transform duration-300"
+                style={
+                  rotated
+                    ? { transform: "rotate(90deg)", maxWidth: "90vh", maxHeight: "90vw" }
+                    : { maxWidth: "100%" }
+                }
               />
             )}
           </div>
+
+          {imageUrls[fullscreenHymn] && (
+            <div className="flex justify-center border-t border-black/5 bg-background py-3 dark:border-white/10">
+              <button
+                onClick={() => setRotated((v) => !v)}
+                className="flex items-center gap-1.5 rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                🔄 {rotated ? "세로로 보기" : "가로로 보기"}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </main>
