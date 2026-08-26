@@ -57,6 +57,11 @@ export default function BoardPage() {
   const [likes, setLikes] = useState({});
   const [likeSubmitting, setLikeSubmitting] = useState(null);
 
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
   async function loadPosts(cat, districtFilter) {
     if (cat === "district" && !districtFilter) {
       setPosts([]);
@@ -274,6 +279,35 @@ export default function BoardPage() {
     loadPosts(category, activeDistrict);
   }
 
+  function startEditPost(post) {
+    setEditingPostId(post.id);
+    setEditTitle(post.title);
+    setEditBody(post.body);
+  }
+
+  function cancelEditPost() {
+    setEditingPostId(null);
+    setEditTitle("");
+    setEditBody("");
+  }
+
+  async function handleEditSave(postId) {
+    if (!editTitle.trim() || !editBody.trim()) return;
+    setEditSubmitting(true);
+    const { error } = await supabase
+      .from("posts")
+      .update({ title: editTitle, body: editBody })
+      .eq("id", postId);
+    setEditSubmitting(false);
+
+    if (error) {
+      window.alert("수정에 실패했어요: " + error.message);
+      return;
+    }
+    cancelEditPost();
+    loadPosts(category, activeDistrict);
+  }
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
@@ -392,28 +426,70 @@ export default function BoardPage() {
                     📌 공지
                   </span>
                 )}
-                {post.title}
+                {editingPostId !== post.id && post.title}
               </p>
-              <div className="flex shrink-0 items-center gap-2">
-                {(isAdmin || isBoardAdmin) && (
-                  <button
-                    onClick={() => togglePin(post)}
-                    className="text-xs text-foreground/40 hover:text-brand-dark"
-                  >
-                    {post.is_pinned ? "고정 해제" : "고정"}
-                  </button>
-                )}
-                {(isAdmin || isBoardAdmin || post.user_id === user?.id) && (
-                  <button
-                    onClick={() => handleDelete(post.id)}
-                    className="text-xs text-foreground/40 hover:text-red-600"
-                  >
-                    삭제
-                  </button>
-                )}
-              </div>
+              {editingPostId !== post.id && (
+                <div className="flex shrink-0 items-center gap-2">
+                  {(isAdmin || isBoardAdmin) && (
+                    <button
+                      onClick={() => togglePin(post)}
+                      className="text-xs text-foreground/40 hover:text-brand-dark"
+                    >
+                      {post.is_pinned ? "고정 해제" : "고정"}
+                    </button>
+                  )}
+                  {(isAdmin || isBoardAdmin || post.user_id === user?.id) && (
+                    <button
+                      onClick={() => startEditPost(post)}
+                      className="text-xs text-foreground/40 hover:text-brand-dark"
+                    >
+                      수정
+                    </button>
+                  )}
+                  {(isAdmin || isBoardAdmin || post.user_id === user?.id) && (
+                    <button
+                      onClick={() => handleDelete(post.id)}
+                      className="text-xs text-foreground/40 hover:text-red-600"
+                    >
+                      삭제
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            <p className="mt-1 text-sm text-foreground/70">{post.body}</p>
+            {editingPostId === post.id ? (
+              <div className="mt-2 space-y-2">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+                />
+                <textarea
+                  rows={3}
+                  value={editBody}
+                  onChange={(e) => setEditBody(e.target.value)}
+                  className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleEditSave(post.id)}
+                    disabled={editSubmitting}
+                    className="rounded-full bg-brand px-4 py-1.5 text-xs text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+                  >
+                    {editSubmitting ? "저장 중..." : "저장"}
+                  </button>
+                  <button
+                    onClick={cancelEditPost}
+                    className="rounded-full border border-black/10 px-4 py-1.5 text-xs text-foreground/60 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-1 text-sm text-foreground/70">{post.body}</p>
+            )}
             {post.attachment_url && (
               <a
                 href={post.attachment_url}
