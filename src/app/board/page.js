@@ -11,8 +11,8 @@ import { DISTRICT_NAMES } from "@/lib/teamRoster";
 const CATEGORIES = [
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
-  { key: "help", label: "앱사용관련" },
   { key: "district", label: "구역게시판" },
+  { key: "help", label: "앱사용문의" },
 ];
 
 // 구역게시판에서 다루는 소속 목록. 정식 "구역"(teamRoster.districts)에
