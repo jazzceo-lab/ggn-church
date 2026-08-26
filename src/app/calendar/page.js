@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { downloadIcs } from "@/lib/ics";
+import { getHolidayName } from "@/lib/holidays";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -223,6 +224,9 @@ export default function CalendarPage() {
             const dayEvents = eventsByDate[key] ?? [];
             const isToday = key === todayKey;
             const isSelected = key === selected;
+            const isSunday = i % 7 === 0;
+            const holidayName = getHolidayName(key);
+            const isSpecialDay = isSunday || Boolean(holidayName);
             return (
               <button
                 key={i}
@@ -231,12 +235,14 @@ export default function CalendarPage() {
                   isSelected
                     ? "bg-brand text-white"
                     : isToday
-                      ? "bg-brand-tint text-brand-dark"
-                      : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
+                      ? `bg-brand-tint ${isSpecialDay ? "text-red-600 dark:text-red-400" : "text-brand-dark"}`
+                      : isSpecialDay
+                        ? "text-red-600 hover:bg-black/5 dark:text-red-400 dark:hover:bg-white/10"
+                        : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
               >
                 <span>{day}</span>
-                {dayEvents.length > 0 && (
+                {dayEvents.length > 0 ? (
                   <span className="w-full px-0.5 text-center text-[9px] leading-tight sm:text-[10px]">
                     <span className="block truncate">{dayEvents[0].title}</span>
                     {dayEvents.length > 1 && (
@@ -245,7 +251,15 @@ export default function CalendarPage() {
                       </span>
                     )}
                   </span>
-                )}
+                ) : holidayName ? (
+                  <span
+                    className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
+                      isSelected ? "text-white/90" : "text-red-500 dark:text-red-400"
+                    }`}
+                  >
+                    {holidayName}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -254,7 +268,14 @@ export default function CalendarPage() {
 
       <div className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
         <div className="flex items-center justify-between">
-          <h2 className="font-serif font-semibold text-foreground">{selected} 일정</h2>
+          <h2 className="flex flex-wrap items-center gap-2 font-serif font-semibold text-foreground">
+            {selected} 일정
+            {getHolidayName(selected) && (
+              <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                {getHolidayName(selected)}
+              </span>
+            )}
+          </h2>
           {isAdmin && (
             <button
               onClick={toggleForm}
