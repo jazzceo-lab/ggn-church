@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
+
+const UNASSIGNED = "미배정";
 
 export default function AdminMembersPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
@@ -32,6 +35,18 @@ export default function AdminMembersPage() {
       .eq("id", member.id);
     if (error) {
       window.alert("변경에 실패했어요: " + error.message);
+      return;
+    }
+    loadMembers();
+  }
+
+  async function updateDistrict(member, newDistrict) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ district: newDistrict || null })
+      .eq("id", member.id);
+    if (error) {
+      window.alert("구역 변경에 실패했어요: " + error.message);
       return;
     }
     loadMembers();
@@ -133,9 +148,24 @@ export default function AdminMembersPage() {
                   </span>
                 )}
               </p>
-              <p className="mt-1 text-xs text-foreground/50">
-                {m.email} · {m.district ?? "구역 미배정"}
-              </p>
+              <p className="mt-1 text-xs text-foreground/50">{m.email}</p>
+              <label className="mt-2 flex items-center gap-2 text-xs text-foreground/60">
+                구역
+                <select
+                  value={m.district ?? UNASSIGNED}
+                  onChange={(e) =>
+                    updateDistrict(m, e.target.value === UNASSIGNED ? "" : e.target.value)
+                  }
+                  className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
+                >
+                  <option value={UNASSIGNED}>미배정</option>
+                  {SIGNUP_GROUP_OPTIONS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
             <div className="flex shrink-0 gap-2">
               <button
