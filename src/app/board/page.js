@@ -9,11 +9,13 @@ import KakaoShareButton from "@/components/KakaoShareButton";
 import { DISTRICT_NAMES } from "@/lib/teamRoster";
 
 const CATEGORIES = [
+  { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
-  { key: "district", label: "구역게시판" },
   { key: "help", label: "앱사용문의" },
 ];
+
+const DEFAULT_CATEGORY = "prayer";
 
 // 구역게시판에서 다루는 소속 목록. 정식 "구역"(teamRoster.districts)에
 // 청년부를 게시판 전용으로 추가한 목록 — 제직명단 구역 편성표에는 영향 없음.
@@ -31,7 +33,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function BoardPage() {
   const { user, loading: authLoading, isAdmin, isBoardAdmin, district: myDistrict } = useAuth();
-  const [category, setCategory] = useState(CATEGORIES[0].key);
+  const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const [districtView, setDistrictView] = useState(null);
   const resolvedDistrictView =
     districtView ?? (BOARD_DISTRICTS.includes(myDistrict) ? myDistrict : BOARD_DISTRICTS[0]);
