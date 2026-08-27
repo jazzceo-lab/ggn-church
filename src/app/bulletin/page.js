@@ -103,7 +103,7 @@ function BulletinContent({ bulletin }) {
             const hymnNumber = label === "찬송" ? hymnNumberFrom(detail) : null;
             return (
               <li key={i} className="flex items-start gap-2 py-2 tracking-tight">
-                <span className="w-20 shrink-0 font-medium text-foreground/80">{label}</span>
+                <span className="w-[68px] shrink-0 font-medium text-foreground/80">{label}</span>
                 {hymnNumber ? (
                   <Link
                     href={`/hymns?open=${hymnNumber}`}
