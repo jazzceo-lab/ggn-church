@@ -21,7 +21,7 @@ export default function DonatePage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">헌금 안내</h1>
       <p className="mt-2 text-sm text-foreground/50">
         아래 계좌로 헌금해주시면 됩니다. 계좌번호를 눌러서 복사한 뒤, 사용하시는 은행 앱에서

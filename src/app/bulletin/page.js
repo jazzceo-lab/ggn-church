@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import KakaoShareButton from "@/components/KakaoShareButton";
+
+function hymnNumberFrom(text) {
+  const match = text?.match(/(\d{1,3})\s*장/);
+  return match ? match[1] : null;
+}
 
 // 새 주보가 나오면 이 배열의 맨 앞에 새 항목을 추가하세요.
 // 이전 항목은 그대로 두면 하단 "지난 주보"에 자동으로 쌓입니다.
@@ -95,12 +101,24 @@ function BulletinContent({ bulletin }) {
           <p className="text-sm text-foreground/50">오전 11:30 · 인도 임원일 목사</p>
         </div>
         <ul className="mt-3 divide-y divide-black/5 text-sm dark:divide-white/10">
-          {bulletin.order.map(([label, detail], i) => (
-            <li key={i} className="flex items-center justify-between gap-4 py-2">
-              <span className="w-24 shrink-0 font-medium text-foreground/80">{label}</span>
-              <span className="text-right text-foreground/60">{detail}</span>
-            </li>
-          ))}
+          {bulletin.order.map(([label, detail], i) => {
+            const hymnNumber = label === "찬송" ? hymnNumberFrom(detail) : null;
+            return (
+              <li key={i} className="flex items-center justify-between gap-4 py-2">
+                <span className="w-24 shrink-0 font-medium text-foreground/80">{label}</span>
+                {hymnNumber ? (
+                  <Link
+                    href={`/hymns?open=${hymnNumber}`}
+                    className="text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                  >
+                    {detail}
+                  </Link>
+                ) : (
+                  <span className="text-right text-foreground/60">{detail}</span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
 
@@ -135,7 +153,7 @@ export default function BulletinPage() {
   const [openIssue, setOpenIssue] = useState(null);
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-4 pb-12">
       <div className="flex items-baseline justify-between gap-3">
         <h1 className="font-serif text-2xl font-bold text-foreground">주보</h1>
         <div className="flex items-center gap-3">

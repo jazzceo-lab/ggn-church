@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
@@ -33,6 +33,17 @@ export default function HymnsPage() {
   const [loadingHymn, setLoadingHymn] = useState(null);
   const [hymnError, setHymnError] = useState({});
   const [rotated, setRotated] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    const params = new URLSearchParams(window.location.search);
+    const num = parseInt(params.get("open"), 10);
+    if (!num || num < 1 || num > TOTAL_HYMNS) return;
+    const rangeIdx = RANGES.findIndex((r) => num >= r.start && num <= r.end);
+    if (rangeIdx !== -1) setOpenRange(rangeIdx);
+    openHymn(num);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   function toggleRange(idx) {
     setOpenRange((prev) => (prev === idx ? null : idx));

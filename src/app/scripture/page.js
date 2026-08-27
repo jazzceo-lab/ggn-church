@@ -9,7 +9,7 @@ const apps = [
 
 export default function ScripturePage() {
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">성경</h1>
       <p className="mt-2 text-sm text-foreground/50">
         아래 버튼을 누르면 이미 앱이 설치되어 있는 경우 바로 앱이 열리고, 설치되어 있지 않다면
