@@ -102,17 +102,17 @@ function BulletinContent({ bulletin }) {
           {bulletin.order.map(([label, detail], i) => {
             const hymnNumber = label === "찬송" ? hymnNumberFrom(detail) : null;
             return (
-              <li key={i} className="flex items-center justify-between gap-4 py-2">
-                <span className="w-24 shrink-0 font-medium text-foreground/80">{label}</span>
+              <li key={i} className="flex items-start gap-2 py-2 tracking-tight">
+                <span className="w-20 shrink-0 font-medium text-foreground/80">{label}</span>
                 {hymnNumber ? (
                   <Link
                     href={`/hymns?open=${hymnNumber}`}
-                    className="text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                    className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                   >
                     {detail}
                   </Link>
                 ) : (
-                  <span className="text-right text-foreground/60">{detail}</span>
+                  <span className="flex-1 text-right text-foreground/60">{detail}</span>
                 )}
               </li>
             );
