@@ -2,6 +2,7 @@ import { Noto_Sans_KR, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import { AuthProvider } from "@/components/AuthProvider";
+import PopupNotice from "@/components/PopupNotice";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-sans-kr",
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AuthProvider>
+          <PopupNotice />
           <NavBar />
           <div className="flex flex-1 flex-col">{children}</div>
           <footer className="border-t border-black/10 py-6 text-center text-xs text-foreground/50 dark:border-white/10">

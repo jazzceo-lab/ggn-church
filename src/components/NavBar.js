@@ -158,6 +158,11 @@ export default function NavBar() {
                 회원 관리
               </Link>
             )}
+            {isAdmin && (
+              <Link href="/admin/notices" className="text-foreground/70 transition-colors hover:text-brand-dark">
+                공지 관리
+              </Link>
+            )}
           </nav>
         </div>
       </div>
