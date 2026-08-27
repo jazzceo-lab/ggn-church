@@ -3,8 +3,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-const BOARD_SEEN_KEY = "church_app_board_last_seen";
-
 const AuthContext = createContext({
   user: null,
   loading: true,
@@ -25,6 +23,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [boardNewCount, setBoardNewCount] = useState(0);
+  const [boardLastSeenAt, setBoardLastSeenAt] = useState(null);
   const [toast, setToast] = useState(null);
   const channelRef = useRef(null);
   const boardChannelRef = useRef(null);
@@ -38,7 +37,7 @@ export function AuthProvider({ children }) {
     }
     const { data } = await supabase
       .from("profiles")
-      .select("is_admin, is_board_admin, is_suspended, district")
+      .select("is_admin, is_board_admin, is_suspended, district, board_last_seen_at")
       .eq("id", currentUser.id)
       .single();
 
@@ -55,6 +54,8 @@ export function AuthProvider({ children }) {
     setIsAdmin(data?.is_admin ?? false);
     setIsBoardAdmin(data?.is_board_admin ?? false);
     setDistrict(data?.district ?? null);
+    setBoardLastSeenAt(data?.board_last_seen_at ?? null);
+    return data?.board_last_seen_at ?? null;
   }
 
   async function refreshUnreadCount(currentUser) {
@@ -71,16 +72,15 @@ export function AuthProvider({ children }) {
     setUnreadCount(count ?? 0);
   }
 
-  async function refreshBoardNewCount(currentUser) {
+  async function refreshBoardNewCount(currentUser, lastSeenOverride) {
     const u = currentUser ?? user;
     if (!u) {
       setBoardNewCount(0);
       return;
     }
-    const lastSeen = window.localStorage.getItem(BOARD_SEEN_KEY);
+    const lastSeen = lastSeenOverride !== undefined ? lastSeenOverride : boardLastSeenAt;
     if (!lastSeen) {
-      window.localStorage.setItem(BOARD_SEEN_KEY, new Date().toISOString());
-      setBoardNewCount(0);
+      await markBoardSeen(u);
       return;
     }
     const { count } = await supabase
@@ -91,27 +91,31 @@ export function AuthProvider({ children }) {
     setBoardNewCount(count ?? 0);
   }
 
-  function markBoardSeen() {
-    window.localStorage.setItem(BOARD_SEEN_KEY, new Date().toISOString());
+  async function markBoardSeen(currentUser) {
+    const u = currentUser ?? user;
+    if (!u) return;
+    const now = new Date().toISOString();
+    setBoardLastSeenAt(now);
     setBoardNewCount(0);
+    await supabase.from("profiles").update({ board_last_seen_at: now }).eq("id", u.id);
   }
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       const currentUser = data.session?.user ?? null;
       setUser(currentUser);
-      await loadProfile(currentUser);
+      const lastSeen = await loadProfile(currentUser);
       await refreshUnreadCount(currentUser);
-      await refreshBoardNewCount(currentUser);
+      await refreshBoardNewCount(currentUser, lastSeen);
       setLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
-      await loadProfile(currentUser);
+      const lastSeen = await loadProfile(currentUser);
       await refreshUnreadCount(currentUser);
-      await refreshBoardNewCount(currentUser);
+      await refreshBoardNewCount(currentUser, lastSeen);
     });
 
     return () => listener.subscription.unsubscribe();
