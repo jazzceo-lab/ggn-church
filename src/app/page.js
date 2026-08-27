@@ -18,7 +18,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-4xl px-4 py-12">
+      <div className="mx-auto w-full max-w-4xl px-4 pt-6 pb-12">
         <section className="text-center">
           <h1 className="break-keep font-serif text-3xl font-bold text-foreground">
             길가는교회에 오신 것을 환영합니다
@@ -32,6 +32,55 @@ export default function Home() {
           >
             이번 주 주보 보기 →
           </Link>
+        </section>
+
+        <section className="mt-8 text-center">
+          <div className="flex justify-center gap-6">
+            <a
+              href="https://www.youtube.com/@%EA%B8%B8%EA%B0%80%EB%8A%94%EA%B5%90%ED%9A%8C"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="길가는교회 유튜브"
+              className="flex flex-col items-center gap-1 text-foreground/60 transition-colors hover:text-brand-dark"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 dark:border-white/10">
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
+                  <path d="M21.6 7.2c-.2-1.3-1.2-2.3-2.5-2.5C17 4.3 12 4.3 12 4.3s-5 0-7.1.4c-1.3.2-2.3 1.2-2.5 2.5C2 9.3 2 12 2 12s0 2.7.4 4.8c.2 1.3 1.2 2.3 2.5 2.5 2.1.4 7.1.4 7.1.4s5 0 7.1-.4c1.3-.2 2.3-1.2 2.5-2.5.4-2.1.4-4.8.4-4.8s0-2.7-.4-4.8ZM10 15.5v-7l6 3.5-6 3.5Z" />
+                </svg>
+              </span>
+              <span className="text-xs">유튜브</span>
+            </a>
+            <a
+              href="https://www.instagram.com/ggn_youth_/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="길가는교회 청년부 인스타그램"
+              className="flex flex-col items-center gap-1 text-foreground/60 transition-colors hover:text-brand-dark"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 dark:border-white/10">
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+                </svg>
+              </span>
+              <span className="text-xs">청년부 인스타그램</span>
+            </a>
+            <a
+              href="https://cafe.daum.net/ggnkids"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="길가는교회 영유아부 다음카페"
+              className="flex flex-col items-center gap-1 text-foreground/60 transition-colors hover:text-brand-dark"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 dark:border-white/10">
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <path d="M4 5h13a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H8l-4 4V5Z" />
+                </svg>
+              </span>
+              <span className="text-xs">영유아부 다음카페</span>
+            </a>
+          </div>
         </section>
 
         <section className="mt-12 grid gap-4 sm:grid-cols-2">
@@ -111,55 +160,6 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mt-12 border-t border-black/10 pt-8 text-center dark:border-white/10">
-          <p className="text-sm text-foreground/50">바로가기</p>
-          <div className="mt-4 flex justify-center gap-6">
-            <a
-              href="https://www.youtube.com/@%EA%B8%B8%EA%B0%80%EB%8A%94%EA%B5%90%ED%9A%8C"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="길가는교회 유튜브"
-              className="flex flex-col items-center gap-1 text-foreground/60 transition-colors hover:text-brand-dark"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 dark:border-white/10">
-                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
-                  <path d="M21.6 7.2c-.2-1.3-1.2-2.3-2.5-2.5C17 4.3 12 4.3 12 4.3s-5 0-7.1.4c-1.3.2-2.3 1.2-2.5 2.5C2 9.3 2 12 2 12s0 2.7.4 4.8c.2 1.3 1.2 2.3 2.5 2.5 2.1.4 7.1.4 7.1.4s5 0 7.1-.4c1.3-.2 2.3-1.2 2.5-2.5.4-2.1.4-4.8.4-4.8s0-2.7-.4-4.8ZM10 15.5v-7l6 3.5-6 3.5Z" />
-                </svg>
-              </span>
-              <span className="text-xs">유튜브</span>
-            </a>
-            <a
-              href="https://www.instagram.com/ggn_youth_/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="길가는교회 청년부 인스타그램"
-              className="flex flex-col items-center gap-1 text-foreground/60 transition-colors hover:text-brand-dark"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 dark:border-white/10">
-                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <rect x="3" y="3" width="18" height="18" rx="5" />
-                  <circle cx="12" cy="12" r="4" />
-                  <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
-                </svg>
-              </span>
-              <span className="text-xs">청년부 인스타그램</span>
-            </a>
-            <a
-              href="https://cafe.daum.net/ggnkids"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="길가는교회 영유아부 다음카페"
-              className="flex flex-col items-center gap-1 text-foreground/60 transition-colors hover:text-brand-dark"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 dark:border-white/10">
-                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M4 5h13a3 3 0 0 1 3 3v3a3 3 0 0 1-3 3H8l-4 4V5Z" />
-                </svg>
-              </span>
-              <span className="text-xs">영유아부 다음카페</span>
-            </a>
-          </div>
-        </section>
       </div>
     </main>
   );
