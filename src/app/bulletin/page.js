@@ -1,12 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/lib/supabaseClient";
+import { safeStoragePath } from "@/lib/storagePath";
 import KakaoShareButton from "@/components/KakaoShareButton";
+
+const BULLETIN_IMAGE_TYPE = "bulletin";
+const MAX_KEPT_IMAGES = 2;
 
 function hymnNumberFrom(text) {
   const match = text?.match(/(\d{1,3})\s*장/);
   return match ? match[1] : null;
+}
+
+function bulletinImageUrl(item) {
+  return supabase.storage.from("attachments").getPublicUrl(item.file_path).data.publicUrl;
 }
 
 // 새 주보가 나오면 이 배열의 맨 앞에 새 항목을 추가하세요.
@@ -149,8 +159,84 @@ function BulletinContent({ bulletin }) {
 }
 
 export default function BulletinPage() {
+  const { isAdmin } = useAuth();
   const [current, ...past] = bulletins;
   const [openIssue, setOpenIssue] = useState(null);
+
+  const [bulletinImages, setBulletinImages] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState("");
+
+  async function loadBulletinImages() {
+    const { data } = await supabase
+      .from("media_items")
+      .select("id, title, file_path, created_at")
+      .eq("media_type", BULLETIN_IMAGE_TYPE)
+      .order("created_at", { ascending: false });
+    setBulletinImages(data ?? []);
+  }
+
+  useEffect(() => {
+    loadBulletinImages();
+  }, []);
+
+  async function pruneOldBulletinImages() {
+    const { data } = await supabase
+      .from("media_items")
+      .select("id, file_path")
+      .eq("media_type", BULLETIN_IMAGE_TYPE)
+      .order("created_at", { ascending: false });
+
+    if (!data || data.length <= MAX_KEPT_IMAGES) return;
+
+    const toDelete = data.slice(MAX_KEPT_IMAGES);
+    await supabase.storage.from("attachments").remove(toDelete.map((d) => d.file_path));
+    await supabase
+      .from("media_items")
+      .delete()
+      .in("id", toDelete.map((d) => d.id));
+  }
+
+  async function handleUploadImage(e) {
+    e.preventDefault();
+    if (!imageFile) return;
+    setImageUploading(true);
+    setImageError("");
+
+    const path = safeStoragePath("bulletin", imageFile.name);
+    const { error: uploadError } = await supabase.storage
+      .from("attachments")
+      .upload(path, imageFile);
+
+    if (uploadError) {
+      setImageUploading(false);
+      setImageError("업로드에 실패했어요: " + uploadError.message);
+      return;
+    }
+
+    const { error: insertError } = await supabase
+      .from("media_items")
+      .insert({ title: current.issue, media_type: BULLETIN_IMAGE_TYPE, file_path: path });
+
+    if (insertError) {
+      setImageUploading(false);
+      setImageError("등록에 실패했어요: " + insertError.message);
+      return;
+    }
+
+    await pruneOldBulletinImages();
+    setImageUploading(false);
+    setImageFile(null);
+    loadBulletinImages();
+  }
+
+  async function handleDeleteImage(item) {
+    if (!window.confirm("이 주보 이미지를 삭제할까요?")) return;
+    await supabase.storage.from("attachments").remove([item.file_path]);
+    await supabase.from("media_items").delete().eq("id", item.id);
+    loadBulletinImages();
+  }
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-4 pb-12">
@@ -168,7 +254,78 @@ export default function BulletinPage() {
         </div>
       </div>
 
+      {isAdmin && (
+        <form
+          onSubmit={handleUploadImage}
+          className="mt-4 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
+        >
+          <p className="text-sm font-medium text-foreground/80">주보 이미지 등록 (관리자)</p>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
+            <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+              🖼️ 이미지 선택
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+              className="hidden"
+            />
+            {imageFile && <span className="text-foreground/70">{imageFile.name}</span>}
+          </label>
+          {imageError && <p className="text-sm text-red-600">{imageError}</p>}
+          <button
+            type="submit"
+            disabled={imageUploading || !imageFile}
+            className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+          >
+            {imageUploading ? "업로드 중..." : "등록"}
+          </button>
+        </form>
+      )}
+
+      {bulletinImages[0] && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-brand-dark">이번 주 주보 이미지</p>
+            {isAdmin && (
+              <button
+                onClick={() => handleDeleteImage(bulletinImages[0])}
+                className="text-xs text-foreground/40 hover:text-red-600"
+              >
+                삭제
+              </button>
+            )}
+          </div>
+          <img
+            src={bulletinImageUrl(bulletinImages[0])}
+            alt="이번 주 주보"
+            className="mt-2 w-full rounded-xl border border-black/10 dark:border-white/10"
+          />
+        </div>
+      )}
+
       <BulletinContent bulletin={current} />
+
+      {bulletinImages[1] && (
+        <div className="mt-6">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-foreground/50">지난주보 이미지</p>
+            {isAdmin && (
+              <button
+                onClick={() => handleDeleteImage(bulletinImages[1])}
+                className="text-xs text-foreground/40 hover:text-red-600"
+              >
+                삭제
+              </button>
+            )}
+          </div>
+          <img
+            src={bulletinImageUrl(bulletinImages[1])}
+            alt="지난주보"
+            className="mt-2 w-full rounded-xl border border-black/10 dark:border-white/10"
+          />
+        </div>
+      )}
 
       {past.length > 0 && (
         <section className="mt-10 border-t border-black/10 pt-6 dark:border-white/10">
