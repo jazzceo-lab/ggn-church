@@ -192,6 +192,15 @@ export function AuthProvider({ children }) {
     return () => clearTimeout(t);
   }, [toast]);
 
+  useEffect(() => {
+    if (!("setAppBadge" in navigator)) return;
+    if (unreadCount > 0) {
+      navigator.setAppBadge(unreadCount).catch(() => {});
+    } else {
+      navigator.clearAppBadge().catch(() => {});
+    }
+  }, [unreadCount]);
+
   return (
     <AuthContext.Provider
       value={{
