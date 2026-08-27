@@ -82,27 +82,15 @@ const bulletins = [
 function BulletinContent({ bulletin }) {
   return (
     <>
-      <section className="mt-8 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10">
-        <p className="text-sm font-medium text-brand-dark">{bulletin.theme.year}</p>
-        <p className="mt-1 font-serif text-lg font-semibold text-foreground">
-          &ldquo;{bulletin.theme.verse}&rdquo;
-        </p>
-        <ol className="mt-4 space-y-1 text-sm text-foreground/70">
-          {bulletin.theme.goals.map((goal, i) => (
+      <section className="mt-8 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+        <h2 className="font-serif font-semibold text-foreground">교회소식</h2>
+        <ol className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
+          {bulletin.news.map((n, i) => (
             <li key={i}>
-              {i + 1}. {goal}
+              {i + 1}. {n}
             </li>
           ))}
         </ol>
-      </section>
-
-      <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
-        <h2 className="font-serif font-semibold text-foreground">기도제목</h2>
-        <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
-          {bulletin.prayers.map((p, i) => (
-            <li key={i}>· {p}</li>
-          ))}
-        </ul>
       </section>
 
       <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
@@ -132,15 +120,27 @@ function BulletinContent({ bulletin }) {
         </ul>
       </section>
 
-      <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
-        <h2 className="font-serif font-semibold text-foreground">교회소식</h2>
-        <ol className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
-          {bulletin.news.map((n, i) => (
+      <section className="mt-6 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10">
+        <p className="text-sm font-medium text-brand-dark">{bulletin.theme.year}</p>
+        <p className="mt-1 font-serif text-lg font-semibold text-foreground">
+          &ldquo;{bulletin.theme.verse}&rdquo;
+        </p>
+        <ol className="mt-4 space-y-1 text-sm text-foreground/70">
+          {bulletin.theme.goals.map((goal, i) => (
             <li key={i}>
-              {i + 1}. {n}
+              {i + 1}. {goal}
             </li>
           ))}
         </ol>
+      </section>
+
+      <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+        <h2 className="font-serif font-semibold text-foreground">기도제목</h2>
+        <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
+          {bulletin.prayers.map((p, i) => (
+            <li key={i}>· {p}</li>
+          ))}
+        </ul>
       </section>
 
       <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
