@@ -3,16 +3,34 @@
 import { useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
+import { DISTRICT_NAMES, DEPARTMENT_GROUPS } from "@/lib/teamRoster";
+
+const DISTRICT_OPTIONS = [...DISTRICT_NAMES, ...DEPARTMENT_GROUPS];
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [groupTab, setGroupTab] = useState(null);
   const [district, setDistrict] = useState("");
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  function selectPastor() {
+    setGroupTab("pastor");
+    setDistrict("목회자");
+  }
+
+  function selectDistrictTab() {
+    setGroupTab("district");
+    if (district === "목회자") setDistrict("");
+  }
+
+  function selectUnknown() {
+    setGroupTab("unknown");
+    setDistrict("");
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -68,18 +86,60 @@ export default function SignupPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground/80">소속 구분</label>
-          <select
-            value={district}
-            onChange={(e) => setDistrict(e.target.value)}
-            className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
-          >
-            <option value="">선택 안 함 / 잘 모르겠어요</option>
-            {SIGNUP_GROUP_OPTIONS.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
+          <div className="mt-1 flex gap-2">
+            <button
+              type="button"
+              onClick={selectPastor}
+              className={`flex-1 rounded-full border px-3 py-2 text-sm transition-colors ${
+                groupTab === "pastor"
+                  ? "border-brand bg-brand text-white"
+                  : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              }`}
+            >
+              목회자
+            </button>
+            <button
+              type="button"
+              onClick={selectDistrictTab}
+              className={`flex-1 rounded-full border px-3 py-2 text-sm transition-colors ${
+                groupTab === "district"
+                  ? "border-brand bg-brand text-white"
+                  : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              }`}
+            >
+              구역
+            </button>
+            <button
+              type="button"
+              onClick={selectUnknown}
+              className={`flex-1 rounded-full border px-3 py-2 text-sm transition-colors ${
+                groupTab === "unknown"
+                  ? "border-brand bg-brand text-white"
+                  : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              }`}
+            >
+              선택 안함
+            </button>
+          </div>
+
+          {groupTab === "district" && (
+            <div className="mt-2 grid grid-cols-3 gap-1.5">
+              {DISTRICT_OPTIONS.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDistrict(d)}
+                  className={`rounded-md border px-1 py-1.5 text-xs transition-colors ${
+                    district === d
+                      ? "border-brand bg-brand-tint text-brand-dark"
+                      : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground/80">이메일</label>
