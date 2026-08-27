@@ -59,9 +59,16 @@ export default function KakaoShareButton({ title, description, url }) {
       type="button"
       onClick={handleShare}
       disabled={!ready}
-      className="inline-flex shrink-0 items-center gap-1 rounded-full border border-black/10 px-3 py-1.5 text-xs text-foreground/70 transition-colors hover:bg-black/5 disabled:opacity-50 dark:border-white/10 dark:hover:bg-white/10"
+      className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-black/10 px-3 py-1.5 text-xs text-foreground/70 transition-colors hover:bg-black/5 disabled:opacity-50 dark:border-white/10 dark:hover:bg-white/10"
     >
-      💬 카톡 공유
+      <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" aria-hidden="true">
+        <rect width="24" height="24" rx="7" fill="#FEE500" />
+        <path
+          d="M12 5.5c-3.87 0-7 2.44-7 5.45 0 1.94 1.3 3.64 3.26 4.61-.14.52-.5 1.86-.58 2.15-.1.36.13.36.28.26.11-.08 1.8-1.22 2.53-1.72.48.07.99.1 1.51.1 3.87 0 7-2.44 7-5.4s-3.13-5.45-7-5.45Z"
+          fill="#3C1E1E"
+        />
+      </svg>
+      카톡 공유
     </button>
   );
 }
