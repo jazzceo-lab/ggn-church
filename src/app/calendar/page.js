@@ -185,10 +185,10 @@ export default function CalendarPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12">
-      <h1 className="font-serif text-2xl font-bold text-foreground">교회 일정</h1>
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-4 pb-12">
+      <h1 className="font-serif text-xl font-bold text-foreground">교회 일정</h1>
 
-      <div className="mt-8 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5 sm:p-5">
+      <div className="mt-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5 sm:p-5">
         <div className="flex items-center justify-between">
           <button
             onClick={() => changeMonth(-1)}
