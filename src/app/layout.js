@@ -3,6 +3,7 @@ import "./globals.css";
 import NavBar from "@/components/NavBar";
 import { AuthProvider } from "@/components/AuthProvider";
 import PopupNotice from "@/components/PopupNotice";
+import InstallAppBanner from "@/components/InstallAppBanner";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-sans-kr",
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AuthProvider>
+          <InstallAppBanner />
           <PopupNotice />
           <NavBar />
           <div className="flex flex-1 flex-col">{children}</div>
