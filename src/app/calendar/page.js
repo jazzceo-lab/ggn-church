@@ -5,7 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import KakaoShareButton from "@/components/KakaoShareButton";
-import { downloadIcs } from "@/lib/ics";
+import { buildGoogleCalendarUrl } from "@/lib/googleCalendarLink";
 import { getHolidayName } from "@/lib/holidays";
 import { getChurchEventName } from "@/lib/churchCalendar";
 
@@ -573,13 +573,14 @@ export default function CalendarPage() {
                     }`}
                     url="https://ggnch.shop/calendar"
                   />
-                  <button
-                    type="button"
-                    onClick={() => downloadIcs(e)}
+                  <a
+                    href={buildGoogleCalendarUrl(e)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="inline-flex shrink-0 items-center gap-1 rounded-full border border-black/10 px-3 py-1.5 text-xs text-foreground/70 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
                   >
-                    📅 캘린더에 담기
-                  </button>
+                    📅 구글 캘린더에 담기
+                  </a>
                 </div>
               </li>
             ))}
