@@ -32,8 +32,15 @@ const REACTIONS = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function BoardPage() {
-  const { user, loading: authLoading, isAdmin, isBoardAdmin, district: myDistrict, markBoardSeen } =
-    useAuth();
+  const {
+    user,
+    loading: authLoading,
+    isAdmin,
+    isBoardAdmin,
+    district: myDistrict,
+    memberTitle,
+    markBoardSeen,
+  } = useAuth();
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const [districtView, setDistrictView] = useState(null);
   const resolvedDistrictView =
@@ -76,7 +83,7 @@ export default function BoardPage() {
     let query = supabase
       .from("posts")
       .select(
-        "id, title, body, author_name, created_at, attachment_url, attachment_name, user_id, is_pinned"
+        "id, title, body, author_name, author_title, created_at, attachment_url, attachment_name, user_id, is_pinned"
       )
       .eq("category", cat)
       .order("is_pinned", { ascending: false })
@@ -142,7 +149,7 @@ export default function BoardPage() {
   async function loadComments(postIds) {
     const { data, error } = await supabase
       .from("comments")
-      .select("id, post_id, user_id, author_name, body, created_at")
+      .select("id, post_id, user_id, author_name, author_title, body, created_at")
       .in("post_id", postIds)
       .order("created_at", { ascending: true });
 
@@ -173,6 +180,7 @@ export default function BoardPage() {
       post_id: postId,
       user_id: user.id,
       author_name: authorName,
+      author_title: memberTitle || null,
       body: text,
     });
     setCommentSubmitting(null);
@@ -246,6 +254,7 @@ export default function BoardPage() {
       body,
       user_id: user.id,
       author_name: authorName,
+      author_title: memberTitle || null,
       category,
       district: activeDistrict,
       attachment_url: attachmentUrl,
@@ -507,7 +516,13 @@ export default function BoardPage() {
               </a>
             )}
             <p className="mt-2 text-xs text-foreground/50">
-              {post.author_name} · {new Date(post.created_at).toLocaleDateString("ko-KR")}
+              {post.author_name}
+              {post.author_title && (
+                <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                  {post.author_title}
+                </span>
+              )}{" "}
+              · {new Date(post.created_at).toLocaleDateString("ko-KR")}
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -553,7 +568,13 @@ export default function BoardPage() {
                     <div>
                       <p className="text-foreground/80">{c.body}</p>
                       <p className="mt-0.5 text-xs text-foreground/40">
-                        {c.author_name} · {new Date(c.created_at).toLocaleDateString("ko-KR")}
+                        {c.author_name}
+                        {c.author_title && (
+                          <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                            {c.author_title}
+                          </span>
+                        )}{" "}
+                        · {new Date(c.created_at).toLocaleDateString("ko-KR")}
                       </p>
                     </div>
                     {(isAdmin || isBoardAdmin || c.user_id === user?.id) && (

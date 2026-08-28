@@ -7,6 +7,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
 
 const UNASSIGNED = "미배정";
+const NO_TITLE = "없음";
+const TITLE_OPTIONS = ["목사", "장로"];
 
 export default function AdminMembersPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
@@ -17,7 +19,9 @@ export default function AdminMembersPage() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, email, display_name, district, is_admin, is_board_admin, is_suspended, created_at")
+      .select(
+        "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at"
+      )
       .order("created_at", { ascending: false });
 
     if (!error) setMembers(data);
@@ -47,6 +51,18 @@ export default function AdminMembersPage() {
       .eq("id", member.id);
     if (error) {
       window.alert("구역 변경에 실패했어요: " + error.message);
+      return;
+    }
+    loadMembers();
+  }
+
+  async function updateTitle(member, newTitle) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ title: newTitle || null })
+      .eq("id", member.id);
+    if (error) {
+      window.alert("직함 변경에 실패했어요: " + error.message);
       return;
     }
     loadMembers();
@@ -143,6 +159,11 @@ export default function AdminMembersPage() {
             <div>
               <p className="font-medium text-foreground">
                 {m.display_name ?? "(이름 없음)"}
+                {m.title && (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                    {m.title}
+                  </span>
+                )}
                 {m.is_admin && (
                   <span className="ml-2 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
                     관리자
@@ -173,6 +194,21 @@ export default function AdminMembersPage() {
                   {SIGNUP_GROUP_OPTIONS.map((d) => (
                     <option key={d} value={d}>
                       {d}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="mt-2 flex items-center gap-2 text-xs text-foreground/60">
+                직함
+                <select
+                  value={m.title ?? NO_TITLE}
+                  onChange={(e) => updateTitle(m, e.target.value === NO_TITLE ? "" : e.target.value)}
+                  className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
+                >
+                  <option value={NO_TITLE}>없음</option>
+                  {TITLE_OPTIONS.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
                     </option>
                   ))}
                 </select>

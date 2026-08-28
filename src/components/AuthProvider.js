@@ -9,6 +9,7 @@ const AuthContext = createContext({
   isAdmin: false,
   isBoardAdmin: false,
   district: null,
+  memberTitle: null,
   unreadCount: 0,
   refreshUnreadCount: () => {},
   boardNewCount: 0,
@@ -20,6 +21,7 @@ export function AuthProvider({ children }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isBoardAdmin, setIsBoardAdmin] = useState(false);
   const [district, setDistrict] = useState(null);
+  const [memberTitle, setMemberTitle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [boardNewCount, setBoardNewCount] = useState(0);
@@ -33,11 +35,12 @@ export function AuthProvider({ children }) {
       setIsAdmin(false);
       setIsBoardAdmin(false);
       setDistrict(null);
+      setMemberTitle(null);
       return;
     }
     const { data } = await supabase
       .from("profiles")
-      .select("is_admin, is_board_admin, is_suspended, district, board_last_seen_at")
+      .select("is_admin, is_board_admin, is_suspended, district, board_last_seen_at, title")
       .eq("id", currentUser.id)
       .single();
 
@@ -46,6 +49,7 @@ export function AuthProvider({ children }) {
       setIsAdmin(false);
       setIsBoardAdmin(false);
       setDistrict(null);
+      setMemberTitle(null);
       setUser(null);
       window.alert("이용이 정지된 계정입니다. 문의사항은 교회 사무실로 연락해주세요.");
       return;
@@ -54,6 +58,7 @@ export function AuthProvider({ children }) {
     setIsAdmin(data?.is_admin ?? false);
     setIsBoardAdmin(data?.is_board_admin ?? false);
     setDistrict(data?.district ?? null);
+    setMemberTitle(data?.title ?? null);
     setBoardLastSeenAt(data?.board_last_seen_at ?? null);
     return data?.board_last_seen_at ?? null;
   }
@@ -209,6 +214,7 @@ export function AuthProvider({ children }) {
         isAdmin,
         isBoardAdmin,
         district,
+        memberTitle,
         unreadCount,
         refreshUnreadCount: () => refreshUnreadCount(),
         boardNewCount,
