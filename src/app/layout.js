@@ -4,6 +4,7 @@ import NavBar from "@/components/NavBar";
 import { AuthProvider } from "@/components/AuthProvider";
 import PopupNotice from "@/components/PopupNotice";
 import InstallAppBanner from "@/components/InstallAppBanner";
+import KakaoInAppEscape from "@/components/KakaoInAppEscape";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-sans-kr",
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
       className={`${notoSans.variable} ${notoSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <KakaoInAppEscape />
         <AuthProvider>
           <InstallAppBanner />
           <PopupNotice />
