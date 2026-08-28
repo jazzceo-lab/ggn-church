@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import { buildBibleLink } from "@/lib/bibleBooks";
 import KakaoShareButton from "@/components/KakaoShareButton";
 
 const BULLETIN_IMAGE_TYPE = "bulletin";
@@ -107,6 +108,7 @@ function BulletinContent({ bulletin }) {
           {bulletin.order.map(([label, detail], i) => {
             const hymnNumber = label === "찬송" ? hymnNumberFrom(detail) : null;
             const gyodokmunNumber = label === "교독문" ? gyodokmunNumberFrom(detail) : null;
+            const bibleLink = label === "성경봉독" ? buildBibleLink(detail) : null;
             return (
               <li key={i} className="flex items-start gap-2 py-2 tracking-tight">
                 <span className="w-[68px] shrink-0 font-medium text-foreground/80">{label}</span>
@@ -124,6 +126,13 @@ function BulletinContent({ bulletin }) {
                   >
                     {detail}
                   </Link>
+                ) : bibleLink ? (
+                  <a
+                    href={bibleLink}
+                    className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                  >
+                    {detail}
+                  </a>
                 ) : (
                   <span className="flex-1 text-right text-foreground/60">{detail}</span>
                 )}
