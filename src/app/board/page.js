@@ -31,6 +31,11 @@ const REACTIONS = [
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i;
+function isImageAttachment(name) {
+  return !!name && IMAGE_EXTENSIONS.test(name);
+}
+
 export default function BoardPage() {
   const {
     user,
@@ -505,15 +510,30 @@ export default function BoardPage() {
             ) : (
               <p className="mt-1 text-sm whitespace-pre-line text-foreground/70">{post.body}</p>
             )}
-            {post.attachment_url && (
+            {post.attachment_url && isImageAttachment(post.attachment_name) ? (
               <a
                 href={post.attachment_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-sm text-brand-dark underline"
+                className="mt-2 block w-fit"
               >
-                📎 {post.attachment_name}
+                <img
+                  src={post.attachment_url}
+                  alt={post.attachment_name}
+                  className="max-h-64 max-w-full rounded-lg border border-black/10 object-contain dark:border-white/10"
+                />
               </a>
+            ) : (
+              post.attachment_url && (
+                <a
+                  href={post.attachment_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1 text-sm text-brand-dark underline"
+                >
+                  📎 {post.attachment_name}
+                </a>
+              )
             )}
             <p className="mt-2 text-xs text-foreground/50">
               {post.author_name}
