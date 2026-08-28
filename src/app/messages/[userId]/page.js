@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { titleBadgeClass } from "@/lib/memberTitle";
 
 export default function ConversationPage() {
   const { userId } = useParams();
@@ -140,7 +141,7 @@ export default function ConversationPage() {
         <h1 className="flex items-center gap-1.5 font-serif text-xl font-bold text-foreground">
           {partnerName}
           {partnerTitle && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${titleBadgeClass(partnerTitle)}`}>
               {partnerTitle}
             </span>
           )}

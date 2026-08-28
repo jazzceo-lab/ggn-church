@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
+import { titleBadgeClass } from "@/lib/memberTitle";
 
 const UNASSIGNED = "미배정";
 
@@ -181,7 +182,7 @@ export default function MessagesPage() {
                           {checked ? "✓ " : ""}
                           {m.display_name}
                           {m.title && (
-                            <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                            <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(m.title)}`}>
                               {m.title}
                             </span>
                           )}
@@ -229,7 +230,7 @@ export default function MessagesPage() {
                 {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden />}
                 {c.name}
                 {c.title && (
-                  <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(c.title)}`}>
                     {c.title}
                   </span>
                 )}

@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { DISTRICT_NAMES } from "@/lib/teamRoster";
+import { titleBadgeClass } from "@/lib/memberTitle";
 
 const CATEGORIES = [
   { key: "district", label: "구역게시판" },
@@ -576,7 +577,7 @@ export default function BoardPage() {
             <p className="mt-2 text-xs text-foreground/50">
               {post.author_name}
               {post.author_title && (
-                <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(post.author_title)}`}>
                   {post.author_title}
                 </span>
               )}{" "}
@@ -628,7 +629,7 @@ export default function BoardPage() {
                       <p className="mt-0.5 text-xs text-foreground/40">
                         {c.author_name}
                         {c.author_title && (
-                          <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(c.author_title)}`}>
                             {c.author_title}
                           </span>
                         )}{" "}

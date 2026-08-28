@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
+import { titleBadgeClass } from "@/lib/memberTitle";
 
 const UNASSIGNED = "미배정";
 const NO_TITLE = "없음";
@@ -160,7 +161,7 @@ export default function AdminMembersPage() {
               <p className="font-medium text-foreground">
                 {m.display_name ?? "(이름 없음)"}
                 {m.title && (
-                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                  <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${titleBadgeClass(m.title)}`}>
                     {m.title}
                   </span>
                 )}
