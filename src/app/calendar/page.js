@@ -7,6 +7,7 @@ import { safeStoragePath } from "@/lib/storagePath";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { downloadIcs } from "@/lib/ics";
 import { getHolidayName } from "@/lib/holidays";
+import { getChurchEventName } from "@/lib/churchCalendar";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -226,7 +227,9 @@ export default function CalendarPage() {
             const isSelected = key === selected;
             const isSunday = i % 7 === 0;
             const holidayName = getHolidayName(key);
+            const churchEventName = getChurchEventName(key);
             const isSpecialDay = isSunday || Boolean(holidayName);
+            const isChurchDay = !isSpecialDay && Boolean(churchEventName);
             return (
               <button
                 key={i}
@@ -235,10 +238,18 @@ export default function CalendarPage() {
                   isSelected
                     ? "bg-brand text-white"
                     : isToday
-                      ? `bg-brand-tint ${isSpecialDay ? "text-red-600 dark:text-red-400" : "text-brand-dark"}`
+                      ? `bg-brand-tint ${
+                          isSpecialDay
+                            ? "text-red-600 dark:text-red-400"
+                            : isChurchDay
+                              ? "text-purple-600 dark:text-purple-400"
+                              : "text-brand-dark"
+                        }`
                       : isSpecialDay
                         ? "text-red-600 hover:bg-black/5 dark:text-red-400 dark:hover:bg-white/10"
-                        : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
+                        : isChurchDay
+                          ? "text-purple-600 hover:bg-black/5 dark:text-purple-400 dark:hover:bg-white/10"
+                          : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
               >
                 <span>{day}</span>
@@ -259,6 +270,14 @@ export default function CalendarPage() {
                   >
                     {holidayName}
                   </span>
+                ) : churchEventName ? (
+                  <span
+                    className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
+                      isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"
+                    }`}
+                  >
+                    {churchEventName}
+                  </span>
                 ) : null}
               </button>
             );
@@ -273,6 +292,11 @@ export default function CalendarPage() {
             {getHolidayName(selected) && (
               <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
                 {getHolidayName(selected)}
+              </span>
+            )}
+            {getChurchEventName(selected) && (
+              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                {getChurchEventName(selected)}
               </span>
             )}
           </h2>
