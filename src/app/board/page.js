@@ -18,8 +18,8 @@ const CATEGORIES = [
 const DEFAULT_CATEGORY = "district";
 
 const DISTRICT_BOARD_TABS = [
-  { key: "general", label: "구역이야기" },
   { key: "notice", label: "구역공지" },
+  { key: "general", label: "구역이야기" },
 ];
 const DEFAULT_DISTRICT_BOARD_TYPE = "general";
 
