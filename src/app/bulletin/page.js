@@ -88,7 +88,7 @@ const bulletins = [
 function BulletinContent({ bulletin }) {
   return (
     <>
-      <section className="mt-8 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15">
+      <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15">
         <h2 className="font-serif font-semibold text-foreground">교회소식</h2>
         <ol className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
           {bulletin.news.map((n, i) => (
