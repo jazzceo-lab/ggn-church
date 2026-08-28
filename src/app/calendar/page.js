@@ -25,10 +25,26 @@ function buildMonthCells(year, month) {
   return cells;
 }
 
+// dateKey("YYYY-MM-DD")가 속한 주(일~토) 7일을 Date 배열로 반환한다.
+function buildWeekCells(dateKey) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const startOfWeek = new Date(date);
+  startOfWeek.setDate(date.getDate() - date.getDay());
+  const cells = [];
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(startOfWeek);
+    day.setDate(startOfWeek.getDate() + i);
+    cells.push(day);
+  }
+  return cells;
+}
+
 export default function CalendarPage() {
   const { user, isAdmin } = useAuth();
   const today = useMemo(() => new Date(), []);
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [viewMode, setViewMode] = useState("month");
   const [selected, setSelected] = useState(
     toDateKey(today.getFullYear(), today.getMonth(), today.getDate())
   );
@@ -51,6 +67,17 @@ export default function CalendarPage() {
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const cells = useMemo(() => buildMonthCells(year, month), [year, month]);
+  const weekCells = useMemo(() => buildWeekCells(selected), [selected]);
+  const weekLabel = (() => {
+    const first = weekCells[0];
+    const last = weekCells[6];
+    if (first.getMonth() === last.getMonth()) {
+      return `${first.getFullYear()}년 ${first.getMonth() + 1}월 ${first.getDate()}일 - ${last.getDate()}일`;
+    }
+    return `${first.getFullYear()}년 ${first.getMonth() + 1}월 ${first.getDate()}일 - ${
+      last.getMonth() + 1
+    }월 ${last.getDate()}일`;
+  })();
 
   async function loadEvents() {
     setLoadingEvents(true);
@@ -82,9 +109,21 @@ export default function CalendarPage() {
     setCursor(new Date(year, month + delta, 1));
   }
 
+  function changeWeek(delta) {
+    const [y, m, d] = selected.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    date.setDate(date.getDate() + delta * 7);
+    const newKey = toDateKey(date.getFullYear(), date.getMonth(), date.getDate());
+    setSelected(newKey);
+    setFormDate(newKey);
+    setCursor(new Date(date.getFullYear(), date.getMonth(), 1));
+  }
+
   function selectDate(key) {
     setSelected(key);
     setFormDate(key);
+    const [y, m] = key.split("-").map(Number);
+    setCursor(new Date(y, m - 1, 1));
   }
 
   function resetForm() {
@@ -185,25 +224,109 @@ export default function CalendarPage() {
     loadEvents();
   }
 
+  // 월간/주간 보기 공통으로 쓰는 날짜 칸 렌더링. date가 null이면 빈 칸(월간 보기 앞뒤 여백).
+  function renderDayCell(date, i) {
+    if (date === null) return <div key={i} />;
+    const key = toDateKey(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayEvents = eventsByDate[key] ?? [];
+    const isToday = key === todayKey;
+    const isSelected = key === selected;
+    const isSunday = date.getDay() === 0;
+    const holidayName = getHolidayName(key);
+    const churchEventName = getChurchEventName(key);
+    const isSpecialDay = isSunday || Boolean(holidayName);
+    const isChurchDay = !isSpecialDay && Boolean(churchEventName);
+    return (
+      <button
+        key={i}
+        onClick={() => selectDate(key)}
+        className={`flex min-h-[56px] flex-col items-center gap-0.5 rounded-lg border border-black/5 pt-1 text-sm transition-colors sm:min-h-[68px] dark:border-white/5 ${
+          isSelected
+            ? "bg-brand text-white"
+            : isToday
+              ? `bg-brand-tint ${
+                  isSpecialDay
+                    ? "text-red-600 dark:text-red-400"
+                    : isChurchDay
+                      ? "text-purple-600 dark:text-purple-400"
+                      : "text-brand-dark"
+                }`
+              : isSpecialDay
+                ? "text-red-600 hover:bg-black/5 dark:text-red-400 dark:hover:bg-white/10"
+                : isChurchDay
+                  ? "text-purple-600 hover:bg-black/5 dark:text-purple-400 dark:hover:bg-white/10"
+                  : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
+        }`}
+      >
+        <span>{date.getDate()}</span>
+        {dayEvents.length > 0 ? (
+          <span className="w-full px-0.5 text-center text-[9px] leading-tight sm:text-[10px]">
+            <span className="block truncate">{dayEvents[0].title}</span>
+            {dayEvents.length > 1 && (
+              <span className={isSelected ? "text-white/80" : "text-foreground/50"}>
+                +{dayEvents.length - 1}
+              </span>
+            )}
+          </span>
+        ) : holidayName ? (
+          <span
+            className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
+              isSelected ? "text-white/90" : "text-red-500 dark:text-red-400"
+            }`}
+          >
+            {holidayName}
+          </span>
+        ) : churchEventName ? (
+          <span
+            className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
+              isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"
+            }`}
+          >
+            {churchEventName}
+          </span>
+        ) : null}
+      </button>
+    );
+  }
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-4 pb-12">
       <h1 className="font-serif text-xl font-bold text-foreground">교회 일정</h1>
 
+      <div className="mt-3 flex gap-2">
+        {[
+          { key: "month", label: "월간" },
+          { key: "week", label: "주간" },
+        ].map((v) => (
+          <button
+            key={v.key}
+            onClick={() => setViewMode(v.key)}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              viewMode === v.key
+                ? "bg-brand text-white"
+                : "bg-black/5 text-foreground/60 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20"
+            }`}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+
       <div className="mt-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5 sm:p-5">
         <div className="flex items-center justify-between">
           <button
-            onClick={() => changeMonth(-1)}
-            aria-label="이전 달"
+            onClick={() => (viewMode === "month" ? changeMonth(-1) : changeWeek(-1))}
+            aria-label={viewMode === "month" ? "이전 달" : "이전 주"}
             className="rounded-full p-2 text-foreground/60 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
           >
             ‹
           </button>
           <p className="font-serif font-semibold text-foreground">
-            {year}년 {month + 1}월
+            {viewMode === "month" ? `${year}년 ${month + 1}월` : weekLabel}
           </p>
           <button
-            onClick={() => changeMonth(1)}
-            aria-label="다음 달"
+            onClick={() => (viewMode === "month" ? changeMonth(1) : changeWeek(1))}
+            aria-label={viewMode === "month" ? "다음 달" : "다음 주"}
             className="rounded-full p-2 text-foreground/60 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
           >
             ›
@@ -219,69 +342,9 @@ export default function CalendarPage() {
         </div>
 
         <div className="grid grid-cols-7 gap-1">
-          {cells.map((day, i) => {
-            if (day === null) return <div key={i} />;
-            const key = toDateKey(year, month, day);
-            const dayEvents = eventsByDate[key] ?? [];
-            const isToday = key === todayKey;
-            const isSelected = key === selected;
-            const isSunday = i % 7 === 0;
-            const holidayName = getHolidayName(key);
-            const churchEventName = getChurchEventName(key);
-            const isSpecialDay = isSunday || Boolean(holidayName);
-            const isChurchDay = !isSpecialDay && Boolean(churchEventName);
-            return (
-              <button
-                key={i}
-                onClick={() => selectDate(key)}
-                className={`flex min-h-[56px] flex-col items-center gap-0.5 rounded-lg pt-1 text-sm transition-colors sm:min-h-[68px] ${
-                  isSelected
-                    ? "bg-brand text-white"
-                    : isToday
-                      ? `bg-brand-tint ${
-                          isSpecialDay
-                            ? "text-red-600 dark:text-red-400"
-                            : isChurchDay
-                              ? "text-purple-600 dark:text-purple-400"
-                              : "text-brand-dark"
-                        }`
-                      : isSpecialDay
-                        ? "text-red-600 hover:bg-black/5 dark:text-red-400 dark:hover:bg-white/10"
-                        : isChurchDay
-                          ? "text-purple-600 hover:bg-black/5 dark:text-purple-400 dark:hover:bg-white/10"
-                          : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
-                }`}
-              >
-                <span>{day}</span>
-                {dayEvents.length > 0 ? (
-                  <span className="w-full px-0.5 text-center text-[9px] leading-tight sm:text-[10px]">
-                    <span className="block truncate">{dayEvents[0].title}</span>
-                    {dayEvents.length > 1 && (
-                      <span className={isSelected ? "text-white/80" : "text-foreground/50"}>
-                        +{dayEvents.length - 1}
-                      </span>
-                    )}
-                  </span>
-                ) : holidayName ? (
-                  <span
-                    className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
-                      isSelected ? "text-white/90" : "text-red-500 dark:text-red-400"
-                    }`}
-                  >
-                    {holidayName}
-                  </span>
-                ) : churchEventName ? (
-                  <span
-                    className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
-                      isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"
-                    }`}
-                  >
-                    {churchEventName}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
+          {viewMode === "month"
+            ? cells.map((day, i) => renderDayCell(day === null ? null : new Date(year, month, day), i))
+            : weekCells.map((date, i) => renderDayCell(date, i))}
         </div>
       </div>
 
