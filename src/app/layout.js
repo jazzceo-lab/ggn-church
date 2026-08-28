@@ -4,6 +4,7 @@ import NavBar from "@/components/NavBar";
 import { AuthProvider } from "@/components/AuthProvider";
 import PopupNotice from "@/components/PopupNotice";
 import InstallAppBanner from "@/components/InstallAppBanner";
+import NotificationPromptBanner from "@/components/NotificationPromptBanner";
 import KakaoInAppEscape from "@/components/KakaoInAppEscape";
 
 const notoSans = Noto_Sans_KR({
@@ -42,6 +43,7 @@ export default function RootLayout({ children }) {
         <KakaoInAppEscape />
         <AuthProvider>
           <InstallAppBanner />
+          <NotificationPromptBanner />
           <PopupNotice />
           <NavBar />
           <div className="flex flex-1 flex-col">{children}</div>
