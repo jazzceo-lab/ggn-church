@@ -240,7 +240,7 @@ export default function CalendarPage() {
       <button
         key={i}
         onClick={() => selectDate(key)}
-        className={`flex min-h-[56px] flex-col items-center gap-0.5 rounded-lg border border-black/5 pt-1 text-sm transition-colors sm:min-h-[68px] dark:border-white/5 ${
+        className={`flex min-h-[56px] flex-col items-center gap-0.5 rounded-lg border border-black/15 pt-1 text-sm transition-colors sm:min-h-[68px] dark:border-white/15 ${
           isSelected
             ? "bg-brand text-white"
             : isToday
