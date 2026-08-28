@@ -187,7 +187,7 @@ export default function TeamsPage() {
         <ul className="mt-3 divide-y divide-black/5 text-sm dark:divide-white/10">
           {districts.map(([district, leader, members]) => (
             <li key={district} className="flex flex-col gap-1 py-2 sm:flex-row sm:gap-3">
-              <span className="w-28 shrink-0 font-medium text-foreground/80">
+              <span className="w-32 shrink-0 whitespace-nowrap font-medium text-foreground/80">
                 {district} · <Names text={leader} directory={directory} />
               </span>
               <span className="text-foreground/60">
