@@ -109,6 +109,7 @@ function BulletinContent({ bulletin }) {
             const hymnNumber = label === "찬송" ? hymnNumberFrom(detail) : null;
             const gyodokmunNumber = label === "교독문" ? gyodokmunNumberFrom(detail) : null;
             const bibleLink = label === "성경봉독" ? buildBibleLink(detail) : null;
+            const isConfession = label === "신앙고백" && detail === "사도신경";
             return (
               <li key={i} className="flex items-start gap-2 py-2 tracking-tight">
                 <span className="w-[68px] shrink-0 font-medium text-foreground/80">{label}</span>
@@ -133,6 +134,13 @@ function BulletinContent({ bulletin }) {
                   >
                     {detail}
                   </a>
+                ) : isConfession ? (
+                  <Link
+                    href="/confession"
+                    className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                  >
+                    {detail}
+                  </Link>
                 ) : (
                   <span className="flex-1 text-right text-foreground/60">{detail}</span>
                 )}
