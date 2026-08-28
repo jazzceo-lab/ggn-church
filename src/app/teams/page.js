@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/lib/supabaseClient";
 import { districts } from "@/lib/teamRoster";
 
 const choir = [
@@ -81,8 +83,43 @@ function Card({ title, children }) {
   );
 }
 
+// 이름이 가입회원 명단에 있으면 클릭해서 바로 쪽지를 보낼 수 있게 이어준다.
+function Names({ text, directory }) {
+  const names = text.split(/\s+/).filter(Boolean);
+  return names.map((name, i) => {
+    const id = directory.get(name);
+    return (
+      <span key={i}>
+        {i > 0 && " "}
+        {id ? (
+          <Link
+            href={`/messages/${id}`}
+            className="text-brand-dark underline decoration-brand-dark/40 underline-offset-2 hover:text-brand"
+          >
+            {name}
+          </Link>
+        ) : (
+          name
+        )}
+      </span>
+    );
+  });
+}
+
 export default function TeamsPage() {
   const { user, loading } = useAuth();
+  const [directory, setDirectory] = useState(new Map());
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("member_directory")
+      .select("id, display_name")
+      .neq("id", user.id)
+      .then(({ data }) => {
+        setDirectory(new Map((data ?? []).map((m) => [m.display_name, m.id])));
+      });
+  }, [user]);
 
   if (loading) {
     return <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12" />;
@@ -115,7 +152,9 @@ export default function TeamsPage() {
           {choir.map(([role, names]) => (
             <div key={role} className="flex gap-2">
               <dt className="w-20 shrink-0 text-foreground/50">{role}</dt>
-              <dd className="text-foreground/80">{names}</dd>
+              <dd className="text-foreground/80">
+                <Names text={names} directory={directory} />
+              </dd>
             </div>
           ))}
         </dl>
@@ -127,13 +166,17 @@ export default function TeamsPage() {
             {dept.leads.map(([role, name]) => (
               <div key={role} className="flex gap-2">
                 <dt className="w-20 shrink-0 text-foreground/50">{role}</dt>
-                <dd className="text-foreground/80">{name}</dd>
+                <dd className="text-foreground/80">
+                  <Names text={name} directory={directory} />
+                </dd>
               </div>
             ))}
             {dept.teachers && (
               <div className="flex gap-2">
                 <dt className="w-20 shrink-0 text-foreground/50">교사</dt>
-                <dd className="text-foreground/80">{dept.teachers}</dd>
+                <dd className="text-foreground/80">
+                  <Names text={dept.teachers} directory={directory} />
+                </dd>
               </div>
             )}
           </dl>
@@ -145,9 +188,11 @@ export default function TeamsPage() {
           {districts.map(([district, leader, members]) => (
             <li key={district} className="flex flex-col gap-1 py-2 sm:flex-row sm:gap-3">
               <span className="w-28 shrink-0 font-medium text-foreground/80">
-                {district} · {leader}
+                {district} · <Names text={leader} directory={directory} />
               </span>
-              <span className="text-foreground/60">{members}</span>
+              <span className="text-foreground/60">
+                <Names text={members} directory={directory} />
+              </span>
             </li>
           ))}
         </ul>
