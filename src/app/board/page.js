@@ -83,6 +83,8 @@ export default function BoardPage() {
 
   const [likes, setLikes] = useState({});
   const [likeSubmitting, setLikeSubmitting] = useState(null);
+  const [likeDetailOpen, setLikeDetailOpen] = useState([]);
+  const [memberNames, setMemberNames] = useState({});
 
   const [avatars, setAvatars] = useState({});
   const [lightboxUrl, setLightboxUrl] = useState(null);
@@ -153,12 +155,36 @@ export default function BoardPage() {
 
     const grouped = {};
     for (const l of data) {
-      if (!grouped[l.post_id]) grouped[l.post_id] = { counts: {}, myReaction: null };
+      if (!grouped[l.post_id]) grouped[l.post_id] = { counts: {}, users: {}, myReaction: null };
       const entry = grouped[l.post_id];
       entry.counts[l.reaction_type] = (entry.counts[l.reaction_type] ?? 0) + 1;
+      (entry.users[l.reaction_type] ??= []).push(l.user_id);
       if (l.user_id === user?.id) entry.myReaction = l.reaction_type;
     }
     setLikes(grouped);
+  }
+
+  // 관리자가 "반응한 회원 보기"를 눌렀을 때만 이름을 조회한다 (일반 회원에겐 불필요한 조회).
+  async function loadNamesFor(userIds) {
+    const missing = [...new Set(userIds)].filter((id) => id && !(id in memberNames));
+    if (missing.length === 0) return;
+    const { data } = await supabase
+      .from("member_directory")
+      .select("id, display_name")
+      .in("id", missing);
+    setMemberNames((prev) => {
+      const next = { ...prev };
+      for (const id of missing) next[id] = "알 수 없음";
+      for (const row of data ?? []) next[row.id] = row.display_name;
+      return next;
+    });
+  }
+
+  function toggleLikeDetail(postId) {
+    setLikeDetailOpen((prev) =>
+      prev.includes(postId) ? prev.filter((id) => id !== postId) : [...prev, postId]
+    );
+    loadNamesFor(Object.values(likes[postId]?.users ?? {}).flat());
   }
 
   async function handleToggleLike(postId, reactionType) {
@@ -652,6 +678,29 @@ export default function BoardPage() {
                 url="https://ggnch.shop/board"
               />
             </div>
+
+            {isAdmin && Object.values(likes[post.id]?.counts ?? {}).some((c) => c > 0) && (
+              <button
+                type="button"
+                onClick={() => toggleLikeDetail(post.id)}
+                className="mt-1.5 text-xs text-foreground/40 underline"
+              >
+                반응한 회원 {likeDetailOpen.includes(post.id) ? "숨기기" : "보기"}
+              </button>
+            )}
+
+            {isAdmin && likeDetailOpen.includes(post.id) && (
+              <div className="mt-1.5 space-y-1 rounded-lg bg-black/5 p-2 text-xs text-foreground/60 dark:bg-white/10">
+                {REACTIONS.filter((r) => (likes[post.id]?.counts?.[r.key] ?? 0) > 0).map((r) => (
+                  <p key={r.key}>
+                    {r.emoji} {r.label}:{" "}
+                    {(likes[post.id]?.users?.[r.key] ?? [])
+                      .map((uid) => memberNames[uid] ?? "불러오는 중...")
+                      .join(", ")}
+                  </p>
+                ))}
+              </div>
+            )}
 
             <button
               onClick={() => toggleExpanded(post.id)}
