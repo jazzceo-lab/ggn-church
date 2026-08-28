@@ -7,22 +7,25 @@ const accounts = [
   { key: "building", title: "건축헌금", bank: "농협", number: "301-0141-2913-81" },
 ];
 
-// 안드로이드는 패키지명으로 앱의 실행(MAIN/LAUNCHER) 액티비티를 직접 열기 때문에
-// 은행별 커스텀 스킴을 몰라도 설치되어 있으면 바로 열림. iOS는 커스텀 스킴 방식만
-// 있어서(공식 문서가 없어 커뮤니티에 알려진 값 사용) 은행이 스킴을 바꾸면 iOS에서만
-// 안 열릴 수 있음.
-// 하나은행은 앱 후보가 여러 개라(하나원큐 등) 패키지를 특정하지 않고 검색 결과로 이동.
+// 은행 앱의 커스텀 스킴은 공식 문서가 없고, 크롬은 보안 정책상 BROWSABLE로 등록된
+// 액티비티만 웹링크로 실행을 허용해서 스킴을 정확히 몰라도 무조건 앱을 열 수는 없음.
+// 그래서 각 은행 공식 홈페이지 주소로 연결 - 은행이 안드로이드 앱링크(App Links)를
+// 설정해뒀으면 앱이 설치된 경우 자동으로 앱이 열리고, 아니어도 최소한 홈페이지는
+// 항상 정상적으로 열림. 하나은행은 앱 후보가 여러 개라 플레이스토어 검색으로 연결.
 const BANK_APPS = [
-  { key: "nh", label: "농협", scheme: "com.nonghyup.nhsmartbanking", androidPackage: "nh.smart.banking" },
-  { key: "kb", label: "국민은행", scheme: "kBbank", androidPackage: "com.kbstar.kbbank" },
-  { key: "shinhan", label: "신한은행", scheme: "shinhanSol", androidPackage: "com.shinhan.sbanking" },
-  { key: "woori", label: "우리은행", scheme: "wooribank", androidPackage: "com.wooribank.smart.npib" },
+  { key: "nh", label: "농협", short: "NH", url: "https://banking.nonghyup.com/nhbank.html", bg: "#00a651", fg: "#ffffff" },
+  { key: "kb", label: "국민은행", short: "KB", url: "https://www.kbstar.com/", bg: "#ffbc00", fg: "#1b1b3a" },
+  { key: "shinhan", label: "신한은행", short: "신한", url: "https://www.shinhan.com/", bg: "#0046ff", fg: "#ffffff" },
+  { key: "woori", label: "우리은행", short: "우리", url: "https://www.wooribank.com/", bg: "#0067ac", fg: "#ffffff" },
   {
     key: "hana",
     label: "하나은행",
-    directUrl: "https://play.google.com/store/search?q=%ED%95%98%EB%82%98%EC%9D%80%ED%96%89&c=apps&hl=ko",
+    short: "하나",
+    url: "https://play.google.com/store/search?q=%ED%95%98%EB%82%98%EC%9D%80%ED%96%89&c=apps&hl=ko",
+    bg: "#009490",
+    fg: "#ffffff",
   },
-  { key: "kakao", label: "카카오뱅크", scheme: "kakaobank", androidPackage: "com.kakaobank.channel" },
+  { key: "kakao", label: "카카오뱅크", short: "카카오", url: "https://www.kakaobank.com/", bg: "#fee500", fg: "#3c1e1e" },
 ];
 
 export default function DonatePage() {
@@ -36,22 +39,6 @@ export default function DonatePage() {
     } catch {
       // clipboard API unavailable, ignore
     }
-  }
-
-  function handleOpenBankApp(bank) {
-    if (bank.directUrl) {
-      window.location.assign(bank.directUrl);
-      return;
-    }
-    const isAndroid = /android/i.test(navigator.userAgent);
-    let target = `${bank.scheme}://`;
-    if (isAndroid) {
-      const fallback = encodeURIComponent(
-        `https://play.google.com/store/apps/details?id=${bank.androidPackage}`
-      );
-      target = `intent://#Intent;package=${bank.androidPackage};action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;S.browser_fallback_url=${fallback};end`;
-    }
-    window.location.assign(target);
   }
 
   return (
@@ -88,20 +75,23 @@ export default function DonatePage() {
         <p className="text-center text-xs font-medium text-foreground/60">은행 앱 바로가기</p>
         <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-3">
           {BANK_APPS.map((bank) => (
-            <button
+            <a
               key={bank.key}
-              onClick={() => handleOpenBankApp(bank)}
+              href={bank.url}
               className="flex w-16 flex-col items-center gap-1 text-foreground/60 transition-colors hover:text-brand-dark"
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 text-2xl dark:border-white/10">
-                🏦
+              <span
+                className="flex h-12 w-12 items-center justify-center rounded-full text-xs font-bold"
+                style={{ backgroundColor: bank.bg, color: bank.fg }}
+              >
+                {bank.short}
               </span>
               <span className="text-center text-xs leading-tight">{bank.label}</span>
-            </button>
+            </a>
           ))}
         </div>
         <p className="mt-2 text-center text-[11px] text-foreground/40">
-          앱이 설치되어 있어야 열려요. (안드로이드는 미설치 시 스토어로 이동해요)
+          앱이 설치되어 있고 은행이 지원하면 앱이 바로 열리고, 아니면 홈페이지로 이동해요.
         </p>
       </div>
 
