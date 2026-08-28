@@ -7,6 +7,18 @@ const accounts = [
   { key: "building", title: "건축헌금", bank: "농협", number: "301-0141-2913-81" },
 ];
 
+// 은행 앱 딥링크 스킴은 각 은행이 공식 문서로 공개하지 않아서, 커뮤니티에 알려진 값을
+// 사용합니다. 은행이 스킴을 바꾸면 해당 은행만 안 열릴 수 있어요 - 그럴 땐 이 목록의
+// scheme 값만 새로 확인해서 고치면 됩니다. (안드로이드는 스킴이 틀려도 스토어로는 이동해요)
+const BANK_APPS = [
+  { key: "nh", label: "농협", scheme: "com.nonghyup.nhsmartbanking", androidPackage: "nh.smart.banking" },
+  { key: "kb", label: "국민은행", scheme: "kBbank", androidPackage: "com.kbstar.kbbank" },
+  { key: "shinhan", label: "신한은행", scheme: "shinhanSol", androidPackage: "com.shinhan.sbanking" },
+  { key: "woori", label: "우리은행", scheme: "wooribank", androidPackage: "com.wooribank.smart.npib" },
+  { key: "hana", label: "하나은행", scheme: "hanapush", androidPackage: "com.kebhana.hanapush" },
+  { key: "kakao", label: "카카오뱅크", scheme: "kakaobank", androidPackage: "com.kakaobank.channel" },
+];
+
 export default function DonatePage() {
   const [copiedKey, setCopiedKey] = useState("");
 
@@ -18,6 +30,18 @@ export default function DonatePage() {
     } catch {
       // clipboard API unavailable, ignore
     }
+  }
+
+  function handleOpenBankApp(bank) {
+    const isAndroid = /android/i.test(navigator.userAgent);
+    let target = `${bank.scheme}://`;
+    if (isAndroid) {
+      const fallback = encodeURIComponent(
+        `https://play.google.com/store/apps/details?id=${bank.androidPackage}`
+      );
+      target = `intent://#Intent;scheme=${bank.scheme};package=${bank.androidPackage};S.browser_fallback_url=${fallback};end`;
+    }
+    window.location.assign(target);
   }
 
   return (
@@ -48,6 +72,27 @@ export default function DonatePage() {
             </button>
           </div>
         ))}
+      </div>
+
+      <div className="mt-8">
+        <p className="text-center text-xs font-medium text-foreground/60">은행 앱 바로가기</p>
+        <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-3">
+          {BANK_APPS.map((bank) => (
+            <button
+              key={bank.key}
+              onClick={() => handleOpenBankApp(bank)}
+              className="flex w-16 flex-col items-center gap-1 text-foreground/60 transition-colors hover:text-brand-dark"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 text-2xl dark:border-white/10">
+                🏦
+              </span>
+              <span className="text-center text-xs leading-tight">{bank.label}</span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 text-center text-[11px] text-foreground/40">
+          앱이 설치되어 있어야 열려요. (안드로이드는 미설치 시 스토어로 이동해요)
+        </p>
       </div>
 
       <p className="mt-6 text-xs text-foreground/40">
