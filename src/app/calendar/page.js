@@ -16,6 +16,25 @@ function toDateKey(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+function isSundayKey(dateKey) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay() === 0;
+}
+
+// 매주 일요일에 자동으로 뜨는 주일예배 일정 (DB에 저장하지 않는 가상 일정).
+function sundayWorshipEvent(dateKey) {
+  return {
+    id: `sunday-worship-${dateKey}`,
+    event_date: dateKey,
+    title: "주일예배",
+    description: null,
+    time_label: "오전 11:30",
+    link_url: null,
+    image_url: null,
+    synthetic: true,
+  };
+}
+
 function buildMonthCells(year, month) {
   const startWeekday = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -103,7 +122,13 @@ export default function CalendarPage() {
   }, [events]);
 
   const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate());
-  const selectedEvents = eventsByDate[selected] ?? [];
+
+  function getEventsForDate(key) {
+    const base = eventsByDate[key] ?? [];
+    return isSundayKey(key) ? [sundayWorshipEvent(key), ...base] : base;
+  }
+
+  const selectedEvents = getEventsForDate(selected);
 
   function changeMonth(delta) {
     setCursor(new Date(year, month + delta, 1));
@@ -228,7 +253,7 @@ export default function CalendarPage() {
   function renderDayCell(date, i) {
     if (date === null) return <div key={i} />;
     const key = toDateKey(date.getFullYear(), date.getMonth(), date.getDate());
-    const dayEvents = eventsByDate[key] ?? [];
+    const dayEvents = getEventsForDate(key);
     const isToday = key === todayKey;
     const isSelected = key === selected;
     const isSunday = date.getDay() === 0;
@@ -251,11 +276,13 @@ export default function CalendarPage() {
                       ? "text-purple-600 dark:text-purple-400"
                       : "text-brand-dark"
                 }`
-              : isSpecialDay
-                ? "text-red-600 hover:bg-black/5 dark:text-red-400 dark:hover:bg-white/10"
-                : isChurchDay
-                  ? "text-purple-600 hover:bg-black/5 dark:text-purple-400 dark:hover:bg-white/10"
-                  : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
+              : isSunday
+                ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40"
+                : holidayName
+                  ? "text-red-600 hover:bg-black/5 dark:text-red-400 dark:hover:bg-white/10"
+                  : isChurchDay
+                    ? "text-purple-600 hover:bg-black/5 dark:text-purple-400 dark:hover:bg-white/10"
+                    : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
         }`}
       >
         <span>{date.getDate()}</span>
@@ -502,7 +529,7 @@ export default function CalendarPage() {
                       </p>
                     )}
                   </div>
-                  {isAdmin && (
+                  {isAdmin && !e.synthetic && (
                     <div className="flex shrink-0 gap-2">
                       <button
                         onClick={() => startEdit(e)}
