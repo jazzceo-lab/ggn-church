@@ -316,6 +316,69 @@ export default function CalendarPage() {
     );
   }
 
+  // 주간 보기 전용: 요일 칸 폭에 맞춰 제목을 잘라내는 월간 칸과 달리
+  // 하루씩 세로로 나열해 일정 제목이 잘리지 않게 보여준다.
+  function renderWeekRow(date, i) {
+    const key = toDateKey(date.getFullYear(), date.getMonth(), date.getDate());
+    const dayEvents = getEventsForDate(key);
+    const isToday = key === todayKey;
+    const isSelected = key === selected;
+    const isSunday = date.getDay() === 0;
+    const holidayName = getHolidayName(key);
+    const churchEventName = getChurchEventName(key);
+    const isSpecialDay = isSunday || Boolean(holidayName);
+    const isChurchDay = !isSpecialDay && Boolean(churchEventName);
+    return (
+      <button
+        key={i}
+        onClick={() => selectDate(key)}
+        className={`flex w-full items-start gap-3 rounded-lg border border-black/15 px-3 py-2 text-left text-sm transition-colors dark:border-white/15 ${
+          isSelected
+            ? "bg-brand text-white"
+            : isToday
+              ? `bg-brand-tint ${
+                  isSpecialDay
+                    ? "text-red-600 dark:text-red-400"
+                    : isChurchDay
+                      ? "text-purple-600 dark:text-purple-400"
+                      : "text-brand-dark"
+                }`
+              : isSunday
+                ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/40"
+                : holidayName
+                  ? "text-red-600 hover:bg-black/5 dark:text-red-400 dark:hover:bg-white/10"
+                  : isChurchDay
+                    ? "text-purple-600 hover:bg-black/5 dark:text-purple-400 dark:hover:bg-white/10"
+                    : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/10"
+        }`}
+      >
+        <span className="flex w-10 shrink-0 flex-col items-center pt-0.5">
+          <span className="text-[10px]">{WEEKDAYS[date.getDay()]}</span>
+          <span className="text-base font-semibold">{date.getDate()}</span>
+        </span>
+        <span className="min-w-0 flex-1 space-y-0.5 pt-0.5">
+          {dayEvents.length > 0 ? (
+            dayEvents.map((ev) => (
+              <span key={ev.id} className="block break-keep">
+                {ev.title}
+              </span>
+            ))
+          ) : holidayName ? (
+            <span className={isSelected ? "text-white/90" : "text-red-500 dark:text-red-400"}>
+              {holidayName}
+            </span>
+          ) : churchEventName ? (
+            <span className={isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"}>
+              {churchEventName}
+            </span>
+          ) : (
+            <span className={isSelected ? "text-white/60" : "text-foreground/30"}>일정 없음</span>
+          )}
+        </span>
+      </button>
+    );
+  }
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-xl font-bold text-foreground">교회 일정</h1>
@@ -360,19 +423,24 @@ export default function CalendarPage() {
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs text-foreground/50">
-          {WEEKDAYS.map((w) => (
-            <div key={w} className="py-1">
-              {w}
+        {viewMode === "month" ? (
+          <>
+            <div className="mt-4 grid grid-cols-7 gap-1 text-center text-xs text-foreground/50">
+              {WEEKDAYS.map((w) => (
+                <div key={w} className="py-1">
+                  {w}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-1">
-          {viewMode === "month"
-            ? cells.map((day, i) => renderDayCell(day === null ? null : new Date(year, month, day), i))
-            : weekCells.map((date, i) => renderDayCell(date, i))}
-        </div>
+            <div className="grid grid-cols-7 gap-1">
+              {cells.map((day, i) => renderDayCell(day === null ? null : new Date(year, month, day), i))}
+            </div>
+          </>
+        ) : (
+          <div className="mt-4 space-y-1.5">
+            {weekCells.map((date, i) => renderWeekRow(date, i))}
+          </div>
+        )}
       </div>
 
       <div className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
