@@ -11,7 +11,7 @@ import PushSubscribeButton from "@/components/PushSubscribeButton";
 
 const publicLinks = [
   { href: "/", label: "소개" },
-  { href: "/bulletin", label: "주보/공지" },
+  { href: "/bulletin", label: "주보/소식" },
   { href: "/calendar", label: "교회일정" },
   { href: "/scripture", label: "성경" },
   { href: "/donate", label: "헌금안내" },
