@@ -31,10 +31,11 @@ export default function MessagesPage() {
 
     const { data: dir } = await supabase
       .from("member_directory")
-      .select("id, display_name, district")
+      .select("id, display_name, district, title")
       .neq("id", user.id);
 
     const nameOf = (id) => dir?.find((m) => m.id === id)?.display_name ?? "알 수 없음";
+    const titleOf = (id) => dir?.find((m) => m.id === id)?.title ?? null;
 
     const byPartner = new Map();
     for (const m of msgs ?? []) {
@@ -43,6 +44,7 @@ export default function MessagesPage() {
         byPartner.set(partnerId, {
           partnerId,
           name: nameOf(partnerId),
+          title: titleOf(partnerId),
           lastBody: m.body,
           lastAt: m.created_at,
           unread: false,
@@ -178,6 +180,11 @@ export default function MessagesPage() {
                         >
                           {checked ? "✓ " : ""}
                           {m.display_name}
+                          {m.title && (
+                            <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                              {m.title}
+                            </span>
+                          )}
                         </button>
                       </li>
                     );
@@ -221,6 +228,11 @@ export default function MessagesPage() {
               <p className="flex items-center gap-1.5 font-medium text-foreground">
                 {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden />}
                 {c.name}
+                {c.title && (
+                  <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                    {c.title}
+                  </span>
+                )}
               </p>
               <p
                 className={`mt-1 truncate text-sm ${

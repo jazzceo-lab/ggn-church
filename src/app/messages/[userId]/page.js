@@ -10,6 +10,7 @@ export default function ConversationPage() {
   const { userId } = useParams();
   const { user, loading: authLoading, refreshUnreadCount } = useAuth();
   const [partnerName, setPartnerName] = useState("");
+  const [partnerTitle, setPartnerTitle] = useState(null);
   const [thread, setThread] = useState([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
@@ -23,10 +24,11 @@ export default function ConversationPage() {
 
     const { data: partner } = await supabase
       .from("member_directory")
-      .select("display_name")
+      .select("display_name, title")
       .eq("id", userId)
       .single();
     setPartnerName(partner?.display_name ?? "알 수 없음");
+    setPartnerTitle(partner?.title ?? null);
 
     const { data } = await supabase
       .from("messages")
@@ -135,7 +137,14 @@ export default function ConversationPage() {
         <Link href="/messages" className="text-sm text-foreground/50 hover:underline">
           ← 쪽지함
         </Link>
-        <h1 className="font-serif text-xl font-bold text-foreground">{partnerName}</h1>
+        <h1 className="flex items-center gap-1.5 font-serif text-xl font-bold text-foreground">
+          {partnerName}
+          {partnerTitle && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+              {partnerTitle}
+            </span>
+          )}
+        </h1>
       </div>
 
       <div className="mt-4 flex-1 space-y-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
