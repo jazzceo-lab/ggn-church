@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
+import AvatarLightbox from "@/components/AvatarLightbox";
 
 const UNASSIGNED = "미배정";
 
@@ -16,6 +17,7 @@ export default function MessagesPage() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [composeBody, setComposeBody] = useState("");
@@ -244,7 +246,12 @@ export default function MessagesPage() {
                 <img
                   src={avatarUrl(c.avatarPath)}
                   alt=""
-                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setLightboxUrl(avatarUrl(c.avatarPath));
+                  }}
+                  className="h-10 w-10 shrink-0 cursor-pointer rounded-full object-cover"
                 />
               ) : (
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/5 text-lg dark:bg-white/10">
@@ -282,6 +289,8 @@ export default function MessagesPage() {
           </li>
         ))}
       </ul>
+
+      <AvatarLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </main>
   );
 }

@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
+import AvatarLightbox from "@/components/AvatarLightbox";
 
 export default function ConversationPage() {
   const { userId } = useParams();
@@ -14,6 +15,7 @@ export default function ConversationPage() {
   const [partnerName, setPartnerName] = useState("");
   const [partnerTitle, setPartnerTitle] = useState(null);
   const [partnerAvatarPath, setPartnerAvatarPath] = useState(null);
+  const [lightboxUrl, setLightboxUrl] = useState(null);
   const [thread, setThread] = useState([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
@@ -145,7 +147,8 @@ export default function ConversationPage() {
           <img
             src={avatarUrl(partnerAvatarPath)}
             alt=""
-            className="h-8 w-8 shrink-0 rounded-full object-cover"
+            onClick={() => setLightboxUrl(avatarUrl(partnerAvatarPath))}
+            className="h-8 w-8 shrink-0 cursor-pointer rounded-full object-cover"
           />
         ) : (
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-sm dark:bg-white/10">
@@ -212,6 +215,8 @@ export default function ConversationPage() {
         </button>
       </form>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+      <AvatarLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </main>
   );
 }

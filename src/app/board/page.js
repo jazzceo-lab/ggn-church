@@ -9,6 +9,7 @@ import KakaoShareButton from "@/components/KakaoShareButton";
 import { DISTRICT_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
+import AvatarLightbox from "@/components/AvatarLightbox";
 
 const CATEGORIES = [
   { key: "district", label: "구역게시판" },
@@ -84,6 +85,7 @@ export default function BoardPage() {
   const [likeSubmitting, setLikeSubmitting] = useState(null);
 
   const [avatars, setAvatars] = useState({});
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   const [editingPostId, setEditingPostId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
@@ -599,7 +601,8 @@ export default function BoardPage() {
                 <img
                   src={avatarUrl(avatars[post.user_id])}
                   alt=""
-                  className="h-5 w-5 shrink-0 rounded-full object-cover"
+                  onClick={() => setLightboxUrl(avatarUrl(avatars[post.user_id]))}
+                  className="h-5 w-5 shrink-0 cursor-pointer rounded-full object-cover"
                 />
               ) : (
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black/5 text-[10px] dark:bg-white/10">
@@ -664,7 +667,8 @@ export default function BoardPage() {
                           <img
                             src={avatarUrl(avatars[c.user_id])}
                             alt=""
-                            className="h-4 w-4 shrink-0 rounded-full object-cover"
+                            onClick={() => setLightboxUrl(avatarUrl(avatars[c.user_id]))}
+                            className="h-4 w-4 shrink-0 cursor-pointer rounded-full object-cover"
                           />
                         ) : (
                           <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/5 text-[9px] dark:bg-white/10">
@@ -724,6 +728,8 @@ export default function BoardPage() {
           </li>
         ))}
       </ul>
+
+      <AvatarLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </main>
   );
 }
