@@ -92,7 +92,7 @@ export default function HymnsPage() {
       <h1 className="font-serif text-2xl font-bold text-foreground">찬송가</h1>
       <p className="mt-2 text-sm text-foreground/50">장 범위를 눌러 목록을 펼쳐보세요.</p>
 
-      <div className="mt-6 space-y-2">
+      <div className="mt-4 space-y-2">
         {RANGES.map((range, idx) => (
           <div
             key={range.label}
