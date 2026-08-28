@@ -9,11 +9,14 @@ import KakaoShareButton from "@/components/KakaoShareButton";
 
 const BULLETIN_IMAGE_TYPE = "bulletin";
 const MAX_KEPT_IMAGES = 2;
-const GYODOKMUN_FOLDER_URL =
-  "https://drive.google.com/drive/folders/1oPGanGlD3Q_71apW822LmoNDhyrmKnws?usp=drive_link";
 
 function hymnNumberFrom(text) {
   const match = text?.match(/(\d{1,3})\s*장/);
+  return match ? match[1] : null;
+}
+
+function gyodokmunNumberFrom(text) {
+  const match = text?.match(/(\d{1,3})\s*번/);
   return match ? match[1] : null;
 }
 
@@ -103,7 +106,7 @@ function BulletinContent({ bulletin }) {
         <ul className="mt-3 divide-y divide-black/5 text-sm dark:divide-white/10">
           {bulletin.order.map(([label, detail], i) => {
             const hymnNumber = label === "찬송" ? hymnNumberFrom(detail) : null;
-            const isGyodokmun = label === "교독문" && detail;
+            const gyodokmunNumber = label === "교독문" ? gyodokmunNumberFrom(detail) : null;
             return (
               <li key={i} className="flex items-start gap-2 py-2 tracking-tight">
                 <span className="w-[68px] shrink-0 font-medium text-foreground/80">{label}</span>
@@ -114,15 +117,13 @@ function BulletinContent({ bulletin }) {
                   >
                     {detail}
                   </Link>
-                ) : isGyodokmun ? (
-                  <a
-                    href={GYODOKMUN_FOLDER_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                ) : gyodokmunNumber ? (
+                  <Link
+                    href={`/gyodokmun?open=${gyodokmunNumber}`}
                     className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                   >
                     {detail}
-                  </a>
+                  </Link>
                 ) : (
                   <span className="flex-1 text-right text-foreground/60">{detail}</span>
                 )}
