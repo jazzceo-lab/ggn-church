@@ -17,6 +17,12 @@ const CATEGORIES = [
 
 const DEFAULT_CATEGORY = "district";
 
+const DISTRICT_BOARD_TABS = [
+  { key: "general", label: "구역이야기" },
+  { key: "notice", label: "구역공지" },
+];
+const DEFAULT_DISTRICT_BOARD_TYPE = "general";
+
 // 구역게시판에서 다루는 소속 목록. 정식 "구역"(teamRoster.districts)에
 // 청년부를 게시판 전용으로 추가한 목록 — 제직명단 구역 편성표에는 영향 없음.
 const BOARD_DISTRICTS = [...DISTRICT_NAMES, "청년부"];
@@ -48,12 +54,17 @@ export default function BoardPage() {
   } = useAuth();
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const [districtView, setDistrictView] = useState(null);
+  const [districtBoardType, setDistrictBoardType] = useState(DEFAULT_DISTRICT_BOARD_TYPE);
   const resolvedDistrictView =
     districtView ?? (BOARD_DISTRICTS.includes(myDistrict) ? myDistrict : BOARD_DISTRICTS[0]);
   const activeDistrict =
     category === "district" ? (isAdmin ? resolvedDistrictView : myDistrict) : null;
+  const activeBoardType = category === "district" ? districtBoardType : DEFAULT_DISTRICT_BOARD_TYPE;
   const canUseDistrictBoard =
     category !== "district" || isAdmin || BOARD_DISTRICTS.includes(myDistrict);
+  const canWriteDistrictNotice = isAdmin || isBoardAdmin;
+  const canWriteInCurrentBoard =
+    category !== "district" || districtBoardType !== "notice" || canWriteDistrictNotice;
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [title, setTitle] = useState("");
@@ -75,7 +86,7 @@ export default function BoardPage() {
   const [editBody, setEditBody] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
 
-  async function loadPosts(cat, districtFilter) {
+  async function loadPosts(cat, districtFilter, boardType) {
     if (cat === "district" && !districtFilter) {
       setPosts([]);
       setComments({});
@@ -94,7 +105,7 @@ export default function BoardPage() {
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
     if (cat === "district") {
-      query = query.eq("district", districtFilter);
+      query = query.eq("district", districtFilter).eq("board_type", boardType);
     }
     const { data, error } = await query;
 
@@ -209,9 +220,9 @@ export default function BoardPage() {
   }
 
   useEffect(() => {
-    loadPosts(category, activeDistrict);
+    loadPosts(category, activeDistrict, activeBoardType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, activeDistrict]);
+  }, [category, activeDistrict, activeBoardType]);
 
   useEffect(() => {
     markBoardSeen();
@@ -262,6 +273,7 @@ export default function BoardPage() {
       author_title: memberTitle || null,
       category,
       district: activeDistrict,
+      board_type: activeBoardType,
       attachment_url: attachmentUrl,
       attachment_name: attachmentName,
     });
@@ -274,7 +286,7 @@ export default function BoardPage() {
     setTitle("");
     setBody("");
     setFile(null);
-    loadPosts(category, activeDistrict);
+    loadPosts(category, activeDistrict, activeBoardType);
   }
 
   async function togglePin(post) {
@@ -286,7 +298,7 @@ export default function BoardPage() {
       window.alert("고정 처리에 실패했어요: " + error.message);
       return;
     }
-    loadPosts(category, activeDistrict);
+    loadPosts(category, activeDistrict, activeBoardType);
   }
 
   async function handleDelete(postId) {
@@ -296,7 +308,7 @@ export default function BoardPage() {
       window.alert("삭제에 실패했어요: " + error.message);
       return;
     }
-    loadPosts(category, activeDistrict);
+    loadPosts(category, activeDistrict, activeBoardType);
   }
 
   function startEditPost(post) {
@@ -325,7 +337,7 @@ export default function BoardPage() {
       return;
     }
     cancelEditPost();
-    loadPosts(category, activeDistrict);
+    loadPosts(category, activeDistrict, activeBoardType);
   }
 
   return (
@@ -347,6 +359,24 @@ export default function BoardPage() {
           </button>
         ))}
       </div>
+
+      {category === "district" && (
+        <div className="mt-4 flex gap-2">
+          {DISTRICT_BOARD_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setDistrictBoardType(t.key)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                districtBoardType === t.key
+                  ? "bg-brand text-white"
+                  : "bg-black/5 text-foreground/60 hover:bg-black/10 dark:bg-white/10 dark:hover:bg-white/20"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {!authLoading && !user && (
         <p className="mt-4 text-sm text-foreground/50">
@@ -381,15 +411,23 @@ export default function BoardPage() {
         </p>
       )}
 
-      {user && canUseDistrictBoard && (
+      {category === "district" && user && canUseDistrictBoard && !canWriteInCurrentBoard && (
+        <p className="mt-4 text-sm text-foreground/50">
+          구역공지는 구역장(관리자)만 작성할 수 있어요.
+        </p>
+      )}
+
+      {user && canUseDistrictBoard && canWriteInCurrentBoard && (
         <form
-          key={category}
+          key={`${category}-${districtBoardType}`}
           onSubmit={handleSubmit}
           className="mt-4 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
         >
           {category === "district" && (
             <p className="text-xs text-foreground/50">
-              {activeDistrict} 구역원에게만 보이는 글이에요.
+              {districtBoardType === "notice"
+                ? `${activeDistrict} 구역원 전체에게 공지로 보여요.`
+                : `${activeDistrict} 구역원에게만 보이는 글이에요.`}
             </p>
           )}
           <input
