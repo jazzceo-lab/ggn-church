@@ -8,33 +8,72 @@ const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
 
 webpush.setVapidDetails("mailto:no-reply@ggnch.shop", vapidPublicKey, vapidPrivateKey);
 
+// 이 함수는 Supabase Database Webhook 3개(messages/posts/media_items의 INSERT)에서
+// 공통으로 호출됨. payload.table로 어떤 이벤트인지 구분해서 알림 내용과 받을 사람을 정한다.
+// 교회일정(calendar_events)은 등록 시점에 자동 발송하면 안 맞는 경우가 많아 일부러 제외함
+// (예: 몇 주 뒤 행사를 미리 등록해도 그 순간 알림이 감) - 필요하면 나중에 관리자가
+// 선택한 회원에게만 보내는 별도 기능으로 다룰 것.
 Deno.serve(async (req) => {
   const payload = await req.json();
-  const message = payload.record;
+  // 기존 notify_new_message() 함수는 table 없이 record만 보내므로 messages로 간주.
+  const table = payload.table || "messages";
+  const record = payload.record;
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  const { data: subs } = await supabase
-    .from("push_subscriptions")
-    .select("id, endpoint, p256dh, auth")
-    .eq("user_id", message.recipient_id);
+  let notification;
+  let recipientIds = null; // null이면 구독한 전체 회원에게 발송
+  let excludeUserId = null;
 
-  const { data: sender } = await supabase
-    .from("profiles")
-    .select("display_name, email")
-    .eq("id", message.sender_id)
-    .single();
+  if (table === "messages") {
+    const { data: sender } = await supabase
+      .from("profiles")
+      .select("display_name, email")
+      .eq("id", record.sender_id)
+      .single();
+    const senderName = sender?.display_name || sender?.email || "누군가";
 
-  const senderName = sender?.display_name || sender?.email || "누군가";
+    notification = {
+      title: `${senderName}님의 새 쪽지`,
+      body: record.body,
+      url: `/messages/${record.sender_id}`,
+    };
+    recipientIds = [record.recipient_id];
+  } else if (table === "media_items" && record.media_type === "bulletin") {
+    notification = {
+      title: "길가는교회",
+      body: "📋 이번 주 주보가 올라왔어요",
+      url: "/bulletin",
+    };
+  } else if (table === "posts") {
+    // 구역게시판/기도게시판만 알림 발송. 나눔게시판·앱사용문의는 제외.
+    const NOTIFY_CATEGORIES = ["district", "prayer"];
+    if (!NOTIFY_CATEGORIES.includes(record.category)) {
+      return new Response(JSON.stringify({ skipped: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    notification = {
+      title: "길가는교회",
+      body: `📌 게시판에 새 글이 올라왔어요: ${record.title}`,
+      url: "/board",
+    };
+    excludeUserId = record.user_id;
+  } else {
+    return new Response(JSON.stringify({ skipped: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
-  const notificationPayload = JSON.stringify({
-    title: `${senderName}님의 새 쪽지`,
-    body: message.body,
-    url: `/messages/${message.sender_id}`,
-  });
+  let query = supabase.from("push_subscriptions").select("id, user_id, endpoint, p256dh, auth");
+  if (recipientIds) query = query.in("user_id", recipientIds);
+  const { data: allSubs } = await query;
+
+  const subs = (allSubs ?? []).filter((s) => s.user_id !== excludeUserId);
+  const notificationPayload = JSON.stringify(notification);
 
   const results = await Promise.allSettled(
-    (subs ?? []).map((sub) =>
+    subs.map((sub) =>
       webpush.sendNotification(
         {
           endpoint: sub.endpoint,
@@ -48,7 +87,7 @@ Deno.serve(async (req) => {
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
     if (result.status === "rejected" && (result.reason?.statusCode === 404 || result.reason?.statusCode === 410)) {
-      await supabase.from("push_subscriptions").delete().eq("id", subs![i].id);
+      await supabase.from("push_subscriptions").delete().eq("id", subs[i].id);
     }
   }
 
