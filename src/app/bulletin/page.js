@@ -269,7 +269,7 @@ export default function BulletinPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-4 pb-12">
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
       <div className="flex items-baseline justify-between gap-3">
         <h1 className="font-serif text-2xl font-bold text-foreground">주보</h1>
         <div className="flex items-center gap-3">

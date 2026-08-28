@@ -379,7 +379,7 @@ export default function BoardPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-4 pb-12">
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
 
       <div className="mt-6 flex gap-2 border-b border-black/10 dark:border-white/10">

@@ -317,7 +317,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-4 pb-12">
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-xl font-bold text-foreground">교회 일정</h1>
 
       <div className="mt-3 flex gap-2">
