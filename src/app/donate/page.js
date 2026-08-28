@@ -7,15 +7,21 @@ const accounts = [
   { key: "building", title: "건축헌금", bank: "농협", number: "301-0141-2913-81" },
 ];
 
-// 은행 앱 딥링크 스킴은 각 은행이 공식 문서로 공개하지 않아서, 커뮤니티에 알려진 값을
-// 사용합니다. 은행이 스킴을 바꾸면 해당 은행만 안 열릴 수 있어요 - 그럴 땐 이 목록의
-// scheme 값만 새로 확인해서 고치면 됩니다. (안드로이드는 스킴이 틀려도 스토어로는 이동해요)
+// 안드로이드는 패키지명으로 앱의 실행(MAIN/LAUNCHER) 액티비티를 직접 열기 때문에
+// 은행별 커스텀 스킴을 몰라도 설치되어 있으면 바로 열림. iOS는 커스텀 스킴 방식만
+// 있어서(공식 문서가 없어 커뮤니티에 알려진 값 사용) 은행이 스킴을 바꾸면 iOS에서만
+// 안 열릴 수 있음.
+// 하나은행은 앱 후보가 여러 개라(하나원큐 등) 패키지를 특정하지 않고 검색 결과로 이동.
 const BANK_APPS = [
   { key: "nh", label: "농협", scheme: "com.nonghyup.nhsmartbanking", androidPackage: "nh.smart.banking" },
   { key: "kb", label: "국민은행", scheme: "kBbank", androidPackage: "com.kbstar.kbbank" },
   { key: "shinhan", label: "신한은행", scheme: "shinhanSol", androidPackage: "com.shinhan.sbanking" },
   { key: "woori", label: "우리은행", scheme: "wooribank", androidPackage: "com.wooribank.smart.npib" },
-  { key: "hana", label: "하나은행", scheme: "hanapush", androidPackage: "com.kebhana.hanapush" },
+  {
+    key: "hana",
+    label: "하나은행",
+    directUrl: "https://play.google.com/store/search?q=%ED%95%98%EB%82%98%EC%9D%80%ED%96%89&c=apps&hl=ko",
+  },
   { key: "kakao", label: "카카오뱅크", scheme: "kakaobank", androidPackage: "com.kakaobank.channel" },
 ];
 
@@ -33,13 +39,17 @@ export default function DonatePage() {
   }
 
   function handleOpenBankApp(bank) {
+    if (bank.directUrl) {
+      window.location.assign(bank.directUrl);
+      return;
+    }
     const isAndroid = /android/i.test(navigator.userAgent);
     let target = `${bank.scheme}://`;
     if (isAndroid) {
       const fallback = encodeURIComponent(
         `https://play.google.com/store/apps/details?id=${bank.androidPackage}`
       );
-      target = `intent://#Intent;scheme=${bank.scheme};package=${bank.androidPackage};S.browser_fallback_url=${fallback};end`;
+      target = `intent://#Intent;package=${bank.androidPackage};action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;S.browser_fallback_url=${fallback};end`;
     }
     window.location.assign(target);
   }
