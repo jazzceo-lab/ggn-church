@@ -28,6 +28,11 @@ export default function MediaPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
+  const [externalTitle, setExternalTitle] = useState("");
+  const [externalUrl, setExternalUrl] = useState("");
+  const [externalSubmitting, setExternalSubmitting] = useState(false);
+  const [externalError, setExternalError] = useState("");
+
   const [youtubeVideos, setYoutubeVideos] = useState([]);
   const [youtubeError, setYoutubeError] = useState("");
   const [youtubeLoading, setYoutubeLoading] = useState(true);
@@ -60,7 +65,7 @@ export default function MediaPage() {
     setLoading(true);
     const { data } = await supabase
       .from("media_items")
-      .select("id, title, media_type, file_path, created_at")
+      .select("id, title, media_type, file_path, external_url, created_at")
       .eq("media_type", tab)
       .order("created_at", { ascending: false });
 
@@ -68,6 +73,7 @@ export default function MediaPage() {
 
     const entries = await Promise.all(
       (data ?? []).map(async (item) => {
+        if (item.external_url) return [item.id, item.external_url];
         const { data: signed } = await supabase.storage
           .from("media")
           .createSignedUrl(item.file_path, 60 * 60);
@@ -139,9 +145,33 @@ export default function MediaPage() {
     loadItems();
   }
 
+  async function handleAddExternalLink(e) {
+    e.preventDefault();
+    if (!externalUrl.trim()) return;
+    setExternalSubmitting(true);
+    setExternalError("");
+
+    const { error } = await supabase
+      .from("media_items")
+      .insert({ title: externalTitle, media_type: tab, external_url: externalUrl.trim() });
+
+    if (error) {
+      setExternalError("등록에 실패했어요: " + error.message);
+      setExternalSubmitting(false);
+      return;
+    }
+
+    setExternalSubmitting(false);
+    setExternalTitle("");
+    setExternalUrl("");
+    loadItems();
+  }
+
   async function handleDeleteItem(item) {
     if (!window.confirm(`"${item.title}"을(를) 삭제할까요?`)) return;
-    await supabase.storage.from("media").remove([item.file_path]);
+    if (item.file_path) {
+      await supabase.storage.from("media").remove([item.file_path]);
+    }
     const { error } = await supabase.from("media_items").delete().eq("id", item.id);
     if (error) {
       window.alert("삭제에 실패했어요: " + error.message);
@@ -226,6 +256,43 @@ export default function MediaPage() {
             className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
           >
             {uploading ? "업로드 중..." : "등록"}
+          </button>
+        </form>
+      )}
+
+      {isAdmin && tab === "video" && (
+        <form
+          onSubmit={handleAddExternalLink}
+          className="mt-4 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
+        >
+          <p className="text-sm font-medium text-foreground/80">클라우드 영상 링크 추가 (관리자)</p>
+          <p className="text-xs leading-5 text-foreground/50">
+            용량이 커서 직접 업로드하기 어려운 영상은 네이버 마이박스 등에서 링크 공유 시
+            &ldquo;내려받기&rdquo; 옵션을 꺼서 공유한 링크를 붙여넣으세요. 누르면 새 창에서 재생 화면이 열려요.
+          </p>
+          <input
+            type="text"
+            required
+            value={externalTitle}
+            onChange={(e) => setExternalTitle(e.target.value)}
+            placeholder="제목 (예: 2026.8.23 찬양대 특송)"
+            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+          />
+          <input
+            type="url"
+            required
+            value={externalUrl}
+            onChange={(e) => setExternalUrl(e.target.value)}
+            placeholder="https://mybox.naver.com/... 공유 링크"
+            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+          />
+          {externalError && <p className="text-sm text-red-600">{externalError}</p>}
+          <button
+            type="submit"
+            disabled={externalSubmitting}
+            className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+          >
+            {externalSubmitting ? "등록 중..." : "링크 등록"}
           </button>
         </form>
       )}
@@ -365,10 +432,19 @@ export default function MediaPage() {
             <p className="mt-1 text-xs text-foreground/40">
               {new Date(item.created_at).toLocaleDateString("ko-KR")}
             </p>
-            {urls[item.id] ? (
-              <video controls className="mt-3 w-full rounded-lg" src={urls[item.id]} />
-            ) : (
+            {!urls[item.id] ? (
               <p className="mt-2 text-xs text-foreground/40">재생 링크를 불러오는 중...</p>
+            ) : item.external_url ? (
+              <a
+                href={urls[item.id]}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
+              >
+                ▶ 재생하기 (새 창에서 열림)
+              </a>
+            ) : (
+              <video controls className="mt-3 w-full rounded-lg" src={urls[item.id]} />
             )}
           </li>
         ))}
