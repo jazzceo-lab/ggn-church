@@ -6,12 +6,14 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { titleBadgeClass } from "@/lib/memberTitle";
+import { avatarUrl } from "@/lib/avatar";
 
 export default function ConversationPage() {
   const { userId } = useParams();
   const { user, loading: authLoading, refreshUnreadCount } = useAuth();
   const [partnerName, setPartnerName] = useState("");
   const [partnerTitle, setPartnerTitle] = useState(null);
+  const [partnerAvatarPath, setPartnerAvatarPath] = useState(null);
   const [thread, setThread] = useState([]);
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
@@ -25,11 +27,12 @@ export default function ConversationPage() {
 
     const { data: partner } = await supabase
       .from("member_directory")
-      .select("display_name, title")
+      .select("display_name, title, avatar_path")
       .eq("id", userId)
       .single();
     setPartnerName(partner?.display_name ?? "알 수 없음");
     setPartnerTitle(partner?.title ?? null);
+    setPartnerAvatarPath(partner?.avatar_path ?? null);
 
     const { data } = await supabase
       .from("messages")
@@ -138,6 +141,17 @@ export default function ConversationPage() {
         <Link href="/messages" className="text-sm text-foreground/50 hover:underline">
           ← 쪽지함
         </Link>
+        {avatarUrl(partnerAvatarPath) ? (
+          <img
+            src={avatarUrl(partnerAvatarPath)}
+            alt=""
+            className="h-8 w-8 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/5 text-sm dark:bg-white/10">
+            🙂
+          </span>
+        )}
         <h1 className="flex items-center gap-1.5 font-serif text-xl font-bold text-foreground">
           {partnerName}
           {partnerTitle && (

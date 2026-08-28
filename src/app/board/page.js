@@ -8,6 +8,7 @@ import { safeStoragePath } from "@/lib/storagePath";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { DISTRICT_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
+import { avatarUrl } from "@/lib/avatar";
 
 const CATEGORIES = [
   { key: "district", label: "구역게시판" },
@@ -82,6 +83,8 @@ export default function BoardPage() {
   const [likes, setLikes] = useState({});
   const [likeSubmitting, setLikeSubmitting] = useState(null);
 
+  const [avatars, setAvatars] = useState({});
+
   const [editingPostId, setEditingPostId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
@@ -116,10 +119,26 @@ export default function BoardPage() {
     if (!error && data?.length > 0) {
       loadComments(data.map((p) => p.id));
       loadLikes(data.map((p) => p.id));
+      loadAvatarsFor(data.map((p) => p.user_id));
     } else {
       setComments({});
       setLikes({});
     }
+  }
+
+  async function loadAvatarsFor(userIds) {
+    const missing = [...new Set(userIds)].filter((id) => id && !(id in avatars));
+    if (missing.length === 0) return;
+    const { data } = await supabase
+      .from("member_directory")
+      .select("id, avatar_path")
+      .in("id", missing);
+    setAvatars((prev) => {
+      const next = { ...prev };
+      for (const id of missing) next[id] = null;
+      for (const row of data ?? []) next[row.id] = row.avatar_path;
+      return next;
+    });
   }
 
   async function loadLikes(postIds) {
@@ -178,6 +197,7 @@ export default function BoardPage() {
       grouped[c.post_id].push(c);
     }
     setComments(grouped);
+    loadAvatarsFor(data.map((c) => c.user_id));
   }
 
   function toggleExpanded(postId) {
@@ -574,14 +594,27 @@ export default function BoardPage() {
                 </a>
               )
             )}
-            <p className="mt-2 text-xs text-foreground/50">
-              {post.author_name}
-              {post.author_title && (
-                <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(post.author_title)}`}>
-                  {post.author_title}
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-foreground/50">
+              {avatarUrl(avatars[post.user_id]) ? (
+                <img
+                  src={avatarUrl(avatars[post.user_id])}
+                  alt=""
+                  className="h-5 w-5 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-black/5 text-[10px] dark:bg-white/10">
+                  🙂
                 </span>
-              )}{" "}
-              · {new Date(post.created_at).toLocaleDateString("ko-KR")}
+              )}
+              <span>
+                {post.author_name}
+                {post.author_title && (
+                  <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(post.author_title)}`}>
+                    {post.author_title}
+                  </span>
+                )}{" "}
+                · {new Date(post.created_at).toLocaleDateString("ko-KR")}
+              </span>
             </p>
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -626,14 +659,27 @@ export default function BoardPage() {
                   <div key={c.id} className="flex items-start justify-between gap-2 text-sm">
                     <div>
                       <p className="text-foreground/80">{c.body}</p>
-                      <p className="mt-0.5 text-xs text-foreground/40">
-                        {c.author_name}
-                        {c.author_title && (
-                          <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(c.author_title)}`}>
-                            {c.author_title}
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-foreground/40">
+                        {avatarUrl(avatars[c.user_id]) ? (
+                          <img
+                            src={avatarUrl(avatars[c.user_id])}
+                            alt=""
+                            className="h-4 w-4 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/5 text-[9px] dark:bg-white/10">
+                            🙂
                           </span>
-                        )}{" "}
-                        · {new Date(c.created_at).toLocaleDateString("ko-KR")}
+                        )}
+                        <span>
+                          {c.author_name}
+                          {c.author_title && (
+                            <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(c.author_title)}`}>
+                              {c.author_title}
+                            </span>
+                          )}{" "}
+                          · {new Date(c.created_at).toLocaleDateString("ko-KR")}
+                        </span>
                       </p>
                     </div>
                     {(isAdmin || isBoardAdmin || c.user_id === user?.id) && (

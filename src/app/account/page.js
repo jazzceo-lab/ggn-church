@@ -5,13 +5,9 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import { avatarUrl } from "@/lib/avatar";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
-
-function avatarUrl(path) {
-  if (!path) return null;
-  return supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl;
-}
 
 // 입력값을 010-1234-5678 형태로 다듬는다. 숫자만 남기고 최대 11자리로 자른 뒤
 // 자릿수에 맞춰 하이픈을 넣는다.

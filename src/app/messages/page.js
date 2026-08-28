@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
+import { avatarUrl } from "@/lib/avatar";
 
 const UNASSIGNED = "미배정";
 
@@ -32,11 +33,12 @@ export default function MessagesPage() {
 
     const { data: dir } = await supabase
       .from("member_directory")
-      .select("id, display_name, district, title")
+      .select("id, display_name, district, title, avatar_path")
       .neq("id", user.id);
 
     const nameOf = (id) => dir?.find((m) => m.id === id)?.display_name ?? "알 수 없음";
     const titleOf = (id) => dir?.find((m) => m.id === id)?.title ?? null;
+    const avatarOf = (id) => dir?.find((m) => m.id === id)?.avatar_path ?? null;
 
     const byPartner = new Map();
     for (const m of msgs ?? []) {
@@ -46,6 +48,7 @@ export default function MessagesPage() {
           partnerId,
           name: nameOf(partnerId),
           title: titleOf(partnerId),
+          avatarPath: avatarOf(partnerId),
           lastBody: m.body,
           lastAt: m.created_at,
           unread: false,
@@ -173,12 +176,23 @@ export default function MessagesPage() {
                         <button
                           type="button"
                           onClick={() => toggleSelected(m.id)}
-                          className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                          className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors ${
                             checked
                               ? "border-brand bg-brand text-white"
                               : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
                           }`}
                         >
+                          {avatarUrl(m.avatar_path) ? (
+                            <img
+                              src={avatarUrl(m.avatar_path)}
+                              alt=""
+                              className="h-4 w-4 shrink-0 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/10 text-[9px] dark:bg-white/10">
+                              🙂
+                            </span>
+                          )}
                           {checked ? "✓ " : ""}
                           {m.display_name}
                           {m.title && (
@@ -225,26 +239,39 @@ export default function MessagesPage() {
         )}
         {conversations.map((c) => (
           <li key={c.partnerId} className="flex items-center gap-2 p-4 hover:bg-black/5 dark:hover:bg-white/10">
-            <Link href={`/messages/${c.partnerId}`} className="min-w-0 flex-1">
-              <p className="flex items-center gap-1.5 font-medium text-foreground">
-                {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden />}
-                {c.name}
-                {c.title && (
-                  <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(c.title)}`}>
-                    {c.title}
-                  </span>
-                )}
-              </p>
-              <p
-                className={`mt-1 truncate text-sm ${
-                  c.unread ? "font-medium text-foreground" : "text-foreground/60"
-                }`}
-              >
-                {c.lastBody}
-              </p>
-              <p className="mt-1 text-xs text-foreground/40">
-                {new Date(c.lastAt).toLocaleString("ko-KR")}
-              </p>
+            <Link href={`/messages/${c.partnerId}`} className="flex min-w-0 flex-1 items-center gap-3">
+              {avatarUrl(c.avatarPath) ? (
+                <img
+                  src={avatarUrl(c.avatarPath)}
+                  alt=""
+                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/5 text-lg dark:bg-white/10">
+                  🙂
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <p className="flex items-center gap-1.5 font-medium text-foreground">
+                  {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden />}
+                  {c.name}
+                  {c.title && (
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(c.title)}`}>
+                      {c.title}
+                    </span>
+                  )}
+                </p>
+                <p
+                  className={`mt-1 truncate text-sm ${
+                    c.unread ? "font-medium text-foreground" : "text-foreground/60"
+                  }`}
+                >
+                  {c.lastBody}
+                </p>
+                <p className="mt-1 text-xs text-foreground/40">
+                  {new Date(c.lastAt).toLocaleString("ko-KR")}
+                </p>
+              </span>
             </Link>
             <button
               onClick={() => handleDeleteConversation(c.partnerId, c.name)}
