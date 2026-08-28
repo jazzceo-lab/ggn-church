@@ -9,24 +9,22 @@ import { avatarUrl } from "@/lib/avatar";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
 
-// 입력값을 010-1234-5678 형태로 다듬는다. 숫자만 남기고 최대 11자리로 자른 뒤
-// 자릿수에 맞춰 하이픈을 넣는다.
-function formatPhone(raw) {
-  const digits = raw.replace(/\D/g, "").slice(0, 11);
-  if (digits.length < 4) return digits;
-  if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+// "010-" 뒤에 이어지는 8자리만 입력받아 1234-5678 형태로 다듬는다.
+function formatPhoneRest(raw) {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 4) return digits;
+  return `${digits.slice(0, 4)}-${digits.slice(4)}`;
 }
 
-function isValidPhone(value) {
-  return /^01[0-9]-\d{3,4}-\d{4}$/.test(value);
+function isValidPhoneRest(value) {
+  return /^\d{4}-\d{4}$/.test(value);
 }
 
 export default function AccountPage() {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [avatarPath, setAvatarPath] = useState(null);
-  const [phone, setPhone] = useState("");
+  const [phoneRest, setPhoneRest] = useState("");
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -45,7 +43,7 @@ export default function AccountPage() {
       .single()
       .then(({ data }) => {
         setAvatarPath(data?.avatar_path ?? null);
-        setPhone(data?.phone ?? "");
+        setPhoneRest(data?.phone?.replace(/^010-/, "") ?? "");
         setLoading(false);
       });
   }, [user]);
@@ -84,11 +82,12 @@ export default function AccountPage() {
     setError("");
     setSuccess(false);
 
-    const trimmedPhone = phone.trim();
-    if (trimmedPhone && !isValidPhone(trimmedPhone)) {
-      setError("휴대폰 번호 형식이 올바르지 않아요. 예: 010-1234-5678");
+    const trimmedRest = phoneRest.trim();
+    if (trimmedRest && !isValidPhoneRest(trimmedRest)) {
+      setError("휴대폰 번호 형식이 올바르지 않아요. 예: 1234-5678");
       return;
     }
+    const fullPhone = trimmedRest ? `010-${trimmedRest}` : null;
 
     setSaving(true);
     let nextAvatarPath = avatarPath;
@@ -108,7 +107,7 @@ export default function AccountPage() {
 
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ phone: trimmedPhone || null, avatar_path: nextAvatarPath })
+      .update({ phone: fullPhone, avatar_path: nextAvatarPath })
       .eq("id", user.id);
 
     setSaving(false);
@@ -119,7 +118,7 @@ export default function AccountPage() {
 
     setAvatarPath(nextAvatarPath);
     setFile(null);
-    setPhone(trimmedPhone);
+    setPhoneRest(trimmedRest);
     setSuccess(true);
   }
 
@@ -175,13 +174,16 @@ export default function AccountPage() {
 
           <div>
             <label className="block text-sm text-foreground/60">핸드폰 번호</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(formatPhone(e.target.value))}
-              placeholder="010-1234-5678"
-              className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-            />
+            <div className="mt-1 flex items-center gap-1.5 rounded-md border border-black/10 px-3 py-2 dark:border-white/10 dark:bg-white/10">
+              <span className="text-sm text-foreground/60">010-</span>
+              <input
+                type="tel"
+                value={phoneRest}
+                onChange={(e) => setPhoneRest(formatPhoneRest(e.target.value))}
+                placeholder="1234-5678"
+                className="w-full text-sm outline-none dark:bg-transparent"
+              />
+            </div>
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
