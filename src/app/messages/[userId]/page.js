@@ -138,7 +138,7 @@ export default function ConversationPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-12">
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-4 pb-12">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="text-sm text-foreground/50 hover:underline">
           ← 쪽지함

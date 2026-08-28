@@ -106,7 +106,7 @@ export default function TeamsPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-4 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">2026년 제직명단·구역 편성</h1>
       <p className="mt-2 text-sm text-foreground/50">로그인한 교인에게만 보이는 페이지입니다.</p>
 

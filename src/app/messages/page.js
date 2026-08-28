@@ -139,7 +139,7 @@ export default function MessagesPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-12">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl font-bold text-foreground">쪽지함</h1>
         <button

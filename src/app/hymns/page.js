@@ -88,7 +88,7 @@ export default function HymnsPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">찬송가</h1>
       <p className="mt-2 text-sm text-foreground/50">장 범위를 눌러 목록을 펼쳐보세요.</p>
 

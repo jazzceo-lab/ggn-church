@@ -138,7 +138,7 @@ export default function AccountPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">회원정보</h1>
       <p className="mt-2 text-sm text-foreground/50">
         프로필 사진과 핸드폰 번호를 등록해두면 다른 교인들이 알아보기 쉬워요.

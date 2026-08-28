@@ -198,7 +198,7 @@ export default function MediaPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-4 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">설교·찬양</h1>
 
       <div className="mt-6 flex gap-2 border-b border-black/10 dark:border-white/10">
