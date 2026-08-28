@@ -2,8 +2,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/pushConfig";
 
 export async function isPushSubscribed(user) {
-  const reg = await navigator.serviceWorker.getRegistration();
-  if (!reg) return false;
+  if (!("serviceWorker" in navigator)) return false;
+  const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
   if (!sub) return false;
   const { data } = await supabase
