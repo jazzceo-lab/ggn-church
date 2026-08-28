@@ -9,14 +9,42 @@ const accounts = [
 
 // 은행 앱의 커스텀 스킴은 공식 문서가 없고, 크롬은 보안 정책상 BROWSABLE로 등록된
 // 액티비티만 웹링크로 실행을 허용해서 스킴을 정확히 몰라도 무조건 앱을 열 수는 없음.
-// 그래서 각 은행 공식 홈페이지 주소로 연결 - 은행이 안드로이드 앱링크(App Links)를
-// 설정해뒀으면 앱이 설치된 경우 자동으로 앱이 열리고, 아니어도 최소한 홈페이지는
-// 항상 정상적으로 열림. 하나은행은 앱 후보가 여러 개라 플레이스토어 검색으로 연결.
+// 그래서 구글 플레이스토어의 해당 앱 페이지로 연결 - 이미 설치되어 있으면 "열기"
+// 버튼이 보이고, 없으면 설치할 수 있어서 항상 정상적으로 동작함.
+// 하나은행은 앱 후보가 여러 개라 특정 앱을 지목하지 않고 검색 결과로 연결.
 const BANK_APPS = [
-  { key: "nh", label: "농협", short: "NH", url: "https://banking.nonghyup.com/nhbank.html", bg: "#00a651", fg: "#ffffff" },
-  { key: "kb", label: "국민은행", short: "KB", url: "https://www.kbstar.com/", bg: "#ffbc00", fg: "#1b1b3a" },
-  { key: "shinhan", label: "신한은행", short: "신한", url: "https://www.shinhan.com/", bg: "#0046ff", fg: "#ffffff" },
-  { key: "woori", label: "우리은행", short: "우리", url: "https://www.wooribank.com/", bg: "#0067ac", fg: "#ffffff" },
+  {
+    key: "nh",
+    label: "농협",
+    short: "NH",
+    url: "https://play.google.com/store/apps/details?id=nh.smart.banking&hl=ko",
+    bg: "#00a651",
+    fg: "#ffffff",
+  },
+  {
+    key: "kb",
+    label: "국민은행",
+    short: "KB",
+    url: "https://play.google.com/store/apps/details?id=com.kbstar.kbbank&hl=ko",
+    bg: "#ffbc00",
+    fg: "#1b1b3a",
+  },
+  {
+    key: "shinhan",
+    label: "신한은행",
+    short: "신한",
+    url: "https://play.google.com/store/apps/details?id=com.shinhan.sbanking&hl=ko",
+    bg: "#0046ff",
+    fg: "#ffffff",
+  },
+  {
+    key: "woori",
+    label: "우리은행",
+    short: "우리",
+    url: "https://play.google.com/store/apps/details?id=com.wooribank.smart.npib&hl=ko",
+    bg: "#0067ac",
+    fg: "#ffffff",
+  },
   {
     key: "hana",
     label: "하나은행",
@@ -25,7 +53,14 @@ const BANK_APPS = [
     bg: "#009490",
     fg: "#ffffff",
   },
-  { key: "kakao", label: "카카오뱅크", short: "카카오", url: "https://www.kakaobank.com/", bg: "#fee500", fg: "#3c1e1e" },
+  {
+    key: "kakao",
+    label: "카카오뱅크",
+    short: "카카오",
+    url: "https://play.google.com/store/apps/details?id=com.kakaobank.channel&hl=ko",
+    bg: "#fee500",
+    fg: "#3c1e1e",
+  },
 ];
 
 export default function DonatePage() {
@@ -91,7 +126,8 @@ export default function DonatePage() {
           ))}
         </div>
         <p className="mt-2 text-center text-[11px] text-foreground/40">
-          앱이 설치되어 있고 은행이 지원하면 앱이 바로 열리고, 아니면 홈페이지로 이동해요.
+          구글 플레이스토어의 해당 앱 페이지로 이동해요. 이미 설치되어 있으면 거기서
+          &ldquo;열기&rdquo;를 눌러주세요.
         </p>
       </div>
 
