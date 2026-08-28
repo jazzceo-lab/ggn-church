@@ -35,12 +35,12 @@ function PowerIcon({ className }) {
 }
 
 const memberLinks = [
-  { href: "/account", label: "회원정보" },
   { href: "/teams", label: "제직명단" },
   { href: "/media", label: "설교·찬양" },
   { href: "/hymns", label: "찬송가" },
   { href: "/board", label: "공지/게시판", countKey: "board" },
   { href: "/messages", label: "쪽지함", countKey: "messages" },
+  { href: "/account", label: "회원정보" },
 ];
 
 export default function NavBar() {
