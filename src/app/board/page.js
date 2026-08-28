@@ -363,6 +363,21 @@ export default function BoardPage() {
     loadPosts(category, activeDistrict, activeBoardType);
   }
 
+  if (!authLoading && !user) {
+    return (
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
+        <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
+        <p className="mt-3 text-sm text-foreground/60">게시판은 로그인한 교인만 볼 수 있어요.</p>
+        <Link
+          href="/login"
+          className="mt-6 inline-block rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
+        >
+          로그인하러 가기
+        </Link>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
@@ -399,16 +414,6 @@ export default function BoardPage() {
             </button>
           ))}
         </div>
-      )}
-
-      {!authLoading && !user && (
-        <p className="mt-4 text-sm text-foreground/50">
-          글을 쓰려면{" "}
-          <Link href="/login" className="text-brand-dark underline">
-            로그인
-          </Link>
-          이 필요해요.
-        </p>
       )}
 
       {category === "district" && user && isAdmin && (
