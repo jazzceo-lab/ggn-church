@@ -279,14 +279,6 @@ export default function BoardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("compose") === "1") {
-      setShowCompose(true);
-      window.history.replaceState(null, "", "/board");
-    }
-  }, []);
-
   function handleFileChange(e) {
     const f = e.target.files?.[0] ?? null;
     if (f && f.size > MAX_FILE_SIZE) {
@@ -445,6 +437,17 @@ export default function BoardPage() {
           )
         )}
       </div>
+
+      {user && canUseDistrictBoard && canWriteInCurrentBoard && (
+        <button
+          type="button"
+          onClick={() => setShowCompose(true)}
+          aria-label="새 글 쓰기"
+          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-3xl leading-none text-white shadow-lg transition-colors hover:bg-brand-dark"
+        >
+          +
+        </button>
+      )}
 
       {category === "district" && (
         <div className="mt-4 flex gap-2">

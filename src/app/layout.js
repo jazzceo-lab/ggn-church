@@ -6,7 +6,6 @@ import PopupNotice from "@/components/PopupNotice";
 import InstallAppBanner from "@/components/InstallAppBanner";
 import NotificationPromptBanner from "@/components/NotificationPromptBanner";
 import KakaoInAppEscape from "@/components/KakaoInAppEscape";
-import WriteFab from "@/components/WriteFab";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-sans-kr",
@@ -51,7 +50,6 @@ export default function RootLayout({ children }) {
           <footer className="border-t border-black/10 py-6 text-center text-xs text-foreground/50 dark:border-white/10">
             © {new Date().getFullYear()} 길가는교회
           </footer>
-          <WriteFab />
         </AuthProvider>
       </body>
     </html>
