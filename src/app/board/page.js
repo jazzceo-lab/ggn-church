@@ -15,10 +15,10 @@ const CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
-  { key: "help", label: "앱사용문의", emphasize: true },
+  { key: "suggestion", label: "교회건의" },
 ];
 
-const DEFAULT_CATEGORY = "help";
+const DEFAULT_CATEGORY = "district";
 
 const DISTRICT_BOARD_TABS = [
   { key: "notice", label: "구역공지" },
@@ -270,6 +270,15 @@ export default function BoardPage() {
   }
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedCategory = params.get("category");
+    if (requestedCategory) {
+      setCategory(requestedCategory);
+      window.history.replaceState(null, "", "/board");
+    }
+  }, []);
+
+  useEffect(() => {
     loadPosts(category, activeDistrict, activeBoardType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, activeDistrict, activeBoardType]);
@@ -408,34 +417,30 @@ export default function BoardPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 mt-3 pb-12">
-      <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
+      <div className="flex items-baseline justify-between gap-2">
+        <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
+        <button
+          onClick={() => setCategory("help")}
+          className="whitespace-nowrap text-xs font-medium text-brand-dark underline underline-offset-2"
+        >
+          앱사용문의
+        </button>
+      </div>
 
       <div className="mt-2 flex items-center gap-2 border-b border-black/10 dark:border-white/10">
-        {CATEGORIES.map((c) =>
-          c.emphasize ? (
-            <button
-              key={c.key}
-              onClick={() => setCategory(c.key)}
-              className={`-mb-px rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                category === c.key ? "bg-brand-dark text-white" : "bg-brand text-white hover:bg-brand-dark"
-              }`}
-            >
-              {c.label}
-            </button>
-          ) : (
-            <button
-              key={c.key}
-              onClick={() => setCategory(c.key)}
-              className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                category === c.key
-                  ? "border-brand text-brand-dark"
-                  : "border-transparent text-foreground/50 hover:text-foreground/80"
-              }`}
-            >
-              {c.label}
-            </button>
-          )
-        )}
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.key}
+            onClick={() => setCategory(c.key)}
+            className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+              category === c.key
+                ? "border-brand text-brand-dark"
+                : "border-transparent text-foreground/50 hover:text-foreground/80"
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
       </div>
 
       {user && canUseDistrictBoard && canWriteInCurrentBoard && (
