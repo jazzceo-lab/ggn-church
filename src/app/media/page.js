@@ -17,7 +17,8 @@ const TABS = [
 const MAX_KEPT_AUDIO = 2;
 
 export default function MediaPage() {
-  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { user, loading: authLoading, isAdmin, hasRole } = useAuth();
+  const canManageVideo = isAdmin || hasRole("media_manager");
   const [tab, setTab] = useState("audio");
   const [items, setItems] = useState([]);
   const [urls, setUrls] = useState({});
@@ -217,14 +218,14 @@ export default function MediaPage() {
         ))}
       </div>
 
-      {isAdmin && tab !== "youtube" && (
+      {((tab === "audio" && isAdmin) || (tab === "video" && canManageVideo)) && (
         <form
           key={tab}
           onSubmit={handleUpload}
           className="mt-4 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
         >
           <p className="text-sm font-medium text-foreground/80">
-            {TABS.find((t) => t.key === tab)?.label} 등록 (관리자)
+            {TABS.find((t) => t.key === tab)?.label} 등록
           </p>
           <input
             type="text"
@@ -260,12 +261,12 @@ export default function MediaPage() {
         </form>
       )}
 
-      {isAdmin && tab === "video" && (
+      {canManageVideo && tab === "video" && (
         <form
           onSubmit={handleAddExternalLink}
           className="mt-4 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
         >
-          <p className="text-sm font-medium text-foreground/80">클라우드 영상 링크 추가 (관리자)</p>
+          <p className="text-sm font-medium text-foreground/80">클라우드 영상 링크 추가</p>
           <p className="text-xs leading-5 text-foreground/50">
             용량이 커서 직접 업로드하기 어려운 영상은 네이버 마이박스 등에서 링크 공유 시
             &ldquo;내려받기&rdquo; 옵션을 꺼서 공유한 링크를 붙여넣으세요. 누르면 새 창에서 재생 화면이 열려요.
@@ -420,7 +421,7 @@ export default function MediaPage() {
           >
             <div className="flex items-start justify-between gap-2">
               <p className="font-medium text-foreground">{item.title}</p>
-              {isAdmin && (
+              {canManageVideo && (
                 <button
                   onClick={() => handleDeleteItem(item)}
                   className="shrink-0 text-xs text-foreground/40 hover:text-red-600"

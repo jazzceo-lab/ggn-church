@@ -10,6 +10,8 @@ const AuthContext = createContext({
   isBoardAdmin: false,
   district: null,
   memberTitle: null,
+  roles: new Set(),
+  hasRole: () => false,
   unreadCount: 0,
   refreshUnreadCount: () => {},
   boardNewCount: 0,
@@ -22,6 +24,7 @@ export function AuthProvider({ children }) {
   const [isBoardAdmin, setIsBoardAdmin] = useState(false);
   const [district, setDistrict] = useState(null);
   const [memberTitle, setMemberTitle] = useState(null);
+  const [roles, setRoles] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [boardNewCount, setBoardNewCount] = useState(0);
@@ -36,6 +39,7 @@ export function AuthProvider({ children }) {
       setIsBoardAdmin(false);
       setDistrict(null);
       setMemberTitle(null);
+      setRoles(new Set());
       return;
     }
     const { data } = await supabase
@@ -50,6 +54,7 @@ export function AuthProvider({ children }) {
       setIsBoardAdmin(false);
       setDistrict(null);
       setMemberTitle(null);
+      setRoles(new Set());
       setUser(null);
       window.alert("이용이 정지된 계정입니다. 문의사항은 교회 사무실로 연락해주세요.");
       return;
@@ -60,6 +65,13 @@ export function AuthProvider({ children }) {
     setDistrict(data?.district ?? null);
     setMemberTitle(data?.title ?? null);
     setBoardLastSeenAt(data?.board_last_seen_at ?? null);
+
+    const { data: roleRows } = await supabase
+      .from("member_roles")
+      .select("role_key")
+      .eq("user_id", currentUser.id);
+    setRoles(new Set((roleRows ?? []).map((r) => r.role_key)));
+
     return data?.board_last_seen_at ?? null;
   }
 
@@ -215,6 +227,8 @@ export function AuthProvider({ children }) {
         isBoardAdmin,
         district,
         memberTitle,
+        roles,
+        hasRole: (key) => roles.has(key),
         unreadCount,
         refreshUnreadCount: () => refreshUnreadCount(),
         boardNewCount,

@@ -53,9 +53,11 @@ export default function BoardPage() {
     isBoardAdmin,
     district: myDistrict,
     memberTitle,
+    hasRole,
     markBoardSeen,
   } = useAuth();
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
+  const canReplyToSuggestion = category !== "suggestion" || isAdmin || hasRole("pastor_reply");
   const [districtView, setDistrictView] = useState(null);
   const [districtBoardType, setDistrictBoardType] = useState(DEFAULT_DISTRICT_BOARD_TYPE);
   const resolvedDistrictView =
@@ -803,7 +805,10 @@ export default function BoardPage() {
                   <p className="text-xs text-foreground/40">아직 댓글이 없어요.</p>
                 )}
 
-                {user && (
+                {user && !canReplyToSuggestion && (
+                  <p className="mt-2 text-xs text-foreground/40">답변은 목회자만 남길 수 있어요.</p>
+                )}
+                {user && canReplyToSuggestion && (
                   <form
                     onSubmit={(e) => handleAddComment(e, post.id)}
                     className="mt-2 flex items-center gap-2"

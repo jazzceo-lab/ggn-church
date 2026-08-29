@@ -11,11 +11,19 @@ const UNASSIGNED = "미배정";
 const NO_TITLE = "없음";
 const TITLE_OPTIONS = ["목사", "장로"];
 
+const ROLE_OPTIONS = [
+  { key: "pastor_reply", label: "교회건의 답변 권한" },
+  { key: "media_manager", label: "찬양팀 영상 관리 권한" },
+];
+const ROLE_LABELS = Object.fromEntries(ROLE_OPTIONS.map((r) => [r.key, r.label]));
+
 export default function AdminMembersPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifyingIds, setNotifyingIds] = useState(new Set());
+  const [rolesByMember, setRolesByMember] = useState({});
+  const [newRoleByMember, setNewRoleByMember] = useState({});
 
   async function loadMembers() {
     setLoading(true);
@@ -31,7 +39,39 @@ export default function AdminMembersPage() {
     const { data: subs } = await supabase.from("push_subscriptions").select("user_id");
     setNotifyingIds(new Set((subs ?? []).map((s) => s.user_id)));
 
+    const { data: roleRows } = await supabase.from("member_roles").select("user_id, role_key");
+    const grouped = {};
+    for (const r of roleRows ?? []) {
+      (grouped[r.user_id] ??= new Set()).add(r.role_key);
+    }
+    setRolesByMember(grouped);
+
     setLoading(false);
+  }
+
+  async function addRole(memberId) {
+    const roleKey = newRoleByMember[memberId];
+    if (!roleKey) return;
+    const { error } = await supabase.from("member_roles").insert({ user_id: memberId, role_key: roleKey });
+    if (error) {
+      window.alert("권한 추가에 실패했어요: " + error.message);
+      return;
+    }
+    setNewRoleByMember((prev) => ({ ...prev, [memberId]: "" }));
+    loadMembers();
+  }
+
+  async function removeRole(memberId, roleKey) {
+    const { error } = await supabase
+      .from("member_roles")
+      .delete()
+      .eq("user_id", memberId)
+      .eq("role_key", roleKey);
+    if (error) {
+      window.alert("권한 제거에 실패했어요: " + error.message);
+      return;
+    }
+    loadMembers();
   }
 
   useEffect(() => {
@@ -224,6 +264,46 @@ export default function AdminMembersPage() {
                   ))}
                 </select>
               </label>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                {[...(rolesByMember[m.id] ?? [])].map((roleKey) => (
+                  <span
+                    key={roleKey}
+                    className="flex items-center gap-1 rounded-full bg-brand-tint px-2 py-0.5 text-brand-dark"
+                  >
+                    {ROLE_LABELS[roleKey] ?? roleKey}
+                    <button
+                      onClick={() => removeRole(m.id, roleKey)}
+                      aria-label="권한 제거"
+                      className="text-brand-dark/60 hover:text-brand-dark"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+                <select
+                  value={newRoleByMember[m.id] ?? ""}
+                  onChange={(e) =>
+                    setNewRoleByMember((prev) => ({ ...prev, [m.id]: e.target.value }))
+                  }
+                  className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
+                >
+                  <option value="">권한 추가...</option>
+                  {ROLE_OPTIONS.filter((r) => !(rolesByMember[m.id] ?? new Set()).has(r.key)).map(
+                    (r) => (
+                      <option key={r.key} value={r.key}>
+                        {r.label}
+                      </option>
+                    )
+                  )}
+                </select>
+                <button
+                  onClick={() => addRole(m.id)}
+                  disabled={!newRoleByMember[m.id]}
+                  className="rounded-full border border-black/10 px-2 py-1 text-foreground/70 hover:bg-black/5 disabled:opacity-40 dark:border-white/10 dark:hover:bg-white/10"
+                >
+                  추가
+                </button>
+              </div>
             </div>
             <div className="flex shrink-0 gap-2">
               <button
