@@ -410,14 +410,14 @@ export default function BoardPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 mt-3 pb-12">
-      <div className="flex items-baseline gap-3">
+      <div className="flex items-baseline gap-5">
         <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
         <button
           onClick={() => setCategory(RESOURCE_CATEGORY.key)}
-          className={`text-sm font-medium underline underline-offset-2 transition-colors ${
+          className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
             category === RESOURCE_CATEGORY.key
-              ? "text-brand-dark"
-              : "text-foreground/50 hover:text-foreground/80"
+              ? "bg-brand-dark text-white"
+              : "bg-brand text-white hover:bg-brand-dark"
           }`}
         >
           {RESOURCE_CATEGORY.label}
