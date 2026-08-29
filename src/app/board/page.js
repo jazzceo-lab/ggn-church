@@ -475,6 +475,8 @@ export default function BoardPage() {
         </div>
       )}
 
+      <div className="flex flex-col">
+      <div className={posts.length > 0 ? "order-2" : "order-1"}>
       {category === "district" && user && !isAdmin && !canUseDistrictBoard && (
         <p className="mt-4 text-sm text-foreground/50">
           소속 구역이 지정되지 않아 구역게시판을 이용할 수 없어요. 관리자에게 문의해주세요.
@@ -536,7 +538,9 @@ export default function BoardPage() {
           </button>
         </form>
       )}
+      </div>
 
+      <div className={posts.length > 0 ? "order-1" : "order-2"}>
       <ul className="mt-4 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
         {loadingPosts && <li className="p-4 text-sm text-foreground/50">불러오는 중...</li>}
         {!loadingPosts && posts.length === 0 && (
@@ -798,6 +802,8 @@ export default function BoardPage() {
           </li>
         ))}
       </ul>
+      </div>
+      </div>
 
       <AvatarLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </main>
