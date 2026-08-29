@@ -15,8 +15,11 @@ const CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
-  { key: "help", label: "앱사용문의" },
 ];
+
+// 탭 줄이 좁아지는 걸 막기 위해 "게시판" 제목 옆에 따로 빼둔 카테고리.
+// 예전 "앱사용문의"와 같은 category 값(help)을 그대로 써서 기존 글이 유지됨.
+const RESOURCE_CATEGORY = { key: "help", label: "자료실" };
 
 const DEFAULT_CATEGORY = "district";
 
@@ -406,7 +409,19 @@ export default function BoardPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 mt-3 pb-12">
-      <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
+      <div className="flex items-baseline gap-3">
+        <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
+        <button
+          onClick={() => setCategory(RESOURCE_CATEGORY.key)}
+          className={`text-sm font-medium underline underline-offset-2 transition-colors ${
+            category === RESOURCE_CATEGORY.key
+              ? "text-brand-dark"
+              : "text-foreground/50 hover:text-foreground/80"
+          }`}
+        >
+          {RESOURCE_CATEGORY.label}
+        </button>
+      </div>
 
       <div className="mt-2 flex gap-2 border-b border-black/10 dark:border-white/10">
         {CATEGORIES.map((c) => (
