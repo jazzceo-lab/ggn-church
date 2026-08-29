@@ -15,14 +15,10 @@ const CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
-  { key: "resources", label: "자료실" },
+  { key: "help", label: "앱사용문의", emphasize: true },
 ];
 
-// 탭 줄이 좁아지는 걸 막기 위해 "게시판" 제목 옆에 따로 빼둔 카테고리.
-// 기존 "앱사용문의"(category 값 help)를 그대로 옮긴 것 - 이름과 글은 그대로 유지됨.
-const RESOURCE_CATEGORY = { key: "help", label: "앱사용문의" };
-
-const DEFAULT_CATEGORY = "district";
+const DEFAULT_CATEGORY = "help";
 
 const DISTRICT_BOARD_TABS = [
   { key: "notice", label: "구역공지" },
@@ -410,34 +406,34 @@ export default function BoardPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 mt-3 pb-12">
-      <div className="flex items-baseline gap-5">
-        <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
-        <button
-          onClick={() => setCategory(RESOURCE_CATEGORY.key)}
-          className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-            category === RESOURCE_CATEGORY.key
-              ? "bg-brand-dark text-white"
-              : "bg-brand text-white hover:bg-brand-dark"
-          }`}
-        >
-          {RESOURCE_CATEGORY.label}
-        </button>
-      </div>
+      <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
 
-      <div className="mt-2 flex gap-2 border-b border-black/10 dark:border-white/10">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.key}
-            onClick={() => setCategory(c.key)}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-              category === c.key
-                ? "border-brand text-brand-dark"
-                : "border-transparent text-foreground/50 hover:text-foreground/80"
-            }`}
-          >
-            {c.label}
-          </button>
-        ))}
+      <div className="mt-2 flex items-center gap-2 border-b border-black/10 dark:border-white/10">
+        {CATEGORIES.map((c) =>
+          c.emphasize ? (
+            <button
+              key={c.key}
+              onClick={() => setCategory(c.key)}
+              className={`-mb-px rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                category === c.key ? "bg-brand-dark text-white" : "bg-brand text-white hover:bg-brand-dark"
+              }`}
+            >
+              {c.label}
+            </button>
+          ) : (
+            <button
+              key={c.key}
+              onClick={() => setCategory(c.key)}
+              className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+                category === c.key
+                  ? "border-brand text-brand-dark"
+                  : "border-transparent text-foreground/50 hover:text-foreground/80"
+              }`}
+            >
+              {c.label}
+            </button>
+          )
+        )}
       </div>
 
       {category === "district" && (
