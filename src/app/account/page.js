@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
@@ -22,6 +23,7 @@ function isValidPhoneRest(value) {
 
 export default function AccountPage() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [avatarPath, setAvatarPath] = useState(null);
   const [phoneRest, setPhoneRest] = useState("");
@@ -30,6 +32,15 @@ export default function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState(false);
+
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -122,6 +133,66 @@ export default function AccountPage() {
     setSuccess(true);
   }
 
+  async function handlePasswordChange(e) {
+    e.preventDefault();
+    setPwError("");
+    setPwSuccess(false);
+
+    if (newPassword.length < 6) {
+      setPwError("비밀번호는 6자 이상이어야 해요.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPwError("새 비밀번호가 서로 일치하지 않아요.");
+      return;
+    }
+
+    setPwSaving(true);
+    const { error: pwUpdateError } = await supabase.auth.updateUser({ password: newPassword });
+    setPwSaving(false);
+
+    if (pwUpdateError) {
+      setPwError("변경에 실패했어요: " + pwUpdateError.message);
+      return;
+    }
+
+    setNewPassword("");
+    setConfirmPassword("");
+    setPwSuccess(true);
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteError("");
+    if (
+      !window.confirm(
+        "정말 탈퇴하시겠어요?\n작성한 글, 쪽지 등 모든 정보가 삭제되며 되돌릴 수 없어요."
+      )
+    )
+      return;
+    if (!window.confirm("한 번 더 확인할게요. 정말로 탈퇴를 진행할까요?")) return;
+
+    setDeleting(true);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const res = await fetch("/api/account/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
+      },
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      setDeleting(false);
+      setDeleteError("탈퇴에 실패했어요: " + (data.error ?? "알 수 없는 오류"));
+      return;
+    }
+
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  }
+
   if (!authLoading && !user) {
     return (
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-12 text-center">
@@ -197,6 +268,65 @@ export default function AccountPage() {
             {saving ? "저장 중..." : "저장"}
           </button>
         </form>
+      )}
+
+      {!loading && (
+        <form
+          onSubmit={handlePasswordChange}
+          className="mt-6 space-y-4 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
+        >
+          <h2 className="font-medium text-foreground">비밀번호 변경</h2>
+
+          <div>
+            <label className="block text-sm text-foreground/60">새 비밀번호</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="6자 이상"
+              className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-foreground/60">새 비밀번호 확인</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="한 번 더 입력"
+              className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+            />
+          </div>
+
+          {pwError && <p className="text-sm text-red-600">{pwError}</p>}
+          {pwSuccess && <p className="text-sm text-brand-dark">비밀번호를 변경했어요.</p>}
+
+          <button
+            type="submit"
+            disabled={pwSaving}
+            className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+          >
+            {pwSaving ? "변경 중..." : "비밀번호 변경"}
+          </button>
+        </form>
+      )}
+
+      {!loading && (
+        <div className="mt-6 space-y-3 rounded-xl border border-red-200 bg-red-50/60 p-5 dark:border-red-900/40 dark:bg-red-900/10">
+          <h2 className="font-medium text-red-700 dark:text-red-300">회원 탈퇴</h2>
+          <p className="text-sm text-foreground/60">
+            탈퇴하면 계정과 작성한 글, 쪽지 등 모든 정보가 삭제되며 되돌릴 수 없어요.
+          </p>
+          {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+          <button
+            type="button"
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+            className="rounded-full border border-red-300 px-4 py-2 text-sm text-red-700 transition-colors hover:bg-red-100 disabled:opacity-50 dark:border-red-900/40 dark:text-red-300 dark:hover:bg-red-900/20"
+          >
+            {deleting ? "탈퇴 처리 중..." : "회원 탈퇴"}
+          </button>
+        </div>
       )}
     </main>
   );
