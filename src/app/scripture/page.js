@@ -3,12 +3,15 @@ import { getTodayVerse } from "@/lib/dailyVerses";
 
 export const dynamic = "force-dynamic";
 
+// bible.com 웹사이트 링크는 앱이 설치되어 있지 않으면 그냥 웹사이트로만 이동해서
+// 앱 설치로 이어지지 않았음. 플레이스토어 앱 페이지로 연결하면 설치되어 있을 때는
+// "열기", 없을 때는 "설치" 버튼이 자동으로 떠서 항상 원하는 동작으로 이어짐.
 const apps = [
   {
     key: "bible",
     title: "성경",
     description: "성경 읽기 앱으로 이동합니다.",
-    url: "https://www.bible.com/",
+    url: "https://play.google.com/store/apps/details?id=com.sirma.mobile.bible.android&hl=ko",
   },
 ];
 
@@ -20,8 +23,8 @@ export default function ScripturePage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">성경</h1>
       <p className="mt-2 text-sm text-foreground/50">
-        아래 버튼을 누르면 이미 앱이 설치되어 있는 경우 바로 앱이 열리고, 설치되어 있지 않다면
-        웹사이트로 이동해요.
+        아래 버튼을 누르면 플레이스토어로 이동해요. 이미 앱이 설치되어 있으면 &ldquo;열기&rdquo;,
+        설치되어 있지 않으면 &ldquo;설치&rdquo; 버튼이 떠요.
       </p>
 
       <section className="mt-6 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10">
