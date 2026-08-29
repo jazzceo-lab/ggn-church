@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 
 const DISMISS_KEY = "installBannerDismissedAt";
 const DISMISS_DAYS = 14;
+const FALLBACK_DELAY_MS = 3000;
 
 export default function InstallAppBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [visible, setVisible] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [manualFallback, setManualFallback] = useState(false);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -30,9 +32,13 @@ export default function InstallAppBanner() {
       return;
     }
 
+    let fallbackTimer;
+
     function handleBeforeInstallPrompt(e) {
       e.preventDefault();
+      clearTimeout(fallbackTimer);
       setDeferredPrompt(e);
+      setManualFallback(false);
       setVisible(true);
     }
     function handleAppInstalled() {
@@ -42,9 +48,19 @@ export default function InstallAppBanner() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     window.addEventListener("appinstalled", handleAppInstalled);
+
+    // 크롬이 참여도 판단 등으로 beforeinstallprompt를 바로 안 내려줄 때를 대비해,
+    // 잠깐 기다렸다가 크롬 메뉴로 직접 설치하는 방법을 안내하는 배너로 대체한다.
+    // 이후 이벤트가 실제로 도착하면 설치 버튼이 있는 배너로 교체된다.
+    fallbackTimer = setTimeout(() => {
+      setManualFallback(true);
+      setVisible(true);
+    }, FALLBACK_DELAY_MS);
+
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
+      clearTimeout(fallbackTimer);
     };
   }, []);
 
@@ -68,10 +84,12 @@ export default function InstallAppBanner() {
       <span className="break-keep">
         {isIOS
           ? "📲 하단 공유 버튼 → \"홈 화면에 추가\"를 누르면 앱처럼 쓸 수 있어요."
-          : "📲 길가는교회 앱을 폰 화면에 설치해두면 더 편하게 쓸 수 있어요."}
+          : manualFallback
+            ? "📲 오른쪽 위 ⋮ 메뉴 → \"앱 설치\"를 누르면 길가는교회 앱을 설치할 수 있어요."
+            : "📲 길가는교회 앱을 폰 화면에 설치해두면 더 편하게 쓸 수 있어요."}
       </span>
       <div className="flex shrink-0 items-center gap-2">
-        {!isIOS && (
+        {!isIOS && !manualFallback && (
           <button
             onClick={handleInstall}
             className="rounded-full bg-white px-3 py-1 font-medium text-brand-dark"
