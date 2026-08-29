@@ -1,0 +1,45 @@
+"use client";
+
+import { useState } from "react";
+import { buildBibleLink } from "@/lib/bibleBooks";
+import { DAILY_VERSES } from "@/lib/dailyVerses";
+
+export default function DailyVerseCard({ initialVerse }) {
+  const [verse, setVerse] = useState(initialVerse);
+  const verseLink = buildBibleLink(verse.ref);
+
+  function showAnother() {
+    if (DAILY_VERSES.length <= 1) return;
+    let next;
+    do {
+      next = DAILY_VERSES[Math.floor(Math.random() * DAILY_VERSES.length)];
+    } while (next.ref === verse.ref);
+    setVerse(next);
+  }
+
+  return (
+    <section className="mt-6 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-serif font-semibold text-brand-dark">오늘의 성경</h2>
+        <button
+          type="button"
+          onClick={showAnother}
+          className="shrink-0 rounded-full border border-brand-dark/30 px-3 py-1 text-xs font-medium text-brand-dark transition-colors hover:bg-brand-dark/10"
+        >
+          다른 구절 보기
+        </button>
+      </div>
+      <p className="mt-3 break-keep text-sm leading-7 text-foreground/80">&ldquo;{verse.text}&rdquo;</p>
+      {verseLink ? (
+        <a
+          href={verseLink}
+          className="mt-2 inline-block text-sm font-medium text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+        >
+          {verse.ref}
+        </a>
+      ) : (
+        <p className="mt-2 text-sm font-medium text-brand-dark">{verse.ref}</p>
+      )}
+    </section>
+  );
+}
