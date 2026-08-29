@@ -34,6 +34,25 @@ function PowerIcon({ className }) {
   );
 }
 
+function SignupIcon({ className }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <line x1="19" y1="8" x2="19" y2="14" />
+      <line x1="16" y1="11" x2="22" y2="11" />
+    </svg>
+  );
+}
+
 const memberLinks = [
   { href: "/teams", label: "제직명단" },
   { href: "/media", label: "설교·찬양" },
@@ -114,12 +133,12 @@ export default function NavBar() {
               </div>
             ) : (
               <Link
-                href="/login"
-                aria-label="로그인"
-                title="로그인"
-                className="flex items-center justify-center rounded-full border border-black/10 p-2 text-foreground/30 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                href="/signup"
+                aria-label="회원가입"
+                title="회원가입"
+                className="flex items-center justify-center rounded-full border border-brand bg-brand p-2 text-white transition-colors hover:bg-brand-dark"
               >
-                <PowerIcon className="h-4 w-4" />
+                <SignupIcon className="h-4 w-4" />
               </Link>
             )}
           </div>
