@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
@@ -9,6 +9,8 @@ const YEAR_OPTIONS = ["2026년 귀속분", "2025년 귀속분"];
 
 export default function DonationReceiptPage() {
   const { user, loading: authLoading } = useAuth();
+  const [isOpen, setIsOpen] = useState(true);
+  const [settingLoading, setSettingLoading] = useState(true);
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
@@ -17,6 +19,18 @@ export default function DonationReceiptPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "receipt_requests_open")
+      .maybeSingle()
+      .then(({ data }) => {
+        setIsOpen(data?.value ?? true);
+        setSettingLoading(false);
+      });
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -57,6 +71,21 @@ export default function DonationReceiptPage() {
           </Link>
           이 필요해요.
         </p>
+      </main>
+    );
+  }
+
+  if (!settingLoading && !isOpen) {
+    return (
+      <main className="mx-auto w-full max-w-md flex-1 px-4 py-12 text-center">
+        <h1 className="font-serif text-2xl font-bold text-foreground">기부금영수증 신청</h1>
+        <p className="mt-3 text-sm text-foreground/60">지금은 신청기간이 아닙니다.</p>
+        <Link
+          href="/donate"
+          className="mt-6 inline-block rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
+        >
+          헌금안내로 돌아가기
+        </Link>
       </main>
     );
   }

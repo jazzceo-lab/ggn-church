@@ -21,6 +21,8 @@ export default function AdminReceiptsPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(true);
+  const [toggling, setToggling] = useState(false);
 
   async function loadRequests() {
     setLoading(true);
@@ -32,9 +34,35 @@ export default function AdminReceiptsPage() {
     setLoading(false);
   }
 
+  async function loadSetting() {
+    const { data } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "receipt_requests_open")
+      .maybeSingle();
+    setIsOpen(data?.value ?? true);
+  }
+
   useEffect(() => {
-    if (isAdmin) loadRequests();
+    if (isAdmin) {
+      loadRequests();
+      loadSetting();
+    }
   }, [isAdmin]);
+
+  async function toggleOpen() {
+    setToggling(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ value: !isOpen })
+      .eq("key", "receipt_requests_open");
+    setToggling(false);
+    if (error) {
+      window.alert("설정 변경에 실패했어요: " + error.message);
+      return;
+    }
+    setIsOpen((v) => !v);
+  }
 
   async function updateStatus(id, status) {
     const { error } = await supabase.from("receipt_requests").update({ status }).eq("id", id);
@@ -63,6 +91,32 @@ export default function AdminReceiptsPage() {
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">기부금영수증 신청 목록</h1>
       <p className="mt-2 text-sm text-foreground/50">교인들이 신청한 기부금영수증 내역이에요.</p>
+
+      <div className="mt-6 flex items-center justify-between rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
+        <div>
+          <p className="text-sm font-medium text-foreground">신청 기간</p>
+          <p className="mt-0.5 text-xs text-foreground/50">
+            {isOpen
+              ? "지금 신청을 받고 있어요."
+              : "회원 화면에 \"지금은 신청기간이 아닙니다\"라고 표시돼요."}
+          </p>
+        </div>
+        <button
+          onClick={toggleOpen}
+          disabled={toggling}
+          aria-pressed={isOpen}
+          aria-label="신청 기간 켜기/끄기"
+          className={`relative h-7 w-12 shrink-0 rounded-full transition-colors disabled:opacity-50 ${
+            isOpen ? "bg-brand" : "bg-black/20 dark:bg-white/20"
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-6 w-6 rounded-full bg-white transition-transform ${
+              isOpen ? "translate-x-5" : "translate-x-0.5"
+            }`}
+          />
+        </button>
+      </div>
 
       <ul className="mt-6 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
         {loading && <li className="p-4 text-sm text-foreground/50">불러오는 중...</li>}
