@@ -85,12 +85,9 @@ export default function DonatePage() {
         송금해주세요.
       </p>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-6 space-y-4 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
         {accounts.map((account) => (
-          <div
-            key={account.key}
-            className="rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
-          >
+          <div key={account.key}>
             <h2 className="font-serif font-semibold text-foreground">{account.title}</h2>
             <button
               onClick={() => handleCopy(account)}
