@@ -132,15 +132,25 @@ export default function NavBar() {
                 </button>
               </div>
             ) : (
-              <Link
-                href="/signup"
-                aria-label="회원가입"
-                title="회원가입"
-                className="flex items-center justify-center gap-1 rounded-full border border-brand bg-brand px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
-              >
-                <SignupIcon className="h-4 w-4" />
-                회원가입
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  aria-label="로그인"
+                  title="로그인"
+                  className="flex items-center justify-center rounded-full border border-black/10 p-2 text-foreground/60 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                >
+                  <PowerIcon className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/signup"
+                  aria-label="회원가입"
+                  title="회원가입"
+                  className="flex items-center justify-center gap-1 rounded-full border border-brand bg-brand px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+                >
+                  <SignupIcon className="h-4 w-4" />
+                  회원가입
+                </Link>
+              </div>
             )}
           </div>
         </div>
