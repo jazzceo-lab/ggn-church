@@ -481,6 +481,12 @@ export default function BoardPage() {
         </div>
       )}
 
+      {category === "district" && user && canUseDistrictBoard && (
+        <p className="mt-4 text-sm text-foreground/50">
+          이 게시판은 {activeDistrict} 구역원에게만 보여요.
+        </p>
+      )}
+
       {category === "district" && user && !isAdmin && !canUseDistrictBoard && (
         <p className="mt-4 text-sm text-foreground/50">
           소속 구역이 지정되지 않아 구역게시판을 이용할 수 없어요. 관리자에게 문의해주세요.
