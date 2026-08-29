@@ -70,6 +70,7 @@ export default function BoardPage() {
     category !== "district" || districtBoardType !== "notice" || canWriteDistrictNotice;
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [showCompose, setShowCompose] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [file, setFile] = useState(null);
@@ -278,6 +279,14 @@ export default function BoardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("compose") === "1") {
+      setShowCompose(true);
+      window.history.replaceState(null, "", "/board");
+    }
+  }, []);
+
   function handleFileChange(e) {
     const f = e.target.files?.[0] ?? null;
     if (f && f.size > MAX_FILE_SIZE) {
@@ -335,6 +344,7 @@ export default function BoardPage() {
     setTitle("");
     setBody("");
     setFile(null);
+    setShowCompose(false);
     loadPosts(category, activeDistrict, activeBoardType);
   }
 
@@ -471,8 +481,6 @@ export default function BoardPage() {
         </div>
       )}
 
-      <div className="flex flex-col">
-      <div className={posts.length > 0 ? "order-2" : "order-1"}>
       {category === "district" && user && !isAdmin && !canUseDistrictBoard && (
         <p className="mt-4 text-sm text-foreground/50">
           소속 구역이 지정되지 않아 구역게시판을 이용할 수 없어요. 관리자에게 문의해주세요.
@@ -485,58 +493,69 @@ export default function BoardPage() {
         </p>
       )}
 
-      {user && canUseDistrictBoard && canWriteInCurrentBoard && (
-        <form
-          key={`${category}-${districtBoardType}`}
-          onSubmit={handleSubmit}
-          className="mt-4 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5"
-        >
-          {category === "district" && (
-            <p className="text-xs text-foreground/50">
-              {districtBoardType === "notice"
-                ? `${activeDistrict} 구역원 전체에게 공지로 보여요.`
-                : `${activeDistrict} 구역원에게만 보이는 글이에요.`}
-            </p>
-          )}
-          <input
-            type="text"
-            required
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="제목"
-            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-          />
-          <textarea
-            required
-            rows={3}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="내용을 나눠주세요"
-            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-          />
-          <div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
-              <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
-                📎 파일 첨부
-              </span>
-              <input type="file" onChange={handleFileChange} className="hidden" />
-              {file && <span className="text-foreground/70">{file.name}</span>}
-            </label>
-            <p className="mt-1 text-xs text-foreground/40">최대 10MB</p>
-          </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+      {showCompose && user && canUseDistrictBoard && canWriteInCurrentBoard && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <form
+            key={`${category}-${districtBoardType}`}
+            onSubmit={handleSubmit}
+            className="w-full max-w-md space-y-3 rounded-xl border border-black/10 bg-background p-5 dark:border-white/10"
           >
-            {submitting ? "등록 중..." : "글쓰기"}
-          </button>
-        </form>
+            <div className="flex items-center justify-between">
+              <p className="font-serif font-semibold text-foreground">새 글쓰기</p>
+              <button
+                type="button"
+                onClick={() => setShowCompose(false)}
+                aria-label="닫기"
+                className="text-foreground/40 hover:text-foreground/70"
+              >
+                ✕
+              </button>
+            </div>
+            {category === "district" && (
+              <p className="text-xs text-foreground/50">
+                {districtBoardType === "notice"
+                  ? `${activeDistrict} 구역원 전체에게 공지로 보여요.`
+                  : `${activeDistrict} 구역원에게만 보이는 글이에요.`}
+              </p>
+            )}
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="제목"
+              className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+            />
+            <textarea
+              required
+              rows={3}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="내용을 나눠주세요"
+              className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+            />
+            <div>
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
+                <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                  📎 파일 첨부
+                </span>
+                <input type="file" onChange={handleFileChange} className="hidden" />
+                {file && <span className="text-foreground/70">{file.name}</span>}
+              </label>
+              <p className="mt-1 text-xs text-foreground/40">최대 10MB</p>
+            </div>
+            {error && <p className="text-sm text-red-600">{error}</p>}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+            >
+              {submitting ? "등록 중..." : "글쓰기"}
+            </button>
+          </form>
+        </div>
       )}
-      </div>
 
-      <div className={posts.length > 0 ? "order-1" : "order-2"}>
       <ul className="mt-4 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
         {loadingPosts && <li className="p-4 text-sm text-foreground/50">불러오는 중...</li>}
         {!loadingPosts && posts.length === 0 && (
@@ -798,8 +817,6 @@ export default function BoardPage() {
           </li>
         ))}
       </ul>
-      </div>
-      </div>
 
       <AvatarLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
     </main>
