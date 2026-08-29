@@ -4,18 +4,23 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
-import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
+import { SIGNUP_GROUP_OPTIONS, DISTRICT_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
 
 const UNASSIGNED = "미배정";
 const NO_TITLE = "없음";
 const TITLE_OPTIONS = ["목사", "장로"];
 
+// 게시판의 구역게시판이 다루는 소속 목록과 동일해야 함 (src/app/board/page.js의 BOARD_DISTRICTS).
+const BOARD_DISTRICTS = [...DISTRICT_NAMES, "청년부"];
+
 const ROLE_OPTIONS = [
   { key: "pastor_reply", label: "교회건의 답변 권한" },
   { key: "media_manager", label: "찬양팀 영상 관리 권한" },
+  { key: "district_leader", label: "구역장 (구역공지 권한)", scoped: true },
 ];
 const ROLE_LABELS = Object.fromEntries(ROLE_OPTIONS.map((r) => [r.key, r.label]));
+const SCOPED_ROLE_KEYS = new Set(ROLE_OPTIONS.filter((r) => r.scoped).map((r) => r.key));
 
 export default function AdminMembersPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
@@ -24,6 +29,7 @@ export default function AdminMembersPage() {
   const [notifyingIds, setNotifyingIds] = useState(new Set());
   const [rolesByMember, setRolesByMember] = useState({});
   const [newRoleByMember, setNewRoleByMember] = useState({});
+  const [newScopeByMember, setNewScopeByMember] = useState({});
 
   async function loadMembers() {
     setLoading(true);
@@ -39,10 +45,12 @@ export default function AdminMembersPage() {
     const { data: subs } = await supabase.from("push_subscriptions").select("user_id");
     setNotifyingIds(new Set((subs ?? []).map((s) => s.user_id)));
 
-    const { data: roleRows } = await supabase.from("member_roles").select("user_id, role_key");
+    const { data: roleRows } = await supabase
+      .from("member_roles")
+      .select("user_id, role_key, scope");
     const grouped = {};
     for (const r of roleRows ?? []) {
-      (grouped[r.user_id] ??= new Set()).add(r.role_key);
+      (grouped[r.user_id] ??= []).push({ roleKey: r.role_key, scope: r.scope });
     }
     setRolesByMember(grouped);
 
@@ -52,21 +60,30 @@ export default function AdminMembersPage() {
   async function addRole(memberId) {
     const roleKey = newRoleByMember[memberId];
     if (!roleKey) return;
-    const { error } = await supabase.from("member_roles").insert({ user_id: memberId, role_key: roleKey });
+    const scope = SCOPED_ROLE_KEYS.has(roleKey) ? newScopeByMember[memberId] : "";
+    if (SCOPED_ROLE_KEYS.has(roleKey) && !scope) {
+      window.alert("구역을 선택해주세요.");
+      return;
+    }
+    const { error } = await supabase
+      .from("member_roles")
+      .insert({ user_id: memberId, role_key: roleKey, scope: scope ?? "" });
     if (error) {
       window.alert("권한 추가에 실패했어요: " + error.message);
       return;
     }
     setNewRoleByMember((prev) => ({ ...prev, [memberId]: "" }));
+    setNewScopeByMember((prev) => ({ ...prev, [memberId]: "" }));
     loadMembers();
   }
 
-  async function removeRole(memberId, roleKey) {
+  async function removeRole(memberId, roleKey, scope) {
     const { error } = await supabase
       .from("member_roles")
       .delete()
       .eq("user_id", memberId)
-      .eq("role_key", roleKey);
+      .eq("role_key", roleKey)
+      .eq("scope", scope ?? "");
     if (error) {
       window.alert("권한 제거에 실패했어요: " + error.message);
       return;
@@ -265,14 +282,15 @@ export default function AdminMembersPage() {
                 </select>
               </label>
               <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                {[...(rolesByMember[m.id] ?? [])].map((roleKey) => (
+                {(rolesByMember[m.id] ?? []).map(({ roleKey, scope }) => (
                   <span
-                    key={roleKey}
+                    key={`${roleKey}:${scope}`}
                     className="flex items-center gap-1 rounded-full bg-brand-tint px-2 py-0.5 text-brand-dark"
                   >
                     {ROLE_LABELS[roleKey] ?? roleKey}
+                    {scope ? ` (${scope})` : ""}
                     <button
-                      onClick={() => removeRole(m.id, roleKey)}
+                      onClick={() => removeRole(m.id, roleKey, scope)}
                       aria-label="권한 제거"
                       className="text-brand-dark/60 hover:text-brand-dark"
                     >
@@ -288,14 +306,32 @@ export default function AdminMembersPage() {
                   className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
                 >
                   <option value="">권한 추가...</option>
-                  {ROLE_OPTIONS.filter((r) => !(rolesByMember[m.id] ?? new Set()).has(r.key)).map(
-                    (r) => (
-                      <option key={r.key} value={r.key}>
-                        {r.label}
-                      </option>
-                    )
-                  )}
+                  {ROLE_OPTIONS.filter(
+                    (r) =>
+                      SCOPED_ROLE_KEYS.has(r.key) ||
+                      !(rolesByMember[m.id] ?? []).some((x) => x.roleKey === r.key)
+                  ).map((r) => (
+                    <option key={r.key} value={r.key}>
+                      {r.label}
+                    </option>
+                  ))}
                 </select>
+                {SCOPED_ROLE_KEYS.has(newRoleByMember[m.id]) && (
+                  <select
+                    value={newScopeByMember[m.id] ?? ""}
+                    onChange={(e) =>
+                      setNewScopeByMember((prev) => ({ ...prev, [m.id]: e.target.value }))
+                    }
+                    className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
+                  >
+                    <option value="">구역 선택</option>
+                    {BOARD_DISTRICTS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <button
                   onClick={() => addRole(m.id)}
                   disabled={!newRoleByMember[m.id]}

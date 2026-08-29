@@ -12,6 +12,7 @@ const AuthContext = createContext({
   memberTitle: null,
   roles: new Set(),
   hasRole: () => false,
+  hasRoleScope: () => false,
   unreadCount: 0,
   refreshUnreadCount: () => {},
   boardNewCount: 0,
@@ -68,9 +69,9 @@ export function AuthProvider({ children }) {
 
     const { data: roleRows } = await supabase
       .from("member_roles")
-      .select("role_key")
+      .select("role_key, scope")
       .eq("user_id", currentUser.id);
-    setRoles(new Set((roleRows ?? []).map((r) => r.role_key)));
+    setRoles(new Set((roleRows ?? []).map((r) => `${r.role_key}:${r.scope}`)));
 
     return data?.board_last_seen_at ?? null;
   }
@@ -228,7 +229,8 @@ export function AuthProvider({ children }) {
         district,
         memberTitle,
         roles,
-        hasRole: (key) => roles.has(key),
+        hasRole: (key) => roles.has(`${key}:`),
+        hasRoleScope: (key, scope) => roles.has(`${key}:${scope ?? ""}`),
         unreadCount,
         refreshUnreadCount: () => refreshUnreadCount(),
         boardNewCount,
