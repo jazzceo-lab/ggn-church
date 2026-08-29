@@ -15,11 +15,12 @@ const CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
+  { key: "resources", label: "자료실" },
 ];
 
 // 탭 줄이 좁아지는 걸 막기 위해 "게시판" 제목 옆에 따로 빼둔 카테고리.
-// 예전 "앱사용문의"와 같은 category 값(help)을 그대로 써서 기존 글이 유지됨.
-const RESOURCE_CATEGORY = { key: "help", label: "자료실" };
+// 기존 "앱사용문의"(category 값 help)를 그대로 옮긴 것 - 이름과 글은 그대로 유지됨.
+const RESOURCE_CATEGORY = { key: "help", label: "앱사용문의" };
 
 const DEFAULT_CATEGORY = "district";
 
