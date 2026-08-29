@@ -42,6 +42,11 @@ export default function AccountPage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
+  const [notifyMessages, setNotifyMessages] = useState(true);
+  const [notifyBulletin, setNotifyBulletin] = useState(true);
+  const [notifyBoard, setNotifyBoard] = useState(true);
+  const [notifySaving, setNotifySaving] = useState(false);
+
   useEffect(() => {
     if (!user) {
       setLoading(false);
@@ -49,12 +54,15 @@ export default function AccountPage() {
     }
     supabase
       .from("profiles")
-      .select("avatar_path, phone")
+      .select("avatar_path, phone, notify_messages, notify_bulletin, notify_board")
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
         setAvatarPath(data?.avatar_path ?? null);
         setPhoneRest(data?.phone?.replace(/^010-/, "") ?? "");
+        setNotifyMessages(data?.notify_messages ?? true);
+        setNotifyBulletin(data?.notify_bulletin ?? true);
+        setNotifyBoard(data?.notify_board ?? true);
         setLoading(false);
       });
   }, [user]);
@@ -131,6 +139,20 @@ export default function AccountPage() {
     setFile(null);
     setPhoneRest(trimmedRest);
     setSuccess(true);
+  }
+
+  async function handleNotifyToggle(column, value, setter) {
+    setter(value);
+    setNotifySaving(true);
+    const { error: notifyError } = await supabase
+      .from("profiles")
+      .update({ [column]: value })
+      .eq("id", user.id);
+    setNotifySaving(false);
+    if (notifyError) {
+      setter(!value);
+      window.alert("알림 설정 변경에 실패했어요: " + notifyError.message);
+    }
   }
 
   async function handlePasswordChange(e) {
@@ -268,6 +290,44 @@ export default function AccountPage() {
             {saving ? "저장 중..." : "저장"}
           </button>
         </form>
+      )}
+
+      {!loading && (
+        <div className="mt-6 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+          <h2 className="font-medium text-foreground">알림 설정</h2>
+          <p className="text-sm text-foreground/50">받고 싶은 알림만 골라서 켜둘 수 있어요.</p>
+
+          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+            쪽지 알림
+            <input
+              type="checkbox"
+              checked={notifyMessages}
+              disabled={notifySaving}
+              onChange={(e) => handleNotifyToggle("notify_messages", e.target.checked, setNotifyMessages)}
+              className="h-5 w-5 accent-brand"
+            />
+          </label>
+          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+            주보 등록 알림
+            <input
+              type="checkbox"
+              checked={notifyBulletin}
+              disabled={notifySaving}
+              onChange={(e) => handleNotifyToggle("notify_bulletin", e.target.checked, setNotifyBulletin)}
+              className="h-5 w-5 accent-brand"
+            />
+          </label>
+          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+            게시판 새 글 알림
+            <input
+              type="checkbox"
+              checked={notifyBoard}
+              disabled={notifySaving}
+              onChange={(e) => handleNotifyToggle("notify_board", e.target.checked, setNotifyBoard)}
+              className="h-5 w-5 accent-brand"
+            />
+          </label>
+        </div>
       )}
 
       {!loading && (

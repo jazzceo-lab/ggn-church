@@ -24,6 +24,8 @@ Deno.serve(async (req) => {
   let notification;
   let recipientIds = null; // null이면 구독한 전체 회원에게 발송
   let excludeUserId = null;
+  // 회원이 profiles에서 종류별로 끌 수 있는 알림 설정 컬럼.
+  const NOTIFY_COLUMN = { messages: "notify_messages", media_items: "notify_bulletin", posts: "notify_board" }[table];
 
   if (table === "messages") {
     const { data: sender } = await supabase
@@ -69,7 +71,15 @@ Deno.serve(async (req) => {
   if (recipientIds) query = query.in("user_id", recipientIds);
   const { data: allSubs } = await query;
 
-  const subs = (allSubs ?? []).filter((s) => s.user_id !== excludeUserId);
+  let subs = (allSubs ?? []).filter((s) => s.user_id !== excludeUserId);
+
+  if (NOTIFY_COLUMN && subs.length) {
+    const userIds = [...new Set(subs.map((s) => s.user_id))];
+    const { data: prefs } = await supabase.from("profiles").select(`id, ${NOTIFY_COLUMN}`).in("id", userIds);
+    // 설정 값이 없거나 true인 사람만 발송 대상. false로 꺼둔 사람만 제외.
+    const disabledIds = new Set((prefs ?? []).filter((p) => p[NOTIFY_COLUMN] === false).map((p) => p.id));
+    subs = subs.filter((s) => !disabledIds.has(s.user_id));
+  }
   const notificationPayload = JSON.stringify(notification);
 
   const results = await Promise.allSettled(
