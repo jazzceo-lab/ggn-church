@@ -15,6 +15,7 @@ export default function AdminMembersPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notifyingIds, setNotifyingIds] = useState(new Set());
 
   async function loadMembers() {
     setLoading(true);
@@ -26,6 +27,10 @@ export default function AdminMembersPage() {
       .order("created_at", { ascending: false });
 
     if (!error) setMembers(data);
+
+    const { data: subs } = await supabase.from("push_subscriptions").select("user_id");
+    setNotifyingIds(new Set((subs ?? []).map((s) => s.user_id)));
+
     setLoading(false);
   }
 
@@ -178,6 +183,11 @@ export default function AdminMembersPage() {
                 {m.is_suspended && (
                   <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
                     정지됨
+                  </span>
+                )}
+                {notifyingIds.has(m.id) && (
+                  <span className="ml-2 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
+                    🔔 알림 켜짐
                   </span>
                 )}
               </p>
