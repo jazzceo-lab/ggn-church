@@ -421,7 +421,7 @@ export default function BoardPage() {
         <h1 className="font-serif text-2xl font-bold text-foreground">게시판</h1>
         <button
           onClick={() => setCategory("help")}
-          className="whitespace-nowrap text-xs font-medium text-brand-dark underline underline-offset-2"
+          className="whitespace-nowrap rounded-full bg-brand px-3 py-1 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
         >
           앱사용문의
         </button>
