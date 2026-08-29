@@ -136,9 +136,10 @@ export default function NavBar() {
                 href="/signup"
                 aria-label="회원가입"
                 title="회원가입"
-                className="flex items-center justify-center rounded-full border border-brand bg-brand p-2 text-white transition-colors hover:bg-brand-dark"
+                className="flex items-center justify-center gap-1 rounded-full border border-brand bg-brand px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
               >
                 <SignupIcon className="h-4 w-4" />
+                회원가입
               </Link>
             )}
           </div>
