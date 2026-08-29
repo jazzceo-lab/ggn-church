@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 const DISMISS_KEY = "installBannerDismissedAt";
+const INSTALLED_KEY = "pwaInstalled";
 const DISMISS_DAYS = 14;
 const FALLBACK_DELAY_MS = 3000;
 
@@ -19,7 +20,15 @@ export default function InstallAppBanner() {
 
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-    if (isStandalone) return;
+    if (isStandalone) {
+      // 홈 화면 아이콘으로 실행된 것이 확인됐으니, 나중에 같은 기기의 일반
+      // 브라우저 탭으로 접속해도 설치 안내를 다시 띄우지 않도록 기억해둔다.
+      window.localStorage.setItem(INSTALLED_KEY, "1");
+      return;
+    }
+
+    // 이미 설치된 적이 있는 기기라면(일반 브라우저 탭으로 접속한 경우 포함) 안내를 건너뛴다.
+    if (window.localStorage.getItem(INSTALLED_KEY) === "1") return;
 
     const dismissedAt = Number(window.localStorage.getItem(DISMISS_KEY) || 0);
     if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) return;
@@ -42,6 +51,7 @@ export default function InstallAppBanner() {
       setVisible(true);
     }
     function handleAppInstalled() {
+      window.localStorage.setItem(INSTALLED_KEY, "1");
       setVisible(false);
       setDeferredPrompt(null);
     }
