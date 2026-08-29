@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 const accounts = [
   { key: "general", title: "일반헌금", bank: "농협", number: "141-01-317160" },
@@ -105,6 +106,20 @@ export default function DonatePage() {
           </div>
         ))}
       </div>
+
+      <Link
+        href="/donate/receipt"
+        className="mt-6 flex items-center gap-3 rounded-xl border border-brand bg-brand-tint p-4 transition-colors hover:brightness-95"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white">
+          🧾
+        </span>
+        <span>
+          <span className="block text-sm font-medium text-foreground">기부금영수증 신청</span>
+          <span className="block text-xs text-foreground/50">연말정산용 영수증을 신청하세요</span>
+        </span>
+        <span className="ml-auto text-brand-dark">→</span>
+      </Link>
 
       <div className="mt-8">
         <p className="text-center text-xs font-medium text-foreground/60">은행 앱 바로가기</p>

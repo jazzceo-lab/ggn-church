@@ -174,6 +174,11 @@ export default function NavBar() {
                 공지 관리
               </Link>
             )}
+            {isAdmin && (
+              <Link href="/admin/receipts" className="text-foreground/70 transition-colors hover:text-brand-dark">
+                영수증 신청 관리
+              </Link>
+            )}
           </nav>
         </div>
       </div>
