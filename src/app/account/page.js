@@ -236,7 +236,7 @@ export default function AccountPage() {
       <p className="mt-2 text-sm text-foreground/50">
         프로필 사진을 등록해두면 다른 교인들이 알아보기 쉬워요.
         <br />
-        (핸드폰 번호는 노출되지 않으며 교회에서 단체문자 발송시에만 참고합니다)
+        (핸드폰 번호는 노출되지 않으며 교회에서 단체문자 발송시에만 참고)
       </p>
 
       {loading ? (
