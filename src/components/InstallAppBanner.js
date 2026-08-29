@@ -8,6 +8,7 @@ const DISMISS_DAYS = 14;
 export default function InstallAppBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [visible, setVisible] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
@@ -20,6 +21,14 @@ export default function InstallAppBanner() {
 
     const dismissedAt = Number(window.localStorage.getItem(DISMISS_KEY) || 0);
     if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) return;
+
+    // iOS Safari(카카오톡에서 외부 브라우저로 열었을 때 포함)는 beforeinstallprompt
+    // 자체를 지원하지 않아서 이벤트를 기다리지 않고 바로 수동 설치 안내를 띄운다.
+    if (/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase())) {
+      setIsIOS(true);
+      setVisible(true);
+      return;
+    }
 
     function handleBeforeInstallPrompt(e) {
       e.preventDefault();
@@ -56,14 +65,20 @@ export default function InstallAppBanner() {
 
   return (
     <div className="sticky top-0 z-50 flex items-center justify-between gap-3 bg-brand px-4 py-2.5 text-sm text-white">
-      <span className="break-keep">📲 길가는교회 앱을 폰 화면에 설치해두면 더 편하게 쓸 수 있어요.</span>
+      <span className="break-keep">
+        {isIOS
+          ? "📲 하단 공유 버튼 → \"홈 화면에 추가\"를 누르면 앱처럼 쓸 수 있어요."
+          : "📲 길가는교회 앱을 폰 화면에 설치해두면 더 편하게 쓸 수 있어요."}
+      </span>
       <div className="flex shrink-0 items-center gap-2">
-        <button
-          onClick={handleInstall}
-          className="rounded-full bg-white px-3 py-1 font-medium text-brand-dark"
-        >
-          설치
-        </button>
+        {!isIOS && (
+          <button
+            onClick={handleInstall}
+            className="rounded-full bg-white px-3 py-1 font-medium text-brand-dark"
+          >
+            설치
+          </button>
+        )}
         <button onClick={handleDismiss} aria-label="닫기" className="px-1 text-white/80">
           ✕
         </button>
