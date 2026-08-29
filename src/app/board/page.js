@@ -467,7 +467,7 @@ export default function BoardPage() {
         <p className="mt-4 text-sm text-foreground/50">
           이 게시판은 {activeDistrict} 구역원에게만 보여요.
           <br />
-          구역장은 게시글 고정(📌 공지) 버튼이 보이고 사용할 수 있어요.
+          (구역장은 게시글 고정(📌 공지) 버튼 사용가능)
         </p>
       )}
 
