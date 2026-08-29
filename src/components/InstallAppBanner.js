@@ -85,7 +85,7 @@ export default function InstallAppBanner() {
         {isIOS
           ? "📲 하단 공유 버튼 → \"홈 화면에 추가\"를 누르면 앱처럼 쓸 수 있어요."
           : manualFallback
-            ? "📲 오른쪽 위 ⋮ 메뉴 → \"앱 설치\"를 누르면 길가는교회 앱을 설치할 수 있어요."
+            ? "📲 오른쪽 위 ⋮ 메뉴 → \"설치 및 바로가기\"를 누르면 길가는교회 앱을 설치할 수 있어요."
             : "📲 길가는교회 앱을 폰 화면에 설치해두면 더 편하게 쓸 수 있어요."}
       </span>
       <div className="flex shrink-0 items-center gap-2">
