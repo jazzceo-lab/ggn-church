@@ -240,7 +240,12 @@ export default function MessagesPage() {
           <li className="p-4 text-sm text-foreground/50">아직 나눈 쪽지가 없어요.</li>
         )}
         {conversations.map((c) => (
-          <li key={c.partnerId} className="flex items-center gap-2 p-4 hover:bg-black/5 dark:hover:bg-white/10">
+          <li
+            key={c.partnerId}
+            className={`flex items-center gap-2 p-4 hover:bg-black/5 dark:hover:bg-white/10 ${
+              c.unread ? "bg-brand-tint/40 dark:bg-brand-tint/10" : ""
+            }`}
+          >
             <Link href={`/messages/${c.partnerId}`} className="flex min-w-0 flex-1 items-center gap-3">
               {avatarUrl(c.avatarPath) ? (
                 <img
@@ -260,7 +265,7 @@ export default function MessagesPage() {
               )}
               <span className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 font-medium text-foreground">
-                  {c.unread && <span className="h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden />}
+                  {c.unread && <span className="h-3 w-3 shrink-0 rounded-full bg-brand" aria-hidden />}
                   {c.name}
                   {c.title && (
                     <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(c.title)}`}>

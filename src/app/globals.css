@@ -47,8 +47,7 @@ html[data-font-size="xl"] {
   font-size: 130%;
 }
 
-/* 화면 아래 콘텐츠가 더 있다는 걸 보여주는 은은한 그라데이션.
-   모바일에서는 스크롤바가 안 보이는 경우가 많아 대신 사용. */
+/* 페이지 맨 아래에서 위로 끌어당길 때(오버스크롤)만 나타나는 완만한 U자형 그라데이션. */
 .scroll-fade-bottom {
   position: fixed;
   left: 0;
@@ -56,10 +55,10 @@ html[data-font-size="xl"] {
   bottom: 0;
   height: 3rem;
   background: radial-gradient(
-    ellipse 70% 100% at 50% 100%,
-    rgba(0, 0, 0, 0.55) 0%,
-    rgba(0, 0, 0, 0.22) 50%,
-    transparent 80%
+    ellipse 160% 100% at 50% 100%,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.2) 55%,
+    transparent 85%
   );
   pointer-events: none;
   z-index: 20;
