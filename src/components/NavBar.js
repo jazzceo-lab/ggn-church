@@ -54,6 +54,21 @@ const memberLinks = [
 // 사라지게(더 긴 transition) 해서 인지할 시간을 준다.
 const MIN_VISIBLE_MS = 220;
 
+// 눌리는 동안 글씨만 살짝(1.05배) 확대해서 하이라이트와 함께 "눌렸다"는
+// 느낌을 더 뚜렷하게 준다. 배지(안 읽음 숫자)는 확대 대상에서 제외.
+// prefers-reduced-motion에서는 globals.css에서 transform을 무효화한다.
+function ScaleLabel({ pressed, children }) {
+  return (
+    <span
+      className={`navlink-scale inline-block origin-left transition-transform duration-300 ${
+        pressed ? "scale-105" : "scale-100"
+      }`}
+    >
+      {children}
+    </span>
+  );
+}
+
 function NavLink({ href, className, children }) {
   const [pressed, setPressed] = useState(false);
   const pressStartRef = useRef(0);
@@ -88,7 +103,7 @@ function NavLink({ href, className, children }) {
         pressed ? "bg-brand-tint dark:bg-brand-dark/40" : ""
       } ${className}`}
     >
-      {children}
+      {typeof children === "function" ? children(pressed) : children}
     </Link>
   );
 }
@@ -188,7 +203,7 @@ export default function NavBar() {
         <nav className="mt-2 flex gap-x-3 gap-y-1 overflow-x-auto text-sm tracking-tight whitespace-nowrap text-foreground/70">
           {publicLinks.map((link) => (
             <NavLink key={link.href} href={link.href} className="hover:text-brand-dark">
-              {link.label}
+              {(pressed) => <ScaleLabel pressed={pressed}>{link.label}</ScaleLabel>}
             </NavLink>
           ))}
         </nav>
@@ -206,27 +221,31 @@ export default function NavBar() {
                   user ? "text-foreground/70" : "text-foreground/40"
                 }`}
               >
-                {link.label}
-                {link.countKey && user && counts[link.countKey] > 0 && (
-                  <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                    {counts[link.countKey]}
-                  </span>
+                {(pressed) => (
+                  <>
+                    <ScaleLabel pressed={pressed}>{link.label}</ScaleLabel>
+                    {link.countKey && user && counts[link.countKey] > 0 && (
+                      <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                        {counts[link.countKey]}
+                      </span>
+                    )}
+                  </>
                 )}
               </NavLink>
             ))}
             {isAdmin && (
               <NavLink href="/admin/members" className="text-foreground/70 hover:text-brand-dark">
-                회원 관리
+                {(pressed) => <ScaleLabel pressed={pressed}>회원 관리</ScaleLabel>}
               </NavLink>
             )}
             {isAdmin && (
               <NavLink href="/admin/notices" className="text-foreground/70 hover:text-brand-dark">
-                공지 관리
+                {(pressed) => <ScaleLabel pressed={pressed}>공지 관리</ScaleLabel>}
               </NavLink>
             )}
             {isAdmin && (
               <NavLink href="/admin/receipts" className="text-foreground/70 hover:text-brand-dark">
-                영수증 관리
+                {(pressed) => <ScaleLabel pressed={pressed}>영수증 관리</ScaleLabel>}
               </NavLink>
             )}
           </nav>
