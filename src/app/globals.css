@@ -58,4 +58,6 @@ html[data-font-size="xl"] {
   background: linear-gradient(to top, var(--background), transparent);
   pointer-events: none;
   z-index: 20;
+  opacity: 0;
+  transition: opacity 0.2s ease;
 }
