@@ -102,7 +102,13 @@ export default function DonatePage() {
               <span className="text-foreground/80">
                 {account.bank} {account.number}
               </span>
-              <span className="text-xs text-brand-dark">
+              <span
+                className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                  copiedKey === account.key
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                    : "bg-brand text-white"
+                }`}
+              >
                 {copiedKey === account.key ? "복사됨!" : "복사"}
               </span>
             </button>
