@@ -38,7 +38,7 @@ export async function subscribeToPush(user) {
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
       },
-      { onConflict: "endpoint" }
+      { onConflict: "user_id,endpoint" }
     );
 
     if (error) return { error: "알림 등록에 실패했어요: " + error.message };
