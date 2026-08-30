@@ -38,7 +38,7 @@ export default function ConversationPage() {
 
     const { data } = await supabase
       .from("messages")
-      .select("id, sender_id, recipient_id, body, created_at")
+      .select("id, sender_id, recipient_id, body, created_at, read_at")
       .or(
         `and(sender_id.eq.${user.id},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${user.id})`
       )
@@ -82,6 +82,21 @@ export default function ConversationPage() {
             .update({ read_at: new Date().toISOString() })
             .eq("id", payload.new.id)
             .then(() => refreshUnreadCount());
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `sender_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new.recipient_id !== userId) return;
+          setThread((prev) =>
+            prev.map((m) => (m.id === payload.new.id ? { ...m, read_at: payload.new.read_at } : m))
+          );
         }
       )
       .subscribe();
@@ -188,7 +203,12 @@ export default function ConversationPage() {
                 }`}
               >
                 <p className="whitespace-pre-wrap">{m.body}</p>
-                <p className={`mt-1 text-[10px] ${mine ? "text-white/70" : "text-foreground/40"}`}>
+                <p
+                  className={`mt-1 flex items-center gap-1 text-[10px] ${
+                    mine ? "justify-end text-white/70" : "text-foreground/40"
+                  }`}
+                >
+                  {mine && m.read_at && <span>읽음</span>}
                   {new Date(m.created_at).toLocaleString("ko-KR")}
                 </p>
               </div>
