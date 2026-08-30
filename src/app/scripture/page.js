@@ -10,6 +10,7 @@ const apps = [
   {
     key: "bible",
     title: "성경",
+    description: "성경 읽기 앱으로 이동합니다.",
     url: "https://play.google.com/store/apps/details?id=com.sirma.mobile.bible.android&hl=ko",
   },
 ];
@@ -36,6 +37,7 @@ export default function ScripturePage() {
             className="rounded-xl border border-black/10 bg-white/60 p-5 transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
           >
             <h2 className="font-serif font-semibold text-foreground">{app.title}</h2>
+            <p className="mt-1 text-sm text-foreground/60">{app.description}</p>
             <span className="mt-3 inline-block rounded-full bg-brand px-4 py-2 text-sm text-white">
               {app.title} 앱 열기 ↗
             </span>
