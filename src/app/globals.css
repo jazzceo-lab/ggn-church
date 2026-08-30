@@ -54,8 +54,8 @@ html[data-font-size="xl"] {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 3rem;
-  background: linear-gradient(to top, var(--background), transparent);
+  height: 4.5rem;
+  background: linear-gradient(to top, var(--background) 0%, var(--background) 35%, transparent 100%);
   pointer-events: none;
   z-index: 20;
   opacity: 0;
