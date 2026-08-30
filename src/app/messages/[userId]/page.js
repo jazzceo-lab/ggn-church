@@ -187,7 +187,7 @@ export default function ConversationPage() {
                   mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"
                 }`}
               >
-                <p>{m.body}</p>
+                <p className="whitespace-pre-wrap">{m.body}</p>
                 <p className={`mt-1 text-[10px] ${mine ? "text-white/70" : "text-foreground/40"}`}>
                   {new Date(m.created_at).toLocaleString("ko-KR")}
                 </p>
