@@ -24,12 +24,7 @@ export default function ScripturePage() {
 
       <DailyVerseCard initialVerse={verse} />
 
-      <p className="mt-4 text-sm text-foreground/50">
-        아래 버튼을 누르면 플레이스토어로 이동해요. 이미 앱이 설치되어 있으면 &ldquo;열기&rdquo;,
-        설치되어 있지 않으면 &ldquo;설치&rdquo; 버튼이 떠요.
-      </p>
-
-      <div className="mt-3 grid gap-4">
+      <div className="mt-4 grid gap-4">
         {apps.map((app) => (
           <a
             key={app.key}
@@ -44,6 +39,11 @@ export default function ScripturePage() {
           </a>
         ))}
       </div>
+
+      <p className="mt-3 text-sm text-foreground/50">
+        위에 버튼을 누르면 플레이스토어로 이동해요. 이미 앱이 설치되어 있으면 &ldquo;열기&rdquo;,
+        설치되어 있지 않으면 &ldquo;설치&rdquo; 버튼이 떠요.
+      </p>
     </main>
   );
 }
