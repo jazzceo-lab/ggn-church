@@ -19,7 +19,7 @@ const CATEGORIES = [
   { key: "suggestion", label: "교회건의" },
 ];
 
-const DEFAULT_CATEGORY = "district";
+const DEFAULT_CATEGORY = "help";
 
 // 구역게시판에서 다루는 소속 목록. 정식 "구역"(teamRoster.districts)에
 // 청년부를 게시판 전용으로 추가한 목록 — 제직명단 구역 편성표에는 영향 없음.
@@ -48,6 +48,7 @@ export default function BoardPage() {
     isBoardAdmin,
     district: myDistrict,
     memberTitle,
+    displayName,
     hasRole,
     hasRoleScope,
     markBoardSeen,
@@ -235,7 +236,7 @@ export default function BoardPage() {
     if (!text) return;
 
     setCommentSubmitting(postId);
-    const authorName = user.user_metadata?.display_name || user.email;
+    const authorName = displayName || user.email;
     const { error } = await supabase.from("comments").insert({
       post_id: postId,
       user_id: user.id,
@@ -315,7 +316,7 @@ export default function BoardPage() {
       attachmentName = file.name;
     }
 
-    const authorName = user.user_metadata?.display_name || user.email;
+    const authorName = displayName || user.email;
     const { error } = await supabase.from("posts").insert({
       title,
       body,
