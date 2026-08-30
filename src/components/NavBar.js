@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -42,6 +43,33 @@ const memberLinks = [
   { href: "/messages", label: "쪽지함", countKey: "messages" },
   { href: "/account", label: "회원정보" },
 ];
+
+// 좁은 간격 때문에 옆 메뉴를 잘못 누르는 경우가 있어서, 누른 순간
+// 배경색이 바로 들어와 "지금 이걸 눌렀다"를 시각적으로 확인할 수 있게 한다.
+// iOS Safari는 :active 만으로는 탭 시 반응이 잘 안 보여서 터치/마우스
+// 이벤트로 직접 눌림 상태를 관리한다.
+function NavLink({ href, className, children }) {
+  const [pressed, setPressed] = useState(false);
+  const press = () => setPressed(true);
+  const release = () => setPressed(false);
+
+  return (
+    <Link
+      href={href}
+      onTouchStart={press}
+      onTouchEnd={release}
+      onTouchCancel={release}
+      onMouseDown={press}
+      onMouseUp={release}
+      onMouseLeave={release}
+      className={`-mx-1.5 -my-1 rounded-md px-1.5 py-1 transition-colors ${
+        pressed ? "bg-brand-tint dark:bg-white/10" : ""
+      } ${className}`}
+    >
+      {children}
+    </Link>
+  );
+}
 
 export default function NavBar() {
   const { user, loading, isAdmin, unreadCount, boardNewCount } = useAuth();
@@ -137,9 +165,9 @@ export default function NavBar() {
 
         <nav className="mt-2 flex gap-x-3 gap-y-1 overflow-x-auto text-sm tracking-tight whitespace-nowrap text-foreground/70">
           {publicLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="transition-colors hover:text-brand-dark">
+            <NavLink key={link.href} href={link.href} className="hover:text-brand-dark">
               {link.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
 
@@ -149,10 +177,10 @@ export default function NavBar() {
           </p>
           <nav className="mt-1 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
             {memberLinks.map((link) => (
-              <Link
+              <NavLink
                 key={link.href}
                 href={link.href}
-                className={`relative transition-colors hover:text-brand-dark ${
+                className={`relative hover:text-brand-dark ${
                   user ? "text-foreground/70" : "text-foreground/40"
                 }`}
               >
@@ -162,22 +190,22 @@ export default function NavBar() {
                     {counts[link.countKey]}
                   </span>
                 )}
-              </Link>
+              </NavLink>
             ))}
             {isAdmin && (
-              <Link href="/admin/members" className="text-foreground/70 transition-colors hover:text-brand-dark">
+              <NavLink href="/admin/members" className="text-foreground/70 hover:text-brand-dark">
                 회원 관리
-              </Link>
+              </NavLink>
             )}
             {isAdmin && (
-              <Link href="/admin/notices" className="text-foreground/70 transition-colors hover:text-brand-dark">
+              <NavLink href="/admin/notices" className="text-foreground/70 hover:text-brand-dark">
                 공지 관리
-              </Link>
+              </NavLink>
             )}
             {isAdmin && (
-              <Link href="/admin/receipts" className="text-foreground/70 transition-colors hover:text-brand-dark">
+              <NavLink href="/admin/receipts" className="text-foreground/70 hover:text-brand-dark">
                 영수증 관리
-              </Link>
+              </NavLink>
             )}
           </nav>
         </div>
