@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -48,10 +48,32 @@ const memberLinks = [
 // 배경색이 바로 들어와 "지금 이걸 눌렀다"를 시각적으로 확인할 수 있게 한다.
 // iOS Safari는 :active 만으로는 탭 시 반응이 잘 안 보여서 터치/마우스
 // 이벤트로 직접 눌림 상태를 관리한다.
+//
+// 빠르게 톡 누르고 떼면(일반적인 탭 동작) 눌림 상태가 너무 짧게 켜졌다
+// 꺼져서 눈에 잘 안 띄었다. 최소 노출 시간을 보장하고, 꺼질 때는 서서히
+// 사라지게(더 긴 transition) 해서 인지할 시간을 준다.
+const MIN_VISIBLE_MS = 220;
+
 function NavLink({ href, className, children }) {
   const [pressed, setPressed] = useState(false);
-  const press = () => setPressed(true);
-  const release = () => setPressed(false);
+  const pressStartRef = useRef(0);
+  const releaseTimerRef = useRef(null);
+
+  function press() {
+    if (releaseTimerRef.current) clearTimeout(releaseTimerRef.current);
+    pressStartRef.current = Date.now();
+    setPressed(true);
+  }
+
+  function release() {
+    const elapsed = Date.now() - pressStartRef.current;
+    const remaining = MIN_VISIBLE_MS - elapsed;
+    if (remaining > 0) {
+      releaseTimerRef.current = setTimeout(() => setPressed(false), remaining);
+    } else {
+      setPressed(false);
+    }
+  }
 
   return (
     <Link
@@ -62,8 +84,8 @@ function NavLink({ href, className, children }) {
       onMouseDown={press}
       onMouseUp={release}
       onMouseLeave={release}
-      className={`-mx-1.5 -my-1 rounded-md px-1.5 py-1 transition-colors ${
-        pressed ? "bg-brand-tint dark:bg-white/10" : ""
+      className={`-mx-1.5 -my-1 rounded-md px-1.5 py-1 transition-colors duration-300 ${
+        pressed ? "bg-brand-tint dark:bg-brand-dark/40" : ""
       } ${className}`}
     >
       {children}
