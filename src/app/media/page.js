@@ -17,6 +17,8 @@ const TABS = [
 // 새로 업로드하면 최신 2개(이번 주 + 지난주)만 남기고 이전 파일은 자동 삭제
 const MAX_KEPT_AUDIO = 2;
 
+const PENDING_APPROVAL_NOTICE = "교인전용 콘텐츠로 교회승인대기중입니다";
+
 export default function MediaPage() {
   const { user, loading: authLoading, isAdmin, hasRole } = useAuth();
   const canManageVideo = isAdmin || hasRole("media_manager");
@@ -219,6 +221,12 @@ export default function MediaPage() {
         ))}
       </div>
 
+      {(tab === "audio" || tab === "video") && (
+        <p className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-400/30 dark:bg-amber-900/15 dark:text-amber-200">
+          {PENDING_APPROVAL_NOTICE}
+        </p>
+      )}
+
       {((tab === "audio" && isAdmin) || (tab === "video" && canManageVideo)) && (
         <form
           key={tab}
@@ -301,11 +309,13 @@ export default function MediaPage() {
 
       {tab === "audio" ? (
         <div className="mt-6">
-          {loading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
-          {!loading && items.length === 0 && (
-            <p className="text-sm text-foreground/50">아직 등록된 설교가 없어요.</p>
-          )}
-          {!loading && items.length > 0 && (
+          {!isAdmin ? null : (
+            <>
+              {loading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
+              {!loading && items.length === 0 && (
+                <p className="text-sm text-foreground/50">아직 등록된 설교가 없어요.</p>
+              )}
+              {!loading && items.length > 0 && (
             <>
               <div className="rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
                 <div className="flex items-start justify-between gap-2">
@@ -373,6 +383,8 @@ export default function MediaPage() {
                     ))}
                   </ul>
                 </div>
+              )}
+            </>
               )}
             </>
           )}
