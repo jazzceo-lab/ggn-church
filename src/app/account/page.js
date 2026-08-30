@@ -48,7 +48,6 @@ export default function AccountPage() {
   const [notifyBoardDistrict, setNotifyBoardDistrict] = useState(true);
   const [notifyBoardPrayer, setNotifyBoardPrayer] = useState(true);
   const [notifyBoardShare, setNotifyBoardShare] = useState(true);
-  const [notifyBoardSuggestion, setNotifyBoardSuggestion] = useState(true);
   const [notifySaving, setNotifySaving] = useState(false);
 
   useEffect(() => {
@@ -59,7 +58,7 @@ export default function AccountPage() {
     supabase
       .from("profiles")
       .select(
-        "avatar_path, phone, notify_messages, notify_bulletin, notify_board_district, notify_board_prayer, notify_board_share, notify_board_suggestion"
+        "avatar_path, phone, notify_messages, notify_bulletin, notify_board_district, notify_board_prayer, notify_board_share"
       )
       .eq("id", user.id)
       .single()
@@ -71,7 +70,6 @@ export default function AccountPage() {
         setNotifyBoardDistrict(data?.notify_board_district ?? true);
         setNotifyBoardPrayer(data?.notify_board_prayer ?? true);
         setNotifyBoardShare(data?.notify_board_share ?? true);
-        setNotifyBoardSuggestion(data?.notify_board_suggestion ?? true);
         setLoading(false);
       });
   }, [user]);
@@ -360,18 +358,6 @@ export default function AccountPage() {
                   checked={notifyBoardShare}
                   disabled={notifySaving}
                   onChange={(e) => handleNotifyToggle("notify_board_share", e.target.checked, setNotifyBoardShare)}
-                  className="h-5 w-5 accent-brand"
-                />
-              </label>
-              <label className="flex items-center justify-between gap-3 text-sm text-foreground/70">
-                교회건의
-                <input
-                  type="checkbox"
-                  checked={notifyBoardSuggestion}
-                  disabled={notifySaving}
-                  onChange={(e) =>
-                    handleNotifyToggle("notify_board_suggestion", e.target.checked, setNotifyBoardSuggestion)
-                  }
                   className="h-5 w-5 accent-brand"
                 />
               </label>
