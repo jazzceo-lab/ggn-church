@@ -248,6 +248,11 @@ export default function NavBar() {
                 {(pressed) => <ScaleLabel pressed={pressed}>영수증 관리</ScaleLabel>}
               </NavLink>
             )}
+            {isAdmin && (
+              <NavLink href="/admin/donation-goals" className="text-foreground/70 hover:text-brand-dark">
+                {(pressed) => <ScaleLabel pressed={pressed}>헌금 목표 관리</ScaleLabel>}
+              </NavLink>
+            )}
           </nav>
         </div>
       </div>

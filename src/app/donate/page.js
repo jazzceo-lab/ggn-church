@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/components/AuthProvider";
+import DonationThermometer from "@/components/DonationThermometer";
 
 const accounts = [
   { key: "general", title: "일반헌금", bank: "농협", number: "141-01-317160" },
@@ -65,6 +67,7 @@ const BANK_APPS = [
 ];
 
 export default function DonatePage() {
+  const { user } = useAuth();
   const [copiedKey, setCopiedKey] = useState("");
 
   async function handleCopy(account) {
@@ -84,6 +87,13 @@ export default function DonatePage() {
         아래 계좌로 헌금해주시면 됩니다. 계좌번호를 눌러서 복사한 뒤, 사용하시는 은행 앱에서
         송금해주세요.
       </p>
+
+      {user && (
+        <div className="mt-6 space-y-3">
+          <DonationThermometer goalKey="general" />
+          <DonationThermometer goalKey="building" />
+        </div>
+      )}
 
       <div className="mt-6 space-y-4 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
         {accounts.map((account) => (
