@@ -89,7 +89,7 @@ export default function DonatePage() {
       </p>
 
       {user && (
-        <div className="mt-6 space-y-3">
+        <div className="mt-6 grid grid-cols-2 gap-3">
           <DonationThermometer goalKey="general" />
           <DonationThermometer goalKey="building" />
         </div>
