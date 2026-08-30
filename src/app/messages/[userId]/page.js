@@ -47,12 +47,13 @@ export default function ConversationPage() {
     setThread(data ?? []);
     setLoading(false);
 
-    await supabase
+    const { error: markReadError } = await supabase
       .from("messages")
       .update({ read_at: new Date().toISOString() })
       .eq("sender_id", userId)
       .eq("recipient_id", user.id)
       .is("read_at", null);
+    if (markReadError) console.error("읽음 처리 실패:", markReadError.message);
     refreshUnreadCount();
   }
 
@@ -81,7 +82,10 @@ export default function ConversationPage() {
             .from("messages")
             .update({ read_at: new Date().toISOString() })
             .eq("id", payload.new.id)
-            .then(() => refreshUnreadCount());
+            .then(({ error: markReadError }) => {
+              if (markReadError) console.error("읽음 처리 실패:", markReadError.message);
+              refreshUnreadCount();
+            });
         }
       )
       .on(
