@@ -168,7 +168,10 @@ export default function DonatePage() {
           <span className="ml-auto text-brand-dark">→</span>
         </Link>
       ) : (
-        <div className="mt-6 flex items-center gap-3 rounded-xl border border-black/10 bg-black/5 p-4 dark:border-white/10 dark:bg-white/5">
+        <Link
+          href="/donate/receipt"
+          className="mt-6 flex items-center gap-3 rounded-xl border border-black/10 bg-black/5 p-4 transition-colors hover:bg-black/10 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+        >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/10 text-white/70 dark:bg-white/10">
             🧾
           </span>
@@ -176,7 +179,7 @@ export default function DonatePage() {
             <span className="block text-sm font-medium text-foreground/50">기부금영수증 신청</span>
             <span className="block text-xs text-foreground/40">지금은 신청기간이 아닙니다</span>
           </span>
-        </div>
+        </Link>
       )}
 
       <p className="mt-6 text-xs text-foreground/40">
