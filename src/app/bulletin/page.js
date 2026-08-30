@@ -30,6 +30,14 @@ function findMemberIdByName(detail, members) {
   return members.find((m) => m.display_name === name)?.id ?? null;
 }
 
+// "사무엘기상 16:6~13 · 양혜림 집사" 처럼 성경 구절과 봉독자 이름을
+// "·"로 구분해 적는 형식이라, 둘을 나눠서 각각 링크로 만든다.
+function splitBibleReading(detail) {
+  if (!detail) return { refPart: "", namePart: "" };
+  const [refPart, namePart] = detail.split("·").map((s) => s.trim());
+  return { refPart: refPart ?? "", namePart: namePart ?? "" };
+}
+
 function bulletinImageUrl(item) {
   return supabase.storage.from("attachments").getPublicUrl(item.file_path).data.publicUrl;
 }
@@ -170,7 +178,12 @@ function BulletinContent({ bulletin, members }) {
           {bulletin.order.map(([label, detail], i) => {
             const hymnNumber = label === "찬송" ? hymnNumberFrom(detail) : null;
             const gyodokmunNumber = label === "교독문" ? gyodokmunNumberFrom(detail) : null;
-            const bibleLink = label === "성경봉독" ? buildBibleLink(detail) : null;
+            const isBibleReading = label === "성경봉독";
+            const { refPart, namePart } = isBibleReading
+              ? splitBibleReading(detail)
+              : { refPart: "", namePart: "" };
+            const bibleLink = isBibleReading ? buildBibleLink(refPart) : null;
+            const readerMemberId = isBibleReading ? findMemberIdByName(namePart, members) : null;
             const isConfession = label === "신앙고백" && detail === "사도신경";
             const prayerMemberId =
               label === "기도" || label === "헌금기도" ? findMemberIdByName(detail, members) : null;
@@ -191,13 +204,34 @@ function BulletinContent({ bulletin, members }) {
                   >
                     {detail}
                   </Link>
-                ) : bibleLink ? (
-                  <a
-                    href={bibleLink}
-                    className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
-                  >
-                    {detail}
-                  </a>
+                ) : isBibleReading ? (
+                  <span className="flex-1 text-right text-foreground/60">
+                    {bibleLink ? (
+                      <a
+                        href={bibleLink}
+                        className="text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                      >
+                        {refPart}
+                      </a>
+                    ) : (
+                      refPart
+                    )}
+                    {namePart && (
+                      <>
+                        {" · "}
+                        {readerMemberId ? (
+                          <Link
+                            href={`/messages/${readerMemberId}`}
+                            className="text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                          >
+                            {namePart}
+                          </Link>
+                        ) : (
+                          namePart
+                        )}
+                      </>
+                    )}
+                  </span>
                 ) : isConfession ? (
                   <Link
                     href="/confession"
