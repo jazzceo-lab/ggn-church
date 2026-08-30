@@ -22,6 +22,14 @@ function gyodokmunNumberFrom(text) {
   return match ? match[1] : null;
 }
 
+// "조태형 집사"처럼 "이름 + 직함" 형식이므로 첫 단어를 이름으로 보고
+// 가입된 회원 중 같은 이름이 있으면 매칭한다.
+function findMemberIdByName(detail, members) {
+  const name = detail?.trim().split(/\s+/)[0];
+  if (!name) return null;
+  return members.find((m) => m.display_name === name)?.id ?? null;
+}
+
 function bulletinImageUrl(item) {
   return supabase.storage.from("attachments").getPublicUrl(item.file_path).data.publicUrl;
 }
@@ -139,7 +147,7 @@ const bulletins = [
   },
 ];
 
-function BulletinContent({ bulletin }) {
+function BulletinContent({ bulletin, members }) {
   return (
     <>
       <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15">
@@ -164,6 +172,8 @@ function BulletinContent({ bulletin }) {
             const gyodokmunNumber = label === "교독문" ? gyodokmunNumberFrom(detail) : null;
             const bibleLink = label === "성경봉독" ? buildBibleLink(detail) : null;
             const isConfession = label === "신앙고백" && detail === "사도신경";
+            const prayerMemberId =
+              label === "기도" || label === "헌금기도" ? findMemberIdByName(detail, members) : null;
             return (
               <li key={i} className="flex items-start gap-2 py-2 tracking-tight">
                 <span className="w-[68px] shrink-0 font-medium text-foreground/80">{label}</span>
@@ -191,6 +201,13 @@ function BulletinContent({ bulletin }) {
                 ) : isConfession ? (
                   <Link
                     href="/confession"
+                    className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                  >
+                    {detail}
+                  </Link>
+                ) : prayerMemberId ? (
+                  <Link
+                    href={`/messages/${prayerMemberId}`}
                     className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                   >
                     {detail}
@@ -243,9 +260,10 @@ function BulletinContent({ bulletin }) {
 }
 
 export default function BulletinPage() {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [current, ...past] = bulletins;
   const [openIssue, setOpenIssue] = useState(null);
+  const [members, setMembers] = useState([]);
 
   const [bulletinImages, setBulletinImages] = useState([]);
   const [imageFile, setImageFile] = useState(null);
@@ -264,6 +282,19 @@ export default function BulletinPage() {
   useEffect(() => {
     loadBulletinImages();
   }, []);
+
+  // 예배순서의 "기도" 담당자 이름이 가입된 회원이면 바로 쪽지를 보낼 수 있게
+  // 회원 목록을 미리 불러온다. 로그인해야 조회 가능(member_directory RLS).
+  useEffect(() => {
+    if (!user) {
+      setMembers([]);
+      return;
+    }
+    supabase
+      .from("member_directory")
+      .select("id, display_name")
+      .then(({ data }) => setMembers(data ?? []));
+  }, [user]);
 
   async function pruneOldBulletinImages() {
     const { data } = await supabase
@@ -386,7 +417,7 @@ export default function BulletinPage() {
         </div>
       )}
 
-      <BulletinContent bulletin={current} />
+      <BulletinContent bulletin={current} members={members} />
 
       {bulletinImages[1] && (
         <div className="mt-6">
@@ -426,7 +457,7 @@ export default function BulletinPage() {
                 </button>
                 {openIssue === b.issue && (
                   <div className="px-4 pb-6">
-                    <BulletinContent bulletin={b} />
+                    <BulletinContent bulletin={b} members={members} />
                   </div>
                 )}
               </li>
