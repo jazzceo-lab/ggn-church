@@ -46,3 +46,16 @@ html[data-font-size="lg"] {
 html[data-font-size="xl"] {
   font-size: 130%;
 }
+
+/* 화면 아래 콘텐츠가 더 있다는 걸 보여주는 은은한 그라데이션.
+   모바일에서는 스크롤바가 안 보이는 경우가 많아 대신 사용. */
+.scroll-fade-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3rem;
+  background: linear-gradient(to top, var(--background), transparent);
+  pointer-events: none;
+  z-index: 20;
+}

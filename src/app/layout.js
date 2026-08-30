@@ -52,6 +52,7 @@ export default function RootLayout({ children }) {
           <footer className="border-t border-black/10 py-6 text-center text-xs text-foreground/50 dark:border-white/10">
             © {new Date().getFullYear()} 길가는교회
           </footer>
+          <div className="scroll-fade-bottom" aria-hidden="true" />
         </AuthProvider>
       </body>
     </html>
