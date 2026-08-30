@@ -10,10 +10,12 @@ on conflict (key) do nothing;
 
 alter table app_settings enable row level security;
 
+drop policy if exists "app_settings_select_all" on app_settings;
 create policy "app_settings_select_all"
 on app_settings for select
 using (true);
 
+drop policy if exists "app_settings_update_admin" on app_settings;
 create policy "app_settings_update_admin"
 on app_settings for update
 using (

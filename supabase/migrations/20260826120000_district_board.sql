@@ -12,6 +12,12 @@ alter table posts add column if not exists district text;
 
 -- category 값에 체크 제약이 걸려 있다면(테이블 생성 시 기본 이름) 'district'도 허용하도록 갱신.
 -- 제약이 없거나 이름이 다르면 drop 문은 조용히 무시됩니다.
+--
+-- 이 마이그레이션이 처음 만들어질 당시(이 시점까지는 'district' 카테고리 자체가 없었으므로)
+-- 운영 DB에 이미 들어있던 값 중 새 체크 제약과 맞지 않는 값이 있으면 'share'로 정규화한다.
+update posts set category = 'share'
+where category not in ('prayer', 'share', 'help', 'district');
+
 alter table posts drop constraint if exists posts_category_check;
 alter table posts add constraint posts_category_check
   check (category in ('prayer', 'share', 'help', 'district'));

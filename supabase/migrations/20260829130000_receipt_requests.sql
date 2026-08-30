@@ -13,10 +13,12 @@ create table if not exists receipt_requests (
 
 alter table receipt_requests enable row level security;
 
+drop policy if exists "receipt_requests_insert_own" on receipt_requests;
 create policy "receipt_requests_insert_own"
 on receipt_requests for insert
 with check (auth.uid() = user_id);
 
+drop policy if exists "receipt_requests_select_own_or_admin" on receipt_requests;
 create policy "receipt_requests_select_own_or_admin"
 on receipt_requests for select
 using (
@@ -24,6 +26,7 @@ using (
   or exists (select 1 from profiles p where p.id = auth.uid() and p.is_admin = true)
 );
 
+drop policy if exists "receipt_requests_update_admin" on receipt_requests;
 create policy "receipt_requests_update_admin"
 on receipt_requests for update
 using (
