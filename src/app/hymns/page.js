@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { HYMN_TITLES } from "@/lib/hymnTitles";
@@ -42,9 +43,11 @@ function touchDistance(touches) {
 }
 
 export default function HymnsPage() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [openRange, setOpenRange] = useState(null);
   const [fullscreenHymn, setFullscreenHymn] = useState(null);
+  const [cameFromBulletin, setCameFromBulletin] = useState(false);
   const [imageUrls, setImageUrls] = useState({});
   const [loadingHymn, setLoadingHymn] = useState(null);
   const [hymnError, setHymnError] = useState({});
@@ -62,7 +65,7 @@ export default function HymnsPage() {
     if (!num || num < 1 || num > TOTAL_HYMNS) return;
     const rangeIdx = RANGES.findIndex((r) => num >= r.start && num <= r.end);
     if (rangeIdx !== -1) setOpenRange(rangeIdx);
-    openHymn(num);
+    openHymn(num, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -155,8 +158,9 @@ export default function HymnsPage() {
     }
   }
 
-  async function openHymn(num) {
+  async function openHymn(num, fromBulletin = false) {
     setFullscreenHymn(num);
+    setCameFromBulletin(fromBulletin);
     resetZoom();
     setHymnError((prev) => ({ ...prev, [num]: false }));
     if (imageUrls[num]) return;
@@ -175,6 +179,10 @@ export default function HymnsPage() {
   }
 
   function closeHymn() {
+    if (cameFromBulletin) {
+      router.push("/bulletin");
+      return;
+    }
     setFullscreenHymn(null);
     setRotated(false);
     resetZoom();
