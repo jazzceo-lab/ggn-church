@@ -119,7 +119,7 @@ export default function AccountPage() {
     let nextAvatarPath = avatarPath;
 
     if (file) {
-      const path = safeStoragePath(`avatars/${user.id}`, file.name);
+      const path = safeStoragePath(`${user.id}/avatar`, file.name);
       const { error: uploadError } = await uploadFileWithRetry("attachments", path, file);
       if (uploadError) {
         setSaving(false);
