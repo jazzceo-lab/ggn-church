@@ -446,6 +446,12 @@ export default function BoardPage() {
         </button>
       )}
 
+      {category === "suggestion" && user && (
+        <p className="mt-4 rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm text-foreground/60 dark:border-white/10 dark:bg-white/10">
+          🔒 등록내용은 목회자등급 이상 조회가능하며, 비공개및 개별답변 드립니다.
+        </p>
+      )}
+
       {category === "district" && user && isAdmin && (
         <div className="mt-4 flex items-center gap-2 text-sm">
           <label className="text-foreground/60">구역 선택</label>
