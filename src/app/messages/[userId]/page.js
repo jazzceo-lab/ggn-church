@@ -21,6 +21,7 @@ export default function ConversationPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [readError, setReadError] = useState("");
   const bottomRef = useRef(null);
 
   async function loadThread() {
@@ -53,7 +54,10 @@ export default function ConversationPage() {
       .eq("sender_id", userId)
       .eq("recipient_id", user.id)
       .is("read_at", null);
-    if (markReadError) console.error("읽음 처리 실패:", markReadError.message);
+    if (markReadError) {
+      console.error("읽음 처리 실패:", markReadError.message);
+      setReadError(markReadError.message);
+    }
     refreshUnreadCount();
   }
 
@@ -83,7 +87,10 @@ export default function ConversationPage() {
             .update({ read_at: new Date().toISOString() })
             .eq("id", payload.new.id)
             .then(({ error: markReadError }) => {
-              if (markReadError) console.error("읽음 처리 실패:", markReadError.message);
+              if (markReadError) {
+                console.error("읽음 처리 실패:", markReadError.message);
+                setReadError(markReadError.message);
+              }
               refreshUnreadCount();
             });
         }
@@ -184,6 +191,10 @@ export default function ConversationPage() {
         </h1>
       </div>
 
+      {readError && (
+        <p className="mt-2 text-xs text-red-600">읽음 처리 실패: {readError}</p>
+      )}
+
       <div className="mt-4 flex-1 space-y-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
         {loading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
         {!loading && thread.length === 0 && (
@@ -193,7 +204,7 @@ export default function ConversationPage() {
           const mine = m.sender_id === user?.id;
           return (
             <div key={m.id} className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}>
-              {mine && (
+              {mine && !m.read_at && (
                 <button
                   onClick={() => handleDeleteMessage(m.id)}
                   className="text-xs text-foreground/30 hover:text-red-600"
