@@ -47,11 +47,9 @@ export default function DonationThermometer({ goalKey }) {
         <div className="absolute bottom-0 left-1/2 h-9 w-9 -translate-x-1/2 rounded-full border-2 border-brand bg-brand" />
       </div>
 
-      <p className="mt-3 font-serif text-lg font-bold text-brand-dark">
-        {total.toLocaleString("ko-KR")}
-        <span className="text-xs font-normal text-foreground/50">원</span>
-      </p>
-      <span className="mt-1 text-xs font-medium text-brand-dark">{pct}% 달성</span>
+      <span className="mt-3 rounded-full bg-green-100 px-3 py-1 font-serif text-2xl font-bold text-green-700 dark:bg-green-900/30 dark:text-green-300">
+        {pct}%
+      </span>
     </div>
   );
 }
