@@ -116,7 +116,8 @@ export default function TeamsPage() {
       .from("member_directory")
       .select("id, display_name")
       .neq("id", user.id)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error("회원 명단 조회 실패:", error.message);
         setDirectory(new Map((data ?? []).map((m) => [m.display_name, m.id])));
       });
   }, [user]);

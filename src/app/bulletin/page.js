@@ -300,16 +300,23 @@ export default function BulletinPage() {
   const [members, setMembers] = useState([]);
 
   const [bulletinImages, setBulletinImages] = useState([]);
+  const [imagesLoadError, setImagesLoadError] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
 
   async function loadBulletinImages() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("media_items")
       .select("id, title, file_path, created_at")
       .eq("media_type", BULLETIN_IMAGE_TYPE)
       .order("created_at", { ascending: false });
+    if (error) {
+      console.error("주보 이미지 조회 실패:", error.message);
+      setImagesLoadError(true);
+      return;
+    }
+    setImagesLoadError(false);
     setBulletinImages(data ?? []);
   }
 
@@ -327,7 +334,10 @@ export default function BulletinPage() {
     supabase
       .from("member_directory")
       .select("id, display_name")
-      .then(({ data }) => setMembers(data ?? []));
+      .then(({ data, error }) => {
+        if (error) console.error("회원 명단 조회 실패:", error.message);
+        setMembers(data ?? []);
+      });
   }, [user]);
 
   async function pruneOldBulletinImages() {
@@ -428,6 +438,12 @@ export default function BulletinPage() {
             {imageUploading ? "업로드 중..." : "등록"}
           </button>
         </form>
+      )}
+
+      {imagesLoadError && (
+        <p className="mt-4 text-xs text-red-600">
+          주보 이미지를 불러오지 못했어요. 새로고침해서 다시 시도해주세요.
+        </p>
       )}
 
       {bulletinImages[0] && (

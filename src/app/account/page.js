@@ -27,6 +27,7 @@ export default function AccountPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [avatarPath, setAvatarPath] = useState(null);
   const [phoneRest, setPhoneRest] = useState("");
   const [file, setFile] = useState(null);
@@ -63,7 +64,12 @@ export default function AccountPage() {
       )
       .eq("id", user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error: loadErr }) => {
+        if (loadErr) {
+          setLoadError("정보를 불러오지 못했어요: " + loadErr.message);
+          setLoading(false);
+          return;
+        }
         setAvatarPath(data?.avatar_path ?? null);
         setPhoneRest(data?.phone?.replace(/^010-/, "") ?? "");
         setNotifyMessages(data?.notify_messages ?? true);
@@ -248,6 +254,17 @@ export default function AccountPage() {
 
       {loading ? (
         <p className="mt-6 text-sm text-foreground/50">불러오는 중...</p>
+      ) : loadError ? (
+        <div className="mt-6 rounded-xl border border-red-200 bg-red-50/60 p-5 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/10 dark:text-red-300">
+          <p>{loadError}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-3 rounded-full border border-red-300 px-3 py-1.5 text-xs font-medium hover:bg-red-100 dark:border-red-900/40 dark:hover:bg-red-900/20"
+          >
+            다시 시도
+          </button>
+        </div>
       ) : (
         <form
           onSubmit={handleSubmit}
@@ -301,7 +318,7 @@ export default function AccountPage() {
         </form>
       )}
 
-      {!loading && (
+      {!loading && !loadError && (
         <div className="mt-6 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
           <h2 className="font-medium text-foreground">알림 설정</h2>
           <p className="text-sm text-foreground/50">받고 싶은 알림만 골라서 켜둘 수 있어요.</p>

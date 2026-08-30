@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
 
 const DISMISS_KEY = "installBannerDismissedAt";
 const INSTALLED_KEY = "pwaInstalled";
@@ -23,14 +24,14 @@ export default function InstallAppBanner() {
     if (isStandalone) {
       // 홈 화면 아이콘으로 실행된 것이 확인됐으니, 나중에 같은 기기의 일반
       // 브라우저 탭으로 접속해도 설치 안내를 다시 띄우지 않도록 기억해둔다.
-      window.localStorage.setItem(INSTALLED_KEY, "1");
+      safeSetItem(INSTALLED_KEY, "1");
       return;
     }
 
     // 이미 설치된 적이 있는 기기라면(일반 브라우저 탭으로 접속한 경우 포함) 안내를 건너뛴다.
-    if (window.localStorage.getItem(INSTALLED_KEY) === "1") return;
+    if (safeGetItem(INSTALLED_KEY) === "1") return;
 
-    const dismissedAt = Number(window.localStorage.getItem(DISMISS_KEY) || 0);
+    const dismissedAt = Number(safeGetItem(DISMISS_KEY) || 0);
     if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) return;
 
     // iOS Safari(카카오톡에서 외부 브라우저로 열었을 때 포함)는 beforeinstallprompt
@@ -51,7 +52,7 @@ export default function InstallAppBanner() {
       setVisible(true);
     }
     function handleAppInstalled() {
-      window.localStorage.setItem(INSTALLED_KEY, "1");
+      safeSetItem(INSTALLED_KEY, "1");
       setVisible(false);
       setDeferredPrompt(null);
     }
@@ -83,7 +84,7 @@ export default function InstallAppBanner() {
   }
 
   function handleDismiss() {
-    window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    safeSetItem(DISMISS_KEY, String(Date.now()));
     setVisible(false);
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
 
 const STORAGE_KEY = "theme";
 
@@ -16,7 +17,7 @@ export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY);
+    const saved = safeGetItem(STORAGE_KEY);
     const initial = saved ? saved === "dark" : systemPrefersDark();
     setIsDark(initial);
     applyTheme(initial);
@@ -26,7 +27,7 @@ export default function ThemeToggle() {
     const next = !isDark;
     setIsDark(next);
     applyTheme(next);
-    window.localStorage.setItem(STORAGE_KEY, next ? "dark" : "light");
+    safeSetItem(STORAGE_KEY, next ? "dark" : "light");
   }
 
   return (

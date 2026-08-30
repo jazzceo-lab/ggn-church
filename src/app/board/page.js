@@ -6,6 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
+import { resizeImageFile } from "@/lib/resizeImage";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { DISTRICT_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
@@ -304,8 +305,11 @@ export default function BoardPage() {
     let attachmentName = null;
 
     if (file) {
-      const path = safeStoragePath(user.id, file.name);
-      const { error: uploadError } = await uploadFileWithRetry("attachments", path, file);
+      const uploadFile = file.type.startsWith("image/")
+        ? await resizeImageFile(file, { maxSize: 1600 })
+        : file;
+      const path = safeStoragePath(user.id, uploadFile.name);
+      const { error: uploadError } = await uploadFileWithRetry("attachments", path, uploadFile);
 
       if (uploadError) {
         setSubmitting(false);

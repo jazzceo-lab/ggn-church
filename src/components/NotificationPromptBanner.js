@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { isPushSubscribed, subscribeToPush } from "@/lib/pushSubscribe";
+import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
 
 const DISMISS_KEY = "notifBannerDismissedAt";
 const DISMISS_DAYS = 14;
@@ -20,7 +21,7 @@ export default function NotificationPromptBanner() {
     const supported = "serviceWorker" in navigator && "PushManager" in window;
     if (!supported) return;
 
-    const dismissedAt = Number(window.localStorage.getItem(DISMISS_KEY) || 0);
+    const dismissedAt = Number(safeGetItem(DISMISS_KEY) || 0);
     if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) return;
 
     isPushSubscribed(user).then((subscribed) => {
@@ -40,7 +41,7 @@ export default function NotificationPromptBanner() {
   }
 
   function handleDismiss() {
-    window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    safeSetItem(DISMISS_KEY, String(Date.now()));
     setVisible(false);
   }
 

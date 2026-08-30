@@ -26,7 +26,8 @@ export default function DonationReceiptPage() {
       .select("value")
       .eq("key", "receipt_requests_open")
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error("신청 기간 설정 조회 실패:", error.message);
         setIsOpen(data?.value ?? true);
         setSettingLoading(false);
       });

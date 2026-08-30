@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
 
 const LEVELS = [
   { key: "base", label: "가" },
@@ -13,7 +14,7 @@ export default function FontSizeControl() {
   const [level, setLevel] = useState("base");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem(STORAGE_KEY) || "base";
+    const saved = safeGetItem(STORAGE_KEY) || "base";
     setLevel(saved);
     applyLevel(saved);
   }, []);
@@ -29,7 +30,7 @@ export default function FontSizeControl() {
   function handleSelect(next) {
     setLevel(next);
     applyLevel(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+    safeSetItem(STORAGE_KEY, next);
   }
 
   return (

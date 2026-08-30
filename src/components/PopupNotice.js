@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
 
 const DISMISSED_KEY = "church_app_dismissed_notice_id";
 
@@ -20,7 +21,7 @@ export default function PopupNotice() {
 
       if (!data) return;
 
-      const dismissedId = window.localStorage.getItem(DISMISSED_KEY);
+      const dismissedId = safeGetItem(DISMISSED_KEY);
       if (dismissedId === String(data.id)) return;
 
       setNotice(data);
@@ -31,7 +32,7 @@ export default function PopupNotice() {
 
   function handleClose() {
     if (notice) {
-      window.localStorage.setItem(DISMISSED_KEY, String(notice.id));
+      safeSetItem(DISMISSED_KEY, String(notice.id));
     }
     setNotice(null);
   }

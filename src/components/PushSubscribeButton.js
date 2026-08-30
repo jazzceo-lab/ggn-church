@@ -38,11 +38,16 @@ export default function PushSubscribeButton() {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
-        await supabase
+        const { error: deleteError } = await supabase
           .from("push_subscriptions")
           .delete()
           .eq("user_id", user.id)
           .eq("endpoint", sub.endpoint);
+        if (deleteError) {
+          // 이 기기에서는 알림이 꺼지지만(아래 unsubscribe), 서버에 구독 정보가
+          // 남아있을 수 있어 최소한 콘솔에는 남긴다.
+          console.error("푸시 구독 삭제 실패:", deleteError.message);
+        }
         await sub.unsubscribe();
       }
       setSubscribed(false);
