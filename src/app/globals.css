@@ -55,7 +55,12 @@ html[data-font-size="xl"] {
   right: 0;
   bottom: 0;
   height: 3rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.12) 55%, transparent);
+  background: radial-gradient(
+    ellipse 70% 100% at 50% 100%,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.22) 50%,
+    transparent 80%
+  );
   pointer-events: none;
   z-index: 20;
   opacity: 0;
