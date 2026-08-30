@@ -21,14 +21,15 @@ export default function ScripturePage() {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">성경</h1>
-      <p className="mt-2 text-sm text-foreground/50">
+
+      <DailyVerseCard initialVerse={verse} />
+
+      <p className="mt-6 text-sm text-foreground/50">
         아래 버튼을 누르면 플레이스토어로 이동해요. 이미 앱이 설치되어 있으면 &ldquo;열기&rdquo;,
         설치되어 있지 않으면 &ldquo;설치&rdquo; 버튼이 떠요.
       </p>
 
-      <DailyVerseCard initialVerse={verse} />
-
-      <div className="mt-6 grid gap-4">
+      <div className="mt-4 grid gap-4">
         {apps.map((app) => (
           <a
             key={app.key}
