@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
@@ -21,8 +21,24 @@ function buildRanges() {
 
 const RANGES = buildRanges();
 
+const MIN_SCALE = 1;
+const MAX_SCALE = 4;
+const ZOOM_STEP = 0.5;
+const DOUBLE_TAP_SCALE = 2.5;
+const DOUBLE_TAP_MS = 300;
+const TAP_MOVE_THRESHOLD = 10;
+
 function pad(n) {
   return String(n).padStart(3, "0");
+}
+
+function clampScale(s) {
+  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
+}
+
+function touchDistance(touches) {
+  const [a, b] = touches;
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 }
 
 export default function HymnsPage() {
@@ -33,6 +49,11 @@ export default function HymnsPage() {
   const [loadingHymn, setLoadingHymn] = useState(null);
   const [hymnError, setHymnError] = useState({});
   const [rotated, setRotated] = useState(false);
+  const [scale, setScale] = useState(1);
+  const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const pinchRef = useRef(null);
+  const panRef = useRef(null);
+  const lastTapRef = useRef(0);
 
   useEffect(() => {
     if (!user) return;
@@ -49,8 +70,94 @@ export default function HymnsPage() {
     setOpenRange((prev) => (prev === idx ? null : idx));
   }
 
+  function resetZoom() {
+    setScale(1);
+    setTranslate({ x: 0, y: 0 });
+  }
+
+  function toggleRotated() {
+    setRotated((v) => !v);
+    resetZoom();
+  }
+
+  function zoomIn() {
+    setScale((s) => clampScale(s + ZOOM_STEP));
+  }
+
+  function zoomOut() {
+    setScale((s) => {
+      const next = clampScale(s - ZOOM_STEP);
+      if (next === MIN_SCALE) setTranslate({ x: 0, y: 0 });
+      return next;
+    });
+  }
+
+  function toggleDoubleTapZoom() {
+    if (scale > MIN_SCALE) {
+      resetZoom();
+    } else {
+      setScale(DOUBLE_TAP_SCALE);
+    }
+  }
+
+  function handleTouchStart(e) {
+    if (e.touches.length === 2) {
+      pinchRef.current = { startDist: touchDistance(e.touches), startScale: scale };
+      panRef.current = null;
+    } else if (e.touches.length === 1) {
+      const t = e.touches[0];
+      panRef.current = { startX: t.clientX, startY: t.clientY, startTranslate: translate, moved: false };
+      pinchRef.current = null;
+    }
+  }
+
+  function handleTouchMove(e) {
+    if (e.touches.length === 2 && pinchRef.current) {
+      e.preventDefault();
+      const dist = touchDistance(e.touches);
+      const next = clampScale(pinchRef.current.startScale * (dist / pinchRef.current.startDist));
+      setScale(next);
+      if (next === MIN_SCALE) setTranslate({ x: 0, y: 0 });
+    } else if (e.touches.length === 1 && panRef.current && scale > MIN_SCALE) {
+      e.preventDefault();
+      const t = e.touches[0];
+      const dxScreen = t.clientX - panRef.current.startX;
+      const dyScreen = t.clientY - panRef.current.startY;
+      if (Math.abs(dxScreen) > TAP_MOVE_THRESHOLD || Math.abs(dyScreen) > TAP_MOVE_THRESHOLD) {
+        panRef.current.moved = true;
+      }
+      // 회전된 상태에서는 화면 좌우/상하 이동이 실제 이미지 좌표계에서는 축이 바뀐다.
+      const [ddx, ddy] = rotated ? [dyScreen, -dxScreen] : [dxScreen, dyScreen];
+      setTranslate({
+        x: panRef.current.startTranslate.x + ddx,
+        y: panRef.current.startTranslate.y + ddy,
+      });
+    }
+  }
+
+  function handleTouchEnd(e) {
+    if (e.touches.length === 0) {
+      if (panRef.current && !panRef.current.moved && !pinchRef.current) {
+        const now = Date.now();
+        if (now - lastTapRef.current < DOUBLE_TAP_MS) {
+          toggleDoubleTapZoom();
+          lastTapRef.current = 0;
+        } else {
+          lastTapRef.current = now;
+        }
+      }
+      pinchRef.current = null;
+      panRef.current = null;
+    } else if (e.touches.length === 1) {
+      const t = e.touches[0];
+      panRef.current = { startX: t.clientX, startY: t.clientY, startTranslate: translate, moved: true };
+      pinchRef.current = null;
+    }
+  }
+
   async function openHymn(num) {
     setFullscreenHymn(num);
+    resetZoom();
     setHymnError((prev) => ({ ...prev, [num]: false }));
     if (imageUrls[num]) return;
 
@@ -70,6 +177,7 @@ export default function HymnsPage() {
   function closeHymn() {
     setFullscreenHymn(null);
     setRotated(false);
+    resetZoom();
   }
 
   if (!authLoading && !user) {
@@ -154,7 +262,7 @@ export default function HymnsPage() {
             </p>
           </div>
 
-          <div className="flex flex-1 items-center justify-center overflow-auto p-2">
+          <div className="flex flex-1 items-center justify-center overflow-hidden p-2">
             {loadingHymn === fullscreenHymn && (
               <p className="text-sm text-foreground/50">불러오는 중...</p>
             )}
@@ -167,20 +275,43 @@ export default function HymnsPage() {
               <img
                 src={imageUrls[fullscreenHymn]}
                 alt={`${fullscreenHymn}장 악보`}
-                className="transition-transform duration-300"
-                style={
-                  rotated
-                    ? { transform: "rotate(90deg)", maxWidth: "90vh", maxHeight: "90vw" }
-                    : { maxWidth: "100%" }
-                }
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onDoubleClick={toggleDoubleTapZoom}
+                draggable={false}
+                className={pinchRef.current || panRef.current ? "select-none" : "select-none transition-transform duration-150"}
+                style={{
+                  touchAction: "none",
+                  cursor: scale > MIN_SCALE ? "grab" : "zoom-in",
+                  transform: `rotate(${rotated ? 90 : 0}deg) scale(${scale}) translate(${translate.x / scale}px, ${translate.y / scale}px)`,
+                  transformOrigin: "center center",
+                  maxWidth: rotated ? "90vh" : "100%",
+                  maxHeight: rotated ? "90vw" : "100%",
+                }}
               />
             )}
           </div>
 
           {imageUrls[fullscreenHymn] && (
-            <div className="flex justify-center border-t border-black/5 bg-background py-3 dark:border-white/10">
+            <div className="flex items-center justify-center gap-3 border-t border-black/5 bg-background py-3 dark:border-white/10">
               <button
-                onClick={() => setRotated((v) => !v)}
+                onClick={zoomOut}
+                disabled={scale <= MIN_SCALE}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-foreground/70 transition-colors hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                −
+              </button>
+              <span className="w-12 text-center text-xs text-foreground/50">{Math.round(scale * 100)}%</span>
+              <button
+                onClick={zoomIn}
+                disabled={scale >= MAX_SCALE}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-foreground/70 transition-colors hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                ＋
+              </button>
+              <button
+                onClick={toggleRotated}
                 className="flex items-center gap-1.5 rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
               >
                 🔄 {rotated ? "세로로 보기" : "가로로 보기"}
