@@ -117,8 +117,7 @@ export default function DonatePage() {
       </div>
 
       <div className="mt-8">
-        <p className="text-center text-xs font-medium text-foreground/60">은행 앱 바로가기</p>
-        <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-3">
+        <div className="flex flex-wrap justify-center gap-x-5 gap-y-3">
           {BANK_APPS.map((bank) => (
             <a
               key={bank.key}
