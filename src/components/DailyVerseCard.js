@@ -24,7 +24,7 @@ export default function DailyVerseCard({ initialVerse }) {
         <button
           type="button"
           onClick={showAnother}
-          className="shrink-0 rounded-full border border-brand-dark/30 px-3 py-1 text-xs font-medium text-brand-dark transition-colors hover:bg-brand-dark/10"
+          className="shrink-0 rounded-full border border-brand-dark/40 bg-white px-3 py-1 text-xs font-medium text-brand-dark shadow-sm transition-colors hover:bg-brand-dark hover:text-white dark:bg-black/30 dark:text-brand"
         >
           다른 구절 보기
         </button>
