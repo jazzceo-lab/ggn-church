@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
+import { supabase } from "@/lib/supabaseClient";
 import DonationThermometer from "@/components/DonationThermometer";
 
 const accounts = [
@@ -69,6 +70,18 @@ const BANK_APPS = [
 export default function DonatePage() {
   const { user } = useAuth();
   const [copiedKey, setCopiedKey] = useState("");
+  const [receiptOpen, setReceiptOpen] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "receipt_requests_open")
+      .maybeSingle()
+      .then(({ data }) => {
+        setReceiptOpen(data?.value ?? true);
+      });
+  }, []);
 
   async function handleCopy(account) {
     try {
@@ -140,19 +153,31 @@ export default function DonatePage() {
         </p>
       </div>
 
-      <Link
-        href="/donate/receipt"
-        className="mt-6 flex items-center gap-3 rounded-xl border border-brand bg-brand-tint p-4 transition-colors hover:brightness-95"
-      >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white">
-          🧾
-        </span>
-        <span>
-          <span className="block text-sm font-medium text-foreground">기부금영수증 신청</span>
-          <span className="block text-xs text-foreground/50">연말정산용 영수증을 신청하세요</span>
-        </span>
-        <span className="ml-auto text-brand-dark">→</span>
-      </Link>
+      {receiptOpen ? (
+        <Link
+          href="/donate/receipt"
+          className="mt-6 flex items-center gap-3 rounded-xl border border-brand bg-brand-tint p-4 transition-colors hover:brightness-95"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-white">
+            🧾
+          </span>
+          <span>
+            <span className="block text-sm font-medium text-foreground">기부금영수증 신청</span>
+            <span className="block text-xs text-foreground/50">연말정산용 영수증을 신청하세요</span>
+          </span>
+          <span className="ml-auto text-brand-dark">→</span>
+        </Link>
+      ) : (
+        <div className="mt-6 flex items-center gap-3 rounded-xl border border-black/10 bg-black/5 p-4 dark:border-white/10 dark:bg-white/5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/10 text-white/70 dark:bg-white/10">
+            🧾
+          </span>
+          <span>
+            <span className="block text-sm font-medium text-foreground/50">기부금영수증 신청</span>
+            <span className="block text-xs text-foreground/40">지금은 신청기간이 아닙니다</span>
+          </span>
+        </div>
+      )}
 
       <p className="mt-6 text-xs text-foreground/40">
         예금주는 &ldquo;길가는교회&rdquo;입니다. 헌금 관련 문의는 교회 사무실(032-321-9182)로
