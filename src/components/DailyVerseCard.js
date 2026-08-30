@@ -18,7 +18,7 @@ export default function DailyVerseCard({ initialVerse }) {
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10">
+    <section className="mt-4 rounded-xl border border-black/10 bg-brand-tint/60 p-4 dark:border-white/10">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-serif font-semibold text-brand-dark">오늘의 성경</h2>
         <button
@@ -29,16 +29,16 @@ export default function DailyVerseCard({ initialVerse }) {
           다른 구절 보기
         </button>
       </div>
-      <p className="mt-3 break-keep text-sm leading-7 text-foreground/80">&ldquo;{verse.text}&rdquo;</p>
+      <p className="mt-2 break-keep text-sm leading-6 text-foreground/80">&ldquo;{verse.text}&rdquo;</p>
       {verseLink ? (
         <a
           href={verseLink}
-          className="mt-2 inline-block text-sm font-medium text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+          className="mt-1 inline-block text-sm font-medium text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
         >
           {verse.ref}
         </a>
       ) : (
-        <p className="mt-2 text-sm font-medium text-brand-dark">{verse.ref}</p>
+        <p className="mt-1 text-sm font-medium text-brand-dark">{verse.ref}</p>
       )}
     </section>
   );
