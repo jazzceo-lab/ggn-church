@@ -99,7 +99,7 @@ function NavLink({ href, className, children }) {
       onMouseDown={press}
       onMouseUp={release}
       onMouseLeave={release}
-      className={`-mx-1.5 -my-1 rounded-md px-1.5 py-1 transition-colors duration-300 ${
+      className={`-mx-1.5 -my-1 rounded-full px-1.5 py-1 transition-colors duration-300 ${
         pressed ? "bg-brand-tint dark:bg-brand-dark/40" : ""
       } ${className}`}
     >
