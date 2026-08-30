@@ -55,7 +55,7 @@ html[data-font-size="xl"] {
   right: 0;
   bottom: 0;
   height: 3rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.08) 55%, transparent);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.12) 55%, transparent);
   pointer-events: none;
   z-index: 20;
   opacity: 0;
