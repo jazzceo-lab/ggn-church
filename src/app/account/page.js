@@ -44,7 +44,10 @@ export default function AccountPage() {
 
   const [notifyMessages, setNotifyMessages] = useState(true);
   const [notifyBulletin, setNotifyBulletin] = useState(true);
-  const [notifyBoard, setNotifyBoard] = useState(true);
+  const [notifyBoardDistrict, setNotifyBoardDistrict] = useState(true);
+  const [notifyBoardPrayer, setNotifyBoardPrayer] = useState(true);
+  const [notifyBoardShare, setNotifyBoardShare] = useState(true);
+  const [notifyBoardSuggestion, setNotifyBoardSuggestion] = useState(true);
   const [notifySaving, setNotifySaving] = useState(false);
 
   useEffect(() => {
@@ -54,7 +57,9 @@ export default function AccountPage() {
     }
     supabase
       .from("profiles")
-      .select("avatar_path, phone, notify_messages, notify_bulletin, notify_board")
+      .select(
+        "avatar_path, phone, notify_messages, notify_bulletin, notify_board_district, notify_board_prayer, notify_board_share, notify_board_suggestion"
+      )
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
@@ -62,7 +67,10 @@ export default function AccountPage() {
         setPhoneRest(data?.phone?.replace(/^010-/, "") ?? "");
         setNotifyMessages(data?.notify_messages ?? true);
         setNotifyBulletin(data?.notify_bulletin ?? true);
-        setNotifyBoard(data?.notify_board ?? true);
+        setNotifyBoardDistrict(data?.notify_board_district ?? true);
+        setNotifyBoardPrayer(data?.notify_board_prayer ?? true);
+        setNotifyBoardShare(data?.notify_board_share ?? true);
+        setNotifyBoardSuggestion(data?.notify_board_suggestion ?? true);
         setLoading(false);
       });
   }, [user]);
@@ -319,16 +327,57 @@ export default function AccountPage() {
               className="h-5 w-5 accent-brand"
             />
           </label>
-          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            게시판 새 글 알림
-            <input
-              type="checkbox"
-              checked={notifyBoard}
-              disabled={notifySaving}
-              onChange={(e) => handleNotifyToggle("notify_board", e.target.checked, setNotifyBoard)}
-              className="h-5 w-5 accent-brand"
-            />
-          </label>
+          <div className="pt-1">
+            <p className="text-sm text-foreground/80">게시판 새 글 알림</p>
+            <div className="mt-2 space-y-2 pl-3">
+              <label className="flex items-center justify-between gap-3 text-sm text-foreground/70">
+                구역게시판
+                <input
+                  type="checkbox"
+                  checked={notifyBoardDistrict}
+                  disabled={notifySaving}
+                  onChange={(e) =>
+                    handleNotifyToggle("notify_board_district", e.target.checked, setNotifyBoardDistrict)
+                  }
+                  className="h-5 w-5 accent-brand"
+                />
+              </label>
+              <label className="flex items-center justify-between gap-3 text-sm text-foreground/70">
+                기도게시판
+                <input
+                  type="checkbox"
+                  checked={notifyBoardPrayer}
+                  disabled={notifySaving}
+                  onChange={(e) =>
+                    handleNotifyToggle("notify_board_prayer", e.target.checked, setNotifyBoardPrayer)
+                  }
+                  className="h-5 w-5 accent-brand"
+                />
+              </label>
+              <label className="flex items-center justify-between gap-3 text-sm text-foreground/70">
+                나눔게시판
+                <input
+                  type="checkbox"
+                  checked={notifyBoardShare}
+                  disabled={notifySaving}
+                  onChange={(e) => handleNotifyToggle("notify_board_share", e.target.checked, setNotifyBoardShare)}
+                  className="h-5 w-5 accent-brand"
+                />
+              </label>
+              <label className="flex items-center justify-between gap-3 text-sm text-foreground/70">
+                교회건의
+                <input
+                  type="checkbox"
+                  checked={notifyBoardSuggestion}
+                  disabled={notifySaving}
+                  onChange={(e) =>
+                    handleNotifyToggle("notify_board_suggestion", e.target.checked, setNotifyBoardSuggestion)
+                  }
+                  className="h-5 w-5 accent-brand"
+                />
+              </label>
+            </div>
+          </div>
         </div>
       )}
 

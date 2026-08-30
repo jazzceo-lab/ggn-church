@@ -25,7 +25,8 @@ Deno.serve(async (req) => {
   let recipientIds = null; // null이면 구독한 전체 회원에게 발송
   let excludeUserId = null;
   // 회원이 profiles에서 종류별로 끌 수 있는 알림 설정 컬럼.
-  const NOTIFY_COLUMN = { messages: "notify_messages", media_items: "notify_bulletin", posts: "notify_board" }[table];
+  // posts는 서브게시판(카테고리)별로 컬럼이 다르므로 아래 posts 분기에서 따로 정한다.
+  let NOTIFY_COLUMN = { messages: "notify_messages", media_items: "notify_bulletin" }[table] ?? null;
 
   if (table === "messages") {
     const { data: sender } = await supabase
@@ -48,9 +49,16 @@ Deno.serve(async (req) => {
       url: "/bulletin",
     };
   } else if (table === "posts") {
-    // 구역게시판/기도게시판만 알림 발송. 나눔게시판·앱사용문의는 제외.
-    const NOTIFY_CATEGORIES = ["district", "prayer"];
-    if (!NOTIFY_CATEGORIES.includes(record.category)) {
+    // 구역/기도/나눔/건의 게시판만 알림 발송하며, 서브게시판별로 각자 끌 수 있음.
+    // 자료실(resources)·앱사용문의(help)는 알림 발송 대상이 아님.
+    const POST_CATEGORY_NOTIFY_COLUMN = {
+      district: "notify_board_district",
+      prayer: "notify_board_prayer",
+      share: "notify_board_share",
+      suggestion: "notify_board_suggestion",
+    };
+    NOTIFY_COLUMN = POST_CATEGORY_NOTIFY_COLUMN[record.category];
+    if (!NOTIFY_COLUMN) {
       return new Response(JSON.stringify({ skipped: true }), {
         headers: { "Content-Type": "application/json" },
       });
