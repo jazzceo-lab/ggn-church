@@ -29,12 +29,17 @@ export default function ScripturePage() {
           <a
             key={app.key}
             href={app.url}
-            className="rounded-xl border border-black/10 bg-white/60 p-5 transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
+            className="flex items-center gap-4 rounded-xl border border-black/10 bg-white/60 p-5 transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
           >
-            <h2 className="font-serif font-semibold text-foreground">{app.title}</h2>
-            <p className="mt-1 text-sm text-foreground/60">{app.description}</p>
-            <span className="mt-3 inline-block rounded-full bg-brand px-4 py-2 text-sm text-white">
-              {app.title} 앱 열기 ↗
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-tint text-3xl dark:bg-white/10">
+              📖
+            </span>
+            <span className="min-w-0 flex-1">
+              <h2 className="font-serif font-semibold text-foreground">{app.title}</h2>
+              <p className="mt-1 text-sm text-foreground/60">{app.description}</p>
+              <span className="mt-3 inline-block rounded-full bg-brand px-6 py-3 text-base font-medium text-white">
+                {app.title} 앱 열기 ↗
+              </span>
             </span>
           </a>
         ))}
