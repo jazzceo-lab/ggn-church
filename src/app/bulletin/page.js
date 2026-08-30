@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { buildBibleLink } from "@/lib/bibleBooks";
 import KakaoShareButton from "@/components/KakaoShareButton";
 
@@ -288,9 +289,7 @@ export default function BulletinPage() {
     setImageError("");
 
     const path = safeStoragePath("bulletin", imageFile.name);
-    const { error: uploadError } = await supabase.storage
-      .from("attachments")
-      .upload(path, imageFile);
+    const { error: uploadError } = await uploadFileWithRetry("attachments", path, imageFile);
 
     if (uploadError) {
       setImageUploading(false);

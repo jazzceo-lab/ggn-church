@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import { avatarUrl } from "@/lib/avatar";
+import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -121,9 +122,7 @@ export default function AccountPage() {
 
     if (file) {
       const path = safeStoragePath(`avatars/${user.id}`, file.name);
-      const { error: uploadError } = await supabase.storage
-        .from("attachments")
-        .upload(path, file);
+      const { error: uploadError } = await uploadFileWithRetry("attachments", path, file);
       if (uploadError) {
         setSaving(false);
         setError("사진 업로드에 실패했어요: " + uploadError.message);

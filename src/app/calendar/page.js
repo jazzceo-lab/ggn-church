@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { buildGoogleCalendarUrl } from "@/lib/googleCalendarLink";
 import { getHolidayName } from "@/lib/holidays";
@@ -204,9 +205,7 @@ export default function CalendarPage() {
     let imageUrl = formExistingImageUrl;
     if (formImage) {
       const path = safeStoragePath("calendar", formImage.name);
-      const { error: uploadError } = await supabase.storage
-        .from("attachments")
-        .upload(path, formImage);
+      const { error: uploadError } = await uploadFileWithRetry("attachments", path, formImage);
 
       if (uploadError) {
         setSubmitting(false);

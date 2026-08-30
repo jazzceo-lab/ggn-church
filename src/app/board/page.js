@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { DISTRICT_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
@@ -303,9 +304,7 @@ export default function BoardPage() {
 
     if (file) {
       const path = safeStoragePath(user.id, file.name);
-      const { error: uploadError } = await supabase.storage
-        .from("attachments")
-        .upload(path, file);
+      const { error: uploadError } = await uploadFileWithRetry("attachments", path, file);
 
       if (uploadError) {
         setSubmitting(false);

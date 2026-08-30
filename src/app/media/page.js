@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 
 const TABS = [
   { key: "audio", label: "설교 음성" },
@@ -119,7 +120,7 @@ export default function MediaPage() {
     setError("");
 
     const path = safeStoragePath(tab, file.name);
-    const { error: uploadError } = await supabase.storage.from("media").upload(path, file);
+    const { error: uploadError } = await uploadFileWithRetry("media", path, file);
     if (uploadError) {
       setUploading(false);
       setError("업로드에 실패했어요: " + uploadError.message);

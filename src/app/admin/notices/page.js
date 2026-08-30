@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
+import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 
 function noticeImageUrl(item) {
   return supabase.storage.from("attachments").getPublicUrl(item.image_path).data.publicUrl;
@@ -41,7 +42,7 @@ export default function AdminNoticesPage() {
     setError("");
 
     const path = safeStoragePath("notices", file.name);
-    const { error: uploadError } = await supabase.storage.from("attachments").upload(path, file);
+    const { error: uploadError } = await uploadFileWithRetry("attachments", path, file);
     if (uploadError) {
       setUploading(false);
       setError("업로드에 실패했어요: " + uploadError.message);
