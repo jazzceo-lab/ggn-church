@@ -263,31 +263,33 @@ export default function HymnsPage() {
 
       {fullscreenHymn && (
         <div ref={viewerRef} className="fixed inset-0 z-50 flex flex-col bg-background">
-          <div className="border-b border-black/5 bg-background px-4 py-3 dark:border-white/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/images/logo-mark.jpg"
-                  alt="길가는교회 로고"
-                  width={32}
-                  height={32}
-                  className="rounded-full ring-1 ring-black/5"
-                />
-                <span className="font-serif text-lg font-bold tracking-tight text-foreground">
-                  길가는교회
-                </span>
+          {!isFullscreen && (
+            <div className="border-b border-black/5 bg-background px-4 py-3 dark:border-white/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Image
+                    src="/images/logo-mark.jpg"
+                    alt="길가는교회 로고"
+                    width={32}
+                    height={32}
+                    className="rounded-full ring-1 ring-black/5"
+                  />
+                  <span className="font-serif text-lg font-bold tracking-tight text-foreground">
+                    길가는교회
+                  </span>
+                </div>
+                <button
+                  onClick={closeHymn}
+                  className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-sm text-foreground/80 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                >
+                  ← 되돌아가기
+                </button>
               </div>
-              <button
-                onClick={closeHymn}
-                className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-sm text-foreground/80 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-              >
-                ← 되돌아가기
-              </button>
+              <p className="mt-2 text-sm font-medium text-foreground">
+                {fullscreenHymn}장{HYMN_TITLES[fullscreenHymn] ? ` - ${HYMN_TITLES[fullscreenHymn]}` : ""}
+              </p>
             </div>
-            <p className="mt-2 text-sm font-medium text-foreground">
-              {fullscreenHymn}장{HYMN_TITLES[fullscreenHymn] ? ` - ${HYMN_TITLES[fullscreenHymn]}` : ""}
-            </p>
-          </div>
+          )}
 
           <div className="flex flex-1 items-center justify-center overflow-hidden p-2">
             {loadingHymn === fullscreenHymn && (
