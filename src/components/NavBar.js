@@ -142,25 +142,6 @@ export default function NavBar() {
             <FontSizeControl />
             <ThemeToggle />
 
-            {!loading && user && (
-              <Link
-                href="/messages"
-                aria-label="쪽지함"
-                className={`relative rounded-full border px-2 py-1.5 text-sm transition-colors ${
-                  unreadCount > 0
-                    ? "border-brand bg-brand-tint text-brand-dark"
-                    : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-                }`}
-              >
-                ✉️
-                {unreadCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-semibold text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </Link>
-            )}
-
             {!loading && user ? (
               <div className="flex flex-wrap items-center justify-end gap-2 text-sm">
                 <span className="hidden text-xs text-foreground/50 sm:inline">{user.email}</span>

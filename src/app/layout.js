@@ -7,6 +7,7 @@ import InstallAppBanner from "@/components/InstallAppBanner";
 import NotificationPromptBanner from "@/components/NotificationPromptBanner";
 import KakaoInAppEscape from "@/components/KakaoInAppEscape";
 import ScrollFadeBottom from "@/components/ScrollFadeBottom";
+import MessageFab from "@/components/MessageFab";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-sans-kr",
@@ -54,6 +55,7 @@ export default function RootLayout({ children }) {
             © {new Date().getFullYear()} 길가는교회
           </footer>
           <ScrollFadeBottom />
+          <MessageFab />
         </AuthProvider>
       </body>
     </html>
