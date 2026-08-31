@@ -37,6 +37,18 @@ export default function GroupConversationPage() {
   const [replyingTo, setReplyingTo] = useState(null);
   const [forwardContent, setForwardContent] = useState(null);
   const bottomRef = useRef(null);
+  const longPressTimer = useRef(null);
+
+  function startLongPress(m) {
+    longPressTimer.current = setTimeout(() => setActiveMessage(m), 450);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
 
   const memberOf = (id) => participants.find((p) => p.id === id) ?? null;
 
@@ -350,6 +362,13 @@ export default function GroupConversationPage() {
                   ⋯
                 </button>
                 <div
+                  onTouchStart={() => startLongPress(m)}
+                  onTouchEnd={cancelLongPress}
+                  onTouchMove={cancelLongPress}
+                  onContextMenu={(e) => e.preventDefault()}
+                  onMouseDown={() => startLongPress(m)}
+                  onMouseUp={cancelLongPress}
+                  onMouseLeave={cancelLongPress}
                   className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                     mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"
                   }`}
