@@ -26,7 +26,10 @@ Deno.serve(async (req) => {
   let excludeUserId = null;
   // 회원이 profiles에서 종류별로 끌 수 있는 알림 설정 컬럼.
   // posts는 서브게시판(카테고리)별로 컬럼이 다르므로 아래 posts 분기에서 따로 정한다.
-  let NOTIFY_COLUMN = { messages: "notify_messages", media_items: "notify_bulletin" }[table] ?? null;
+  let NOTIFY_COLUMN =
+    { messages: "notify_messages", conversation_messages: "notify_messages", media_items: "notify_bulletin" }[
+      table
+    ] ?? null;
 
   if (table === "messages") {
     const { data: sender } = await supabase
@@ -42,6 +45,31 @@ Deno.serve(async (req) => {
       url: `/messages/${record.sender_id}`,
     };
     recipientIds = [record.recipient_id];
+  } else if (table === "conversation_messages") {
+    const { data: sender } = await supabase
+      .from("profiles")
+      .select("display_name, email")
+      .eq("id", record.sender_id)
+      .single();
+    const senderName = sender?.display_name || sender?.email || "누군가";
+
+    const { data: conv } = await supabase
+      .from("conversations")
+      .select("name")
+      .eq("id", record.conversation_id)
+      .single();
+
+    const { data: participants } = await supabase
+      .from("conversation_participants")
+      .select("user_id")
+      .eq("conversation_id", record.conversation_id);
+
+    notification = {
+      title: conv?.name ? `${conv.name} · ${senderName}` : `${senderName}님의 새 그룹 메시지`,
+      body: record.body,
+      url: `/messages/group/${record.conversation_id}`,
+    };
+    recipientIds = (participants ?? []).map((p) => p.user_id).filter((id) => id !== record.sender_id);
   } else if (table === "media_items" && record.media_type === "bulletin") {
     notification = {
       title: "길가는교회",

@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
-import { SIGNUP_GROUP_OPTIONS } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
 import AvatarLightbox from "@/components/AvatarLightbox";
-
-const UNASSIGNED = "미배정";
+import MemberPicker from "@/components/MemberPicker";
 
 export default function MessagesPage() {
-  const { user, loading: authLoading, refreshUnreadCount } = useAuth();
+  const { user, loading: authLoading, refreshUnreadCount, refreshGroupUnreadCount, refreshGroupConversationIds } =
+    useAuth();
+  const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,13 @@ export default function MessagesPage() {
   const [composeBody, setComposeBody] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
+
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [groupSelectedIds, setGroupSelectedIds] = useState([]);
+  const [groupName, setGroupName] = useState("");
+  const [groupBody, setGroupBody] = useState("");
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [groupError, setGroupError] = useState("");
 
   async function load() {
     setLoading(true);
@@ -47,6 +55,9 @@ export default function MessagesPage() {
       const partnerId = m.sender_id === user.id ? m.recipient_id : m.sender_id;
       if (!byPartner.has(partnerId)) {
         byPartner.set(partnerId, {
+          type: "1:1",
+          key: `partner-${partnerId}`,
+          href: `/messages/${partnerId}`,
           partnerId,
           name: nameOf(partnerId),
           title: titleOf(partnerId),
@@ -61,11 +72,69 @@ export default function MessagesPage() {
       }
     }
 
-    const list = Array.from(byPartner.values()).sort((a, b) => {
+    const { data: myParticipant } = await supabase
+      .from("conversation_participants")
+      .select("conversation_id, last_read_at")
+      .eq("user_id", user.id);
+
+    const conversationIds = (myParticipant ?? []).map((p) => p.conversation_id);
+    const groupItems = [];
+
+    if (conversationIds.length) {
+      const [{ data: convRows }, { data: allParticipants }, { data: groupMsgs }] = await Promise.all([
+        supabase.from("conversations").select("id, name").in("id", conversationIds),
+        supabase
+          .from("conversation_participants")
+          .select("conversation_id, user_id")
+          .in("conversation_id", conversationIds),
+        supabase
+          .from("conversation_messages")
+          .select("conversation_id, sender_id, body, created_at")
+          .in("conversation_id", conversationIds)
+          .order("created_at", { ascending: false }),
+      ]);
+
+      const latestByConv = new Map();
+      for (const m of groupMsgs ?? []) {
+        if (!latestByConv.has(m.conversation_id)) latestByConv.set(m.conversation_id, m);
+      }
+
+      const participantsByConv = new Map();
+      for (const p of allParticipants ?? []) {
+        if (!participantsByConv.has(p.conversation_id)) participantsByConv.set(p.conversation_id, []);
+        participantsByConv.get(p.conversation_id).push(p.user_id);
+      }
+
+      const lastReadByConv = new Map((myParticipant ?? []).map((p) => [p.conversation_id, p.last_read_at]));
+
+      for (const conv of convRows ?? []) {
+        const last = latestByConv.get(conv.id);
+        if (!last) continue;
+        const otherIds = (participantsByConv.get(conv.id) ?? []).filter((id) => id !== user.id);
+        const title = conv.name || otherIds.map((id) => nameOf(id)).join(", ") || "그룹 채팅";
+        const lastReadAt = lastReadByConv.get(conv.id);
+        const unread =
+          last.sender_id !== user.id && (!lastReadAt || new Date(last.created_at) > new Date(lastReadAt));
+
+        groupItems.push({
+          type: "group",
+          key: `group-${conv.id}`,
+          href: `/messages/group/${conv.id}`,
+          title,
+          participantCount: otherIds.length + 1,
+          lastBody: last.body,
+          lastAt: last.created_at,
+          unread,
+        });
+      }
+    }
+
+    const merged = [...Array.from(byPartner.values()), ...groupItems].sort((a, b) => {
       if (a.unread !== b.unread) return a.unread ? -1 : 1;
       return new Date(b.lastAt) - new Date(a.lastAt);
     });
-    setConversations(list);
+
+    setConversations(merged);
     setMembers(dir ?? []);
     setLoading(false);
   }
@@ -78,6 +147,10 @@ export default function MessagesPage() {
 
   function toggleSelected(id) {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function toggleGroupSelected(id) {
+    setGroupSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
   async function handleDeleteConversation(partnerId, partnerName) {
@@ -121,6 +194,52 @@ export default function MessagesPage() {
     load();
   }
 
+  async function handleCreateGroup(e) {
+    e.preventDefault();
+    if (groupSelectedIds.length === 0 || !groupBody.trim()) return;
+    setCreatingGroup(true);
+    setGroupError("");
+
+    const { data: conv, error: convError } = await supabase
+      .from("conversations")
+      .insert({ created_by: user.id, name: groupName.trim() || null })
+      .select()
+      .single();
+
+    if (convError) {
+      setCreatingGroup(false);
+      setGroupError("그룹 생성에 실패했어요: " + convError.message);
+      return;
+    }
+
+    const participantRows = [...new Set([user.id, ...groupSelectedIds])].map((id) => ({
+      conversation_id: conv.id,
+      user_id: id,
+    }));
+    const { error: participantsError } = await supabase.from("conversation_participants").insert(participantRows);
+    if (participantsError) {
+      setCreatingGroup(false);
+      setGroupError("참여자 추가에 실패했어요: " + participantsError.message);
+      return;
+    }
+
+    const { error: msgError } = await supabase.from("conversation_messages").insert({
+      conversation_id: conv.id,
+      sender_id: user.id,
+      body: groupBody,
+    });
+    if (msgError) {
+      setCreatingGroup(false);
+      setGroupError("메시지 전송에 실패했어요: " + msgError.message);
+      return;
+    }
+
+    await refreshGroupConversationIds();
+    refreshGroupUnreadCount();
+    setCreatingGroup(false);
+    router.push(`/messages/group/${conv.id}`);
+  }
+
   if (!authLoading && !user) {
     return (
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
@@ -142,12 +261,26 @@ export default function MessagesPage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl font-bold text-foreground">쪽지함</h1>
-        <button
-          onClick={() => setShowNew((v) => !v)}
-          className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
-        >
-          + 새 쪽지
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setShowNew((v) => !v);
+              setShowNewGroup(false);
+            }}
+            className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
+          >
+            + 새 쪽지
+          </button>
+          <button
+            onClick={() => {
+              setShowNewGroup((v) => !v);
+              setShowNew(false);
+            }}
+            className="rounded-full border border-brand px-4 py-2 text-sm text-brand-dark transition-colors hover:bg-brand-tint"
+          >
+            + 새 그룹
+          </button>
+        </div>
       </div>
 
       {showNew && (
@@ -161,55 +294,7 @@ export default function MessagesPage() {
               <span className="text-brand-dark">· {selectedIds.length}명 선택됨</span>
             )}
           </p>
-          {members.length === 0 && (
-            <p className="mt-2 text-sm text-foreground/50">다른 교인이 아직 없어요.</p>
-          )}
-          {[...SIGNUP_GROUP_OPTIONS, UNASSIGNED].map((district) => {
-            const group = members.filter((m) => (m.district ?? UNASSIGNED) === district);
-            if (group.length === 0) return null;
-            return (
-              <div key={district} className="mt-3">
-                <p className="text-xs font-semibold text-brand-dark">{district}</p>
-                <ul className="mt-1 flex flex-wrap gap-2">
-                  {group.map((m) => {
-                    const checked = selectedIds.includes(m.id);
-                    return (
-                      <li key={m.id}>
-                        <button
-                          type="button"
-                          onClick={() => toggleSelected(m.id)}
-                          className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors ${
-                            checked
-                              ? "border-brand bg-brand text-white"
-                              : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-                          }`}
-                        >
-                          {avatarUrl(m.avatar_path) ? (
-                            <img
-                              src={avatarUrl(m.avatar_path)}
-                              alt=""
-                              className="h-4 w-4 shrink-0 rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-black/10 text-[9px] dark:bg-white/10">
-                              🙂
-                            </span>
-                          )}
-                          {checked ? "✓ " : ""}
-                          {m.display_name}
-                          {m.title && (
-                            <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(m.title)}`}>
-                              {m.title}
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            );
-          })}
+          <MemberPicker members={members} selectedIds={selectedIds} onToggle={toggleSelected} />
 
           {selectedIds.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
@@ -234,6 +319,53 @@ export default function MessagesPage() {
         </form>
       )}
 
+      {showNewGroup && (
+        <form
+          onSubmit={handleCreateGroup}
+          className="mt-4 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5"
+        >
+          <p className="text-xs text-foreground/50">
+            선택한 사람들이 모두 한 방에서 서로의 메시지를 보고 답장할 수 있어요.
+          </p>
+          <input
+            type="text"
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder="그룹 이름 (선택 사항)"
+            className="mt-2 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+          />
+
+          <p className="mt-4 text-sm font-medium text-foreground/80">
+            참여할 사람 선택{" "}
+            {groupSelectedIds.length > 0 && (
+              <span className="text-brand-dark">· {groupSelectedIds.length}명 선택됨</span>
+            )}
+          </p>
+          <MemberPicker members={members} selectedIds={groupSelectedIds} onToggle={toggleGroupSelected} />
+
+          {groupSelectedIds.length > 0 && (
+            <div className="mt-4 space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
+              <textarea
+                required
+                rows={3}
+                value={groupBody}
+                onChange={(e) => setGroupBody(e.target.value)}
+                placeholder="첫 메시지를 입력하세요"
+                className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+              />
+              {groupError && <p className="text-sm text-red-600">{groupError}</p>}
+              <button
+                type="submit"
+                disabled={creatingGroup}
+                className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+              >
+                {creatingGroup ? "만드는 중..." : `${groupSelectedIds.length + 1}명 그룹 만들기`}
+              </button>
+            </div>
+          )}
+        </form>
+      )}
+
       <ul className="mt-6 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
         {loading && <li className="p-4 text-sm text-foreground/50">불러오는 중...</li>}
         {!loading && conversations.length === 0 && (
@@ -241,13 +373,17 @@ export default function MessagesPage() {
         )}
         {conversations.map((c) => (
           <li
-            key={c.partnerId}
+            key={c.key}
             className={`flex items-center gap-2 p-4 hover:bg-black/5 dark:hover:bg-white/10 ${
               c.unread ? "bg-[#c6ff00]/20 dark:bg-[#c6ff00]/10" : ""
             }`}
           >
-            <Link href={`/messages/${c.partnerId}`} className="flex min-w-0 flex-1 items-center gap-3">
-              {avatarUrl(c.avatarPath) ? (
+            <Link href={c.href} className="flex min-w-0 flex-1 items-center gap-3">
+              {c.type === "group" ? (
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-tint text-lg dark:bg-brand-dark/25">
+                  👥
+                </span>
+              ) : avatarUrl(c.avatarPath) ? (
                 <img
                   src={avatarUrl(c.avatarPath)}
                   alt=""
@@ -271,8 +407,13 @@ export default function MessagesPage() {
                       aria-hidden
                     />
                   )}
-                  {c.name}
-                  {c.title && (
+                  {c.type === "group" ? c.title : c.name}
+                  {c.type === "group" && (
+                    <span className="rounded-full bg-black/5 px-1.5 py-0.5 text-[10px] font-medium text-foreground/60 dark:bg-white/10">
+                      {c.participantCount}명
+                    </span>
+                  )}
+                  {c.type === "1:1" && c.title && (
                     <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${titleBadgeClass(c.title)}`}>
                       {c.title}
                     </span>
@@ -290,12 +431,14 @@ export default function MessagesPage() {
                 </p>
               </span>
             </Link>
-            <button
-              onClick={() => handleDeleteConversation(c.partnerId, c.name)}
-              className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
-            >
-              삭제
-            </button>
+            {c.type === "1:1" && (
+              <button
+                onClick={() => handleDeleteConversation(c.partnerId, c.name)}
+                className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+              >
+                삭제
+              </button>
+            )}
           </li>
         ))}
       </ul>

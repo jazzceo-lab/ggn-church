@@ -18,6 +18,9 @@ const AuthContext = createContext({
   refreshUnreadCount: () => {},
   boardNewCount: 0,
   markBoardSeen: () => {},
+  groupUnreadCount: 0,
+  refreshGroupUnreadCount: () => {},
+  refreshGroupConversationIds: () => {},
 });
 
 export function AuthProvider({ children }) {
@@ -32,9 +35,12 @@ export function AuthProvider({ children }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [boardNewCount, setBoardNewCount] = useState(0);
   const [boardLastSeenAt, setBoardLastSeenAt] = useState(null);
+  const [groupUnreadCount, setGroupUnreadCount] = useState(0);
+  const [groupConversationIds, setGroupConversationIds] = useState([]);
   const [toast, setToast] = useState(null);
   const channelRef = useRef(null);
   const boardChannelRef = useRef(null);
+  const groupChannelRef = useRef(null);
 
   async function loadProfile(currentUser) {
     if (!currentUser) {
@@ -95,6 +101,56 @@ export function AuthProvider({ children }) {
     setUnreadCount(count ?? 0);
   }
 
+  async function refreshGroupConversationIds(currentUser) {
+    const u = currentUser ?? user;
+    if (!u) {
+      setGroupConversationIds([]);
+      return [];
+    }
+    const { data } = await supabase
+      .from("conversation_participants")
+      .select("conversation_id")
+      .eq("user_id", u.id);
+    const ids = (data ?? []).map((r) => r.conversation_id);
+    setGroupConversationIds(ids);
+    return ids;
+  }
+
+  async function refreshGroupUnreadCount(currentUser) {
+    const u = currentUser ?? user;
+    if (!u) {
+      setGroupUnreadCount(0);
+      return;
+    }
+    const { data: participants } = await supabase
+      .from("conversation_participants")
+      .select("conversation_id, last_read_at")
+      .eq("user_id", u.id);
+    if (!participants?.length) {
+      setGroupUnreadCount(0);
+      return;
+    }
+    const ids = participants.map((p) => p.conversation_id);
+    const { data: msgs } = await supabase
+      .from("conversation_messages")
+      .select("conversation_id, sender_id, created_at")
+      .in("conversation_id", ids)
+      .order("created_at", { ascending: false });
+
+    const latestByConv = new Map();
+    for (const m of msgs ?? []) {
+      if (!latestByConv.has(m.conversation_id)) latestByConv.set(m.conversation_id, m);
+    }
+
+    let count = 0;
+    for (const p of participants) {
+      const last = latestByConv.get(p.conversation_id);
+      if (!last || last.sender_id === u.id) continue;
+      if (!p.last_read_at || new Date(last.created_at) > new Date(p.last_read_at)) count++;
+    }
+    setGroupUnreadCount(count);
+  }
+
   async function refreshBoardNewCount(currentUser, lastSeenOverride) {
     const u = currentUser ?? user;
     if (!u) {
@@ -130,6 +186,8 @@ export function AuthProvider({ children }) {
       const lastSeen = await loadProfile(currentUser);
       await refreshUnreadCount(currentUser);
       await refreshBoardNewCount(currentUser, lastSeen);
+      await refreshGroupConversationIds(currentUser);
+      await refreshGroupUnreadCount(currentUser);
       setLoading(false);
     });
 
@@ -139,6 +197,8 @@ export function AuthProvider({ children }) {
       const lastSeen = await loadProfile(currentUser);
       await refreshUnreadCount(currentUser);
       await refreshBoardNewCount(currentUser, lastSeen);
+      await refreshGroupConversationIds(currentUser);
+      await refreshGroupUnreadCount(currentUser);
     });
 
     return () => listener.subscription.unsubscribe();
@@ -170,9 +230,9 @@ export function AuthProvider({ children }) {
             .eq("id", payload.new.sender_id)
             .single();
           setToast({
-            name: sender?.display_name ?? "누군가",
+            title: `✉️ ${sender?.display_name ?? "누군가"}`,
             body: payload.new.body,
-            senderId: payload.new.sender_id,
+            href: `/messages/${payload.new.sender_id}`,
           });
         }
       )
@@ -210,6 +270,48 @@ export function AuthProvider({ children }) {
   }, [user]);
 
   useEffect(() => {
+    if (groupChannelRef.current) {
+      supabase.removeChannel(groupChannelRef.current);
+      groupChannelRef.current = null;
+    }
+    if (!user || groupConversationIds.length === 0) return;
+
+    const channel = supabase
+      .channel(`group-messages-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "conversation_messages",
+          filter: `conversation_id=in.(${groupConversationIds.join(",")})`,
+        },
+        async (payload) => {
+          if (payload.new.sender_id === user.id) return;
+          refreshGroupUnreadCount();
+          const [{ data: conv }, { data: sender }] = await Promise.all([
+            supabase.from("conversations").select("name").eq("id", payload.new.conversation_id).single(),
+            supabase.from("member_directory").select("display_name").eq("id", payload.new.sender_id).single(),
+          ]);
+          setToast({
+            title: conv?.name
+              ? `👥 ${conv.name} · ${sender?.display_name ?? "누군가"}`
+              : `👥 ${sender?.display_name ?? "누군가"}님의 새 그룹 메시지`,
+            body: payload.new.body,
+            href: `/messages/group/${payload.new.conversation_id}`,
+          });
+        }
+      )
+      .subscribe();
+
+    groupChannelRef.current = channel;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, groupConversationIds]);
+
+  useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(t);
@@ -217,12 +319,13 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!("setAppBadge" in navigator)) return;
-    if (unreadCount > 0) {
-      navigator.setAppBadge(unreadCount).catch(() => {});
+    const total = unreadCount + groupUnreadCount;
+    if (total > 0) {
+      navigator.setAppBadge(total).catch(() => {});
     } else {
       navigator.clearAppBadge().catch(() => {});
     }
-  }, [unreadCount]);
+  }, [unreadCount, groupUnreadCount]);
 
   return (
     <AuthContext.Provider
@@ -241,15 +344,18 @@ export function AuthProvider({ children }) {
         refreshUnreadCount: () => refreshUnreadCount(),
         boardNewCount,
         markBoardSeen,
+        groupUnreadCount,
+        refreshGroupUnreadCount: () => refreshGroupUnreadCount(),
+        refreshGroupConversationIds: () => refreshGroupConversationIds(),
       }}
     >
       {children}
       {toast && (
         <a
-          href={`/messages/${toast.senderId}`}
+          href={toast.href}
           className="fixed bottom-4 right-4 z-50 max-w-xs rounded-xl border border-black/10 bg-background p-4 shadow-lg transition-opacity dark:border-white/10"
         >
-          <p className="text-sm font-semibold text-foreground">✉️ {toast.name}님의 새 쪽지</p>
+          <p className="text-sm font-semibold text-foreground">{toast.title}</p>
           <p className="mt-1 truncate text-sm text-foreground/60">{toast.body}</p>
         </a>
       )}

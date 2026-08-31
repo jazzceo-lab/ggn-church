@@ -119,8 +119,8 @@ function NavLink({ href, className, plain, children }) {
 }
 
 export default function NavBar() {
-  const { user, loading, isAdmin, unreadCount, boardNewCount } = useAuth();
-  const counts = { messages: unreadCount, board: boardNewCount };
+  const { user, loading, isAdmin, unreadCount, boardNewCount, groupUnreadCount } = useAuth();
+  const counts = { messages: unreadCount + groupUnreadCount, board: boardNewCount };
   const router = useRouter();
 
   async function handleLogout() {
