@@ -249,6 +249,8 @@ export default function AdminMembersPage() {
       )
     : members;
 
+  const unassignedCount = members.filter((m) => !m.district).length;
+
   const groups = [...SIGNUP_GROUP_OPTIONS, UNASSIGNED]
     .map((name) => ({
       name,
@@ -266,12 +268,15 @@ export default function AdminMembersPage() {
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">회원 관리</h1>
       <p className="mt-2 text-sm text-foreground/50">가입한 교인 목록입니다.</p>
-      <div className="mt-2 flex gap-4 text-sm text-foreground/60">
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/60">
         <span>
           총 제직명단 <strong className="font-semibold text-foreground">{TOTAL_ROSTER_COUNT}</strong>명
         </span>
         <span>
           가입회원 <strong className="font-semibold text-foreground">{members.length}</strong>명
+        </span>
+        <span>
+          미배정회원 <strong className="font-semibold text-foreground">{unassignedCount}</strong>명
         </span>
       </div>
 
