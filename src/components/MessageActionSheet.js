@@ -9,12 +9,14 @@ export default function MessageActionSheet({
   isGroup,
   isPinned,
   isBookmarked,
+  canDelete,
   onReact,
   onCopy,
   onReply,
   onForward,
   onTogglePin,
   onToggleBookmark,
+  onDelete,
   onClose,
 }) {
   return (
@@ -87,6 +89,15 @@ export default function MessageActionSheet({
           >
             🔖 {isBookmarked ? "책갈피 해제" : "책갈피 추가"}
           </button>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="flex items-center gap-3 rounded-lg px-2 py-3 text-left text-red-600 hover:bg-black/5 dark:hover:bg-white/10"
+            >
+              🗑 삭제
+            </button>
+          )}
         </div>
 
         <button

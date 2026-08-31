@@ -17,6 +17,8 @@ import { loadMessageBookmarks, toggleMessageBookmark } from "@/lib/messageBookma
 import AvatarLightbox from "@/components/AvatarLightbox";
 import MessageActionSheet from "@/components/MessageActionSheet";
 import ForwardPicker from "@/components/ForwardPicker";
+import DeleteMessageDialog from "@/components/DeleteMessageDialog";
+import { loadHiddenMessageIds, hideMessageLocally } from "@/lib/hiddenMessages";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -39,8 +41,18 @@ export default function ConversationPage() {
   const [activeMessage, setActiveMessage] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [forwardContent, setForwardContent] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [hiddenIds, setHiddenIds] = useState(new Set());
   const bottomRef = useRef(null);
   const longPressTimer = useRef(null);
+
+  useEffect(() => {
+    setHiddenIds(loadHiddenMessageIds("dm"));
+  }, []);
+
+  function isDeletable(m) {
+    return m.sender_id === user?.id && !m.read_at && !m.deleted_at;
+  }
 
   function startLongPress(m) {
     longPressTimer.current = setTimeout(() => setActiveMessage(m), 450);
@@ -68,7 +80,9 @@ export default function ConversationPage() {
 
     const { data } = await supabase
       .from("messages")
-      .select("id, sender_id, recipient_id, body, created_at, read_at, attachment_url, attachment_name, reply_to_id")
+      .select(
+        "id, sender_id, recipient_id, body, created_at, read_at, attachment_url, attachment_name, reply_to_id, deleted_at"
+      )
       .or(
         `and(sender_id.eq.${user.id},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${user.id})`
       )
@@ -249,15 +263,29 @@ export default function ConversationPage() {
     setActiveMessage(null);
   }
 
-  async function handleDeleteMessage(id) {
-    if (!window.confirm("이 채팅을 삭제할까요?")) return;
-    const { error } = await supabase.from("messages").delete().eq("id", id);
+  function handleDelete() {
+    setDeleteTarget(activeMessage);
+    setActiveMessage(null);
+  }
+
+  async function handleConfirmDelete(scope) {
+    const target = deleteTarget;
+    setDeleteTarget(null);
+    if (!target) return;
+
+    if (scope === "me") {
+      hideMessageLocally("dm", target.id);
+      setHiddenIds((prev) => new Set(prev).add(String(target.id)));
+      return;
+    }
+
+    const deletedAt = new Date().toISOString();
+    const { error } = await supabase.from("messages").update({ deleted_at: deletedAt }).eq("id", target.id);
     if (error) {
       window.alert("삭제에 실패했어요: " + error.message);
       return;
     }
-    setThread((prev) => prev.filter((m) => m.id !== id));
-    refreshUnreadCount();
+    setThread((prev) => prev.map((m) => (m.id === target.id ? { ...m, deleted_at: deletedAt } : m)));
   }
 
   if (!authLoading && !user) {
@@ -308,7 +336,9 @@ export default function ConversationPage() {
         {!loading && thread.length === 0 && (
           <p className="text-sm text-foreground/50">아직 나눈 채팅이 없어요. 먼저 인사해보세요!</p>
         )}
-        {thread.map((m) => {
+        {thread
+          .filter((m) => !hiddenIds.has(String(m.id)))
+          .map((m) => {
           const mine = m.sender_id === user?.id;
           const repliedTo = m.reply_to_id ? thread.find((t) => t.id === m.reply_to_id) : null;
           const myReaction = reactions[m.id]?.myReaction;
@@ -317,44 +347,44 @@ export default function ConversationPage() {
           return (
             <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
               <div className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}>
-                {mine && !m.read_at && (
+                {!m.deleted_at && (
                   <button
-                    onClick={() => handleDeleteMessage(m.id)}
-                    className="text-xs text-foreground/30 hover:text-red-600"
+                    onClick={() => setActiveMessage(m)}
+                    className="text-xs text-foreground/30 hover:text-foreground/60"
+                    aria-label="더보기"
+                    title="더보기"
                   >
-                    삭제
+                    ⋯
                   </button>
                 )}
-                <button
-                  onClick={() => setActiveMessage(m)}
-                  className="text-xs text-foreground/30 hover:text-foreground/60"
-                  aria-label="더보기"
-                  title="더보기"
-                >
-                  ⋯
-                </button>
-                {mine && !m.read_at && (
+                {mine && !m.read_at && !m.deleted_at && (
                   <span className="text-[11px] font-medium text-amber-500">1</span>
                 )}
                 <div
-                  onTouchStart={() => startLongPress(m)}
+                  onTouchStart={m.deleted_at ? undefined : () => startLongPress(m)}
                   onTouchEnd={cancelLongPress}
                   onTouchMove={cancelLongPress}
                   onContextMenu={(e) => e.preventDefault()}
-                  onMouseDown={() => startLongPress(m)}
+                  onMouseDown={m.deleted_at ? undefined : () => startLongPress(m)}
                   onMouseUp={cancelLongPress}
                   onMouseLeave={cancelLongPress}
                   className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                     mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"
                   }`}
                 >
+                  {m.deleted_at ? (
+                    <p className={`italic ${mine ? "text-white/70" : "text-foreground/40"}`}>삭제된 메시지입니다</p>
+                  ) : (
+                    <>
                   {repliedTo && (
                     <p
                       className={`mb-1 truncate border-l-2 pl-2 text-xs ${
                         mine ? "border-white/40 text-white/70" : "border-black/20 text-foreground/50"
                       }`}
                     >
-                      {repliedTo.body || (repliedTo.attachment_name ? `📎 ${repliedTo.attachment_name}` : "삭제된 메시지")}
+                      {repliedTo.deleted_at
+                        ? "삭제된 메시지"
+                        : repliedTo.body || (repliedTo.attachment_name ? `📎 ${repliedTo.attachment_name}` : "삭제된 메시지")}
                     </p>
                   )}
                   {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
@@ -380,17 +410,19 @@ export default function ConversationPage() {
                       </a>
                     )
                   )}
+                  </>
+                  )}
                   <p
                     className={`mt-1 flex items-center gap-1 text-[10px] ${
                       mine ? "justify-end text-white/70" : "text-foreground/40"
                     }`}
                   >
-                    {bookmarks.has(m.id) && <span>🔖</span>}
+                    {!m.deleted_at && bookmarks.has(m.id) && <span>🔖</span>}
                     {new Date(m.created_at).toLocaleString("ko-KR")}
                   </p>
                 </div>
               </div>
-              {hasReactions && (
+              {!m.deleted_at && hasReactions && (
                 <p className="mt-0.5 flex gap-1 px-1 text-xs">
                   {REACTIONS.filter((r) => (counts[r.key] ?? 0) > 0).map((r) => (
                     <span
@@ -488,17 +520,27 @@ export default function ConversationPage() {
           reactionCounts={reactions[activeMessage.id]?.counts}
           isGroup={false}
           isBookmarked={bookmarks.has(activeMessage.id)}
+          canDelete
           onReact={handleReact}
           onCopy={handleCopy}
           onReply={handleReply}
           onForward={handleForward}
           onToggleBookmark={handleToggleBookmark}
+          onDelete={handleDelete}
           onClose={() => setActiveMessage(null)}
         />
       )}
 
       {forwardContent && (
         <ForwardPicker userId={user.id} forwardContent={forwardContent} onClose={() => setForwardContent(null)} />
+      )}
+
+      {deleteTarget && (
+        <DeleteMessageDialog
+          canDeleteForEveryone={isDeletable(deleteTarget)}
+          onConfirm={handleConfirmDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
       )}
     </main>
   );

@@ -15,6 +15,8 @@ import { loadMessageReactions, toggleMessageReaction } from "@/lib/messageReacti
 import { loadMessageBookmarks, toggleMessageBookmark } from "@/lib/messageBookmarks";
 import MessageActionSheet from "@/components/MessageActionSheet";
 import ForwardPicker from "@/components/ForwardPicker";
+import DeleteMessageDialog from "@/components/DeleteMessageDialog";
+import { loadHiddenMessageIds, hideMessageLocally } from "@/lib/hiddenMessages";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -37,8 +39,14 @@ export default function GroupConversationPage() {
   const [activeMessage, setActiveMessage] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [forwardContent, setForwardContent] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [hiddenIds, setHiddenIds] = useState(new Set());
   const bottomRef = useRef(null);
   const longPressTimer = useRef(null);
+
+  useEffect(() => {
+    setHiddenIds(loadHiddenMessageIds("group"));
+  }, []);
 
   function startLongPress(m) {
     longPressTimer.current = setTimeout(() => setActiveMessage(m), 450);
@@ -59,6 +67,11 @@ export default function GroupConversationPage() {
       const lastRead = lastReadMap[p.id];
       return !lastRead || new Date(lastRead) < new Date(m.created_at);
     }).length;
+  }
+
+  function isDeletableForEveryone(m) {
+    const others = participants.filter((p) => p.id !== m.sender_id);
+    return m.sender_id === user?.id && !m.deleted_at && unreadCountFor(m) === others.length;
   }
 
   async function loadThread() {
@@ -94,7 +107,7 @@ export default function GroupConversationPage() {
 
     const { data: msgs } = await supabase
       .from("conversation_messages")
-      .select("id, sender_id, body, created_at, attachment_url, attachment_name, reply_to_id")
+      .select("id, sender_id, body, created_at, attachment_url, attachment_name, reply_to_id, deleted_at")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
 
@@ -276,14 +289,32 @@ export default function GroupConversationPage() {
     setActiveMessage(null);
   }
 
-  async function handleDeleteMessage(id) {
-    if (!window.confirm("이 메시지를 삭제할까요?")) return;
-    const { error } = await supabase.from("conversation_messages").delete().eq("id", id);
+  function handleDelete() {
+    setDeleteTarget(activeMessage);
+    setActiveMessage(null);
+  }
+
+  async function handleConfirmDelete(scope) {
+    const target = deleteTarget;
+    setDeleteTarget(null);
+    if (!target) return;
+
+    if (scope === "me") {
+      hideMessageLocally("group", target.id);
+      setHiddenIds((prev) => new Set(prev).add(String(target.id)));
+      return;
+    }
+
+    const deletedAt = new Date().toISOString();
+    const { error } = await supabase
+      .from("conversation_messages")
+      .update({ deleted_at: deletedAt })
+      .eq("id", target.id);
     if (error) {
       window.alert("삭제에 실패했어요: " + error.message);
       return;
     }
-    setThread((prev) => prev.filter((m) => m.id !== id));
+    setThread((prev) => prev.map((m) => (m.id === target.id ? { ...m, deleted_at: deletedAt } : m)));
   }
 
   if (!authLoading && !user) {
@@ -331,7 +362,7 @@ export default function GroupConversationPage() {
       {pinnedMessageId &&
         (() => {
           const pinned = thread.find((t) => t.id === pinnedMessageId);
-          if (!pinned) return null;
+          if (!pinned || pinned.deleted_at) return null;
           return (
             <p className="mt-3 flex items-start gap-2 rounded-lg bg-brand-tint px-3 py-2 text-xs text-brand-dark dark:bg-brand-dark/20">
               <span className="shrink-0">📌 공지</span>
@@ -347,7 +378,9 @@ export default function GroupConversationPage() {
         {!loading && thread.length === 0 && (
           <p className="text-sm text-foreground/50">아직 나눈 메시지가 없어요. 먼저 인사해보세요!</p>
         )}
-        {thread.map((m) => {
+        {thread
+          .filter((m) => !hiddenIds.has(String(m.id)))
+          .map((m) => {
           const mine = m.sender_id === user?.id;
           const sender = memberOf(m.sender_id);
           const repliedTo = m.reply_to_id ? thread.find((t) => t.id === m.reply_to_id) : null;
@@ -367,44 +400,44 @@ export default function GroupConversationPage() {
                 </p>
               )}
               <div className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}>
-                {mine && (
+                {!m.deleted_at && (
                   <button
-                    onClick={() => handleDeleteMessage(m.id)}
-                    className="text-xs text-foreground/30 hover:text-red-600"
+                    onClick={() => setActiveMessage(m)}
+                    className="text-xs text-foreground/30 hover:text-foreground/60"
+                    aria-label="더보기"
+                    title="더보기"
                   >
-                    삭제
+                    ⋯
                   </button>
                 )}
-                <button
-                  onClick={() => setActiveMessage(m)}
-                  className="text-xs text-foreground/30 hover:text-foreground/60"
-                  aria-label="더보기"
-                  title="더보기"
-                >
-                  ⋯
-                </button>
-                {mine && unreadCountFor(m) > 0 && (
+                {mine && !m.deleted_at && unreadCountFor(m) > 0 && (
                   <span className="text-[11px] font-medium text-amber-500">{unreadCountFor(m)}</span>
                 )}
                 <div
-                  onTouchStart={() => startLongPress(m)}
+                  onTouchStart={m.deleted_at ? undefined : () => startLongPress(m)}
                   onTouchEnd={cancelLongPress}
                   onTouchMove={cancelLongPress}
                   onContextMenu={(e) => e.preventDefault()}
-                  onMouseDown={() => startLongPress(m)}
+                  onMouseDown={m.deleted_at ? undefined : () => startLongPress(m)}
                   onMouseUp={cancelLongPress}
                   onMouseLeave={cancelLongPress}
                   className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                     mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"
                   }`}
                 >
+                  {m.deleted_at ? (
+                    <p className={`italic ${mine ? "text-white/70" : "text-foreground/40"}`}>삭제된 메시지입니다</p>
+                  ) : (
+                    <>
                   {repliedTo && (
                     <p
                       className={`mb-1 truncate border-l-2 pl-2 text-xs ${
                         mine ? "border-white/40 text-white/70" : "border-black/20 text-foreground/50"
                       }`}
                     >
-                      {repliedTo.body || (repliedTo.attachment_name ? `📎 ${repliedTo.attachment_name}` : "삭제된 메시지")}
+                      {repliedTo.deleted_at
+                        ? "삭제된 메시지"
+                        : repliedTo.body || (repliedTo.attachment_name ? `📎 ${repliedTo.attachment_name}` : "삭제된 메시지")}
                     </p>
                   )}
                   {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
@@ -430,18 +463,20 @@ export default function GroupConversationPage() {
                       </a>
                     )
                   )}
+                  </>
+                  )}
                   <p
                     className={`mt-1 flex items-center gap-1 text-[10px] ${
                       mine ? "justify-end text-white/70" : "text-foreground/40"
                     }`}
                   >
-                    {bookmarks.has(m.id) && <span>🔖</span>}
-                    {pinnedMessageId === m.id && <span>📌</span>}
+                    {!m.deleted_at && bookmarks.has(m.id) && <span>🔖</span>}
+                    {!m.deleted_at && pinnedMessageId === m.id && <span>📌</span>}
                     {new Date(m.created_at).toLocaleString("ko-KR")}
                   </p>
                 </div>
               </div>
-              {hasReactions && (
+              {!m.deleted_at && hasReactions && (
                 <p className="mt-0.5 flex gap-1 px-1 text-xs">
                   {REACTIONS.filter((r) => (counts[r.key] ?? 0) > 0).map((r) => (
                     <span
@@ -538,13 +573,23 @@ export default function GroupConversationPage() {
           isGroup
           isPinned={pinnedMessageId === activeMessage.id}
           isBookmarked={bookmarks.has(activeMessage.id)}
+          canDelete
           onReact={handleReact}
           onCopy={handleCopy}
           onReply={handleReply}
           onForward={handleForward}
           onTogglePin={handleTogglePin}
           onToggleBookmark={handleToggleBookmark}
+          onDelete={handleDelete}
           onClose={() => setActiveMessage(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <DeleteMessageDialog
+          canDeleteForEveryone={isDeletableForEveryone(deleteTarget)}
+          onConfirm={handleConfirmDelete}
+          onClose={() => setDeleteTarget(null)}
         />
       )}
 
