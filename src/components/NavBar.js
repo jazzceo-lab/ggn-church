@@ -183,7 +183,7 @@ export default function NavBar() {
           </div>
         </div>
 
-        <nav className="mt-2 flex gap-x-3 gap-y-1 overflow-x-auto text-sm tracking-tight whitespace-nowrap text-foreground/70">
+        <nav className="mt-2 flex gap-x-6 gap-y-1 overflow-x-auto text-sm tracking-tight whitespace-nowrap text-foreground/70">
           {publicLinks.map((link) => (
             <NavLink key={link.href} href={link.href} className="hover:text-brand-dark">
               {(pressed) => <ScaleLabel pressed={pressed}>{link.label}</ScaleLabel>}
@@ -195,7 +195,7 @@ export default function NavBar() {
           <p className="text-xs font-medium text-brand-dark">
             교인전용{!user && " · 로그인 후 이용"}
           </p>
-          <nav className="mt-1 grid grid-cols-3 gap-x-3 gap-y-2 text-sm">
+          <nav className="mt-1 grid grid-cols-3 gap-x-6 gap-y-2 text-sm">
             {memberLinks.map((link) => (
               <NavLink
                 key={link.href}
