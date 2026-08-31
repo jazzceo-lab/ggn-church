@@ -246,6 +246,11 @@ export default function AccountPage() {
   return (
     <main className="mx-auto w-full max-w-md flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">회원정보</h1>
+      {user?.created_at && (
+        <p className="mt-1 text-xs text-foreground/40">
+          가입일 {new Date(user.created_at).toLocaleString("ko-KR")}
+        </p>
+      )}
       <p className="mt-2 text-sm text-foreground/50">
         프로필 사진을 등록해두면 다른 교인들이 알아보기 쉬워요.
         <br />
