@@ -10,6 +10,11 @@ import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { resizeImageFile } from "@/lib/resizeImage";
 import { isImageAttachment } from "@/lib/attachment";
+import { REACTIONS } from "@/lib/reactions";
+import { loadMessageReactions, toggleMessageReaction } from "@/lib/messageReactions";
+import { loadMessageBookmarks, toggleMessageBookmark } from "@/lib/messageBookmarks";
+import MessageActionSheet from "@/components/MessageActionSheet";
+import ForwardPicker from "@/components/ForwardPicker";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -17,6 +22,7 @@ export default function GroupConversationPage() {
   const { conversationId } = useParams();
   const { user, loading: authLoading, refreshGroupUnreadCount } = useAuth();
   const [conversationName, setConversationName] = useState(null);
+  const [pinnedMessageId, setPinnedMessageId] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [notFound, setNotFound] = useState(false);
   const [thread, setThread] = useState([]);
@@ -25,6 +31,11 @@ export default function GroupConversationPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [reactions, setReactions] = useState({});
+  const [bookmarks, setBookmarks] = useState(new Set());
+  const [activeMessage, setActiveMessage] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [forwardContent, setForwardContent] = useState(null);
   const bottomRef = useRef(null);
 
   const memberOf = (id) => participants.find((p) => p.id === id) ?? null;
@@ -35,7 +46,7 @@ export default function GroupConversationPage() {
 
     const { data: conv } = await supabase
       .from("conversations")
-      .select("id, name")
+      .select("id, name, pinned_message_id")
       .eq("id", conversationId)
       .single();
 
@@ -45,6 +56,7 @@ export default function GroupConversationPage() {
       return;
     }
     setConversationName(conv.name);
+    setPinnedMessageId(conv.pinned_message_id);
 
     const { data: participantRows } = await supabase
       .from("conversation_participants")
@@ -60,12 +72,16 @@ export default function GroupConversationPage() {
 
     const { data: msgs } = await supabase
       .from("conversation_messages")
-      .select("id, sender_id, body, created_at, attachment_url, attachment_name")
+      .select("id, sender_id, body, created_at, attachment_url, attachment_name, reply_to_id")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
 
     setThread(msgs ?? []);
     setLoading(false);
+
+    const ids = (msgs ?? []).map((m) => m.id);
+    loadMessageReactions("group", ids, user.id).then(setReactions);
+    loadMessageBookmarks("group", ids, user.id).then(setBookmarks);
 
     await supabase
       .from("conversation_participants")
@@ -160,6 +176,7 @@ export default function GroupConversationPage() {
       body,
       attachment_url: attachmentUrl,
       attachment_name: attachmentName,
+      reply_to_id: replyingTo?.id ?? null,
     });
 
     setSending(false);
@@ -169,7 +186,60 @@ export default function GroupConversationPage() {
     }
     setBody("");
     setFile(null);
+    setReplyingTo(null);
     loadThread();
+  }
+
+  async function handleReact(reactionType) {
+    if (!activeMessage) return;
+    const myReaction = reactions[activeMessage.id]?.myReaction ?? null;
+    await toggleMessageReaction("group", activeMessage.id, user.id, myReaction, reactionType);
+    setActiveMessage(null);
+    const ids = thread.map((m) => m.id);
+    loadMessageReactions("group", ids, user.id).then(setReactions);
+  }
+
+  async function handleToggleBookmark() {
+    if (!activeMessage) return;
+    const bookmarked = bookmarks.has(activeMessage.id);
+    await toggleMessageBookmark("group", activeMessage.id, user.id, bookmarked);
+    setActiveMessage(null);
+    const ids = thread.map((m) => m.id);
+    loadMessageBookmarks("group", ids, user.id).then(setBookmarks);
+  }
+
+  function handleCopy() {
+    if (activeMessage?.body) navigator.clipboard?.writeText(activeMessage.body);
+    setActiveMessage(null);
+  }
+
+  function handleReply() {
+    setReplyingTo(activeMessage);
+    setActiveMessage(null);
+  }
+
+  function handleForward() {
+    setForwardContent({
+      body: activeMessage.body,
+      attachment_url: activeMessage.attachment_url,
+      attachment_name: activeMessage.attachment_name,
+    });
+    setActiveMessage(null);
+  }
+
+  async function handleTogglePin() {
+    if (!activeMessage) return;
+    const nextPinnedId = pinnedMessageId === activeMessage.id ? null : activeMessage.id;
+    const { error: pinError } = await supabase
+      .from("conversations")
+      .update({ pinned_message_id: nextPinnedId })
+      .eq("id", conversationId);
+    if (pinError) {
+      window.alert("공지 설정에 실패했어요: " + pinError.message);
+      return;
+    }
+    setPinnedMessageId(nextPinnedId);
+    setActiveMessage(null);
   }
 
   async function handleDeleteMessage(id) {
@@ -224,6 +294,20 @@ export default function GroupConversationPage() {
         </h1>
       </div>
 
+      {pinnedMessageId &&
+        (() => {
+          const pinned = thread.find((t) => t.id === pinnedMessageId);
+          if (!pinned) return null;
+          return (
+            <p className="mt-3 flex items-start gap-2 rounded-lg bg-brand-tint px-3 py-2 text-xs text-brand-dark dark:bg-brand-dark/20">
+              <span className="shrink-0">📌 공지</span>
+              <span className="min-w-0 flex-1 truncate">
+                {pinned.body || (pinned.attachment_name ? `📎 ${pinned.attachment_name}` : "")}
+              </span>
+            </p>
+          );
+        })()}
+
       <div className="mt-4 flex-1 space-y-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
         {loading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
         {!loading && thread.length === 0 && (
@@ -232,6 +316,10 @@ export default function GroupConversationPage() {
         {thread.map((m) => {
           const mine = m.sender_id === user?.id;
           const sender = memberOf(m.sender_id);
+          const repliedTo = m.reply_to_id ? thread.find((t) => t.id === m.reply_to_id) : null;
+          const myReaction = reactions[m.id]?.myReaction;
+          const counts = reactions[m.id]?.counts ?? {};
+          const hasReactions = Object.values(counts).some((c) => c > 0);
           return (
             <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
               {!mine && (
@@ -253,11 +341,28 @@ export default function GroupConversationPage() {
                     삭제
                   </button>
                 )}
+                <button
+                  onClick={() => setActiveMessage(m)}
+                  className="text-xs text-foreground/30 hover:text-foreground/60"
+                  aria-label="더보기"
+                  title="더보기"
+                >
+                  ⋯
+                </button>
                 <div
                   className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
                     mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"
                   }`}
                 >
+                  {repliedTo && (
+                    <p
+                      className={`mb-1 truncate border-l-2 pl-2 text-xs ${
+                        mine ? "border-white/40 text-white/70" : "border-black/20 text-foreground/50"
+                      }`}
+                    >
+                      {repliedTo.body || (repliedTo.attachment_name ? `📎 ${repliedTo.attachment_name}` : "삭제된 메시지")}
+                    </p>
+                  )}
                   {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
                   {m.attachment_url && isImageAttachment(m.attachment_name) ? (
                     <a href={m.attachment_url} target="_blank" rel="noopener noreferrer" className="mt-1 block w-fit">
@@ -286,15 +391,48 @@ export default function GroupConversationPage() {
                       mine ? "justify-end text-white/70" : "text-foreground/40"
                     }`}
                   >
+                    {bookmarks.has(m.id) && <span>🔖</span>}
+                    {pinnedMessageId === m.id && <span>📌</span>}
                     {new Date(m.created_at).toLocaleString("ko-KR")}
                   </p>
                 </div>
               </div>
+              {hasReactions && (
+                <p className="mt-0.5 flex gap-1 px-1 text-xs">
+                  {REACTIONS.filter((r) => (counts[r.key] ?? 0) > 0).map((r) => (
+                    <span
+                      key={r.key}
+                      className={`rounded-full border px-1.5 py-0.5 ${
+                        myReaction === r.key
+                          ? "border-brand bg-brand-tint text-brand-dark"
+                          : "border-black/10 text-foreground/60 dark:border-white/10"
+                      }`}
+                    >
+                      {r.emoji} {counts[r.key]}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
           );
         })}
         <div ref={bottomRef} />
       </div>
+
+      {replyingTo && (
+        <p className="mt-2 flex items-center gap-2 rounded-lg bg-black/5 px-3 py-2 text-xs text-foreground/60 dark:bg-white/10">
+          <span className="min-w-0 flex-1 truncate">
+            ↩️ {replyingTo.body || (replyingTo.attachment_name ? `📎 ${replyingTo.attachment_name}` : "")}
+          </span>
+          <button
+            type="button"
+            onClick={() => setReplyingTo(null)}
+            className="shrink-0 text-foreground/40 hover:text-red-600"
+          >
+            ✕
+          </button>
+        </p>
+      )}
 
       {file && (
         <p className="mt-2 flex items-center gap-2 text-xs text-foreground/60">
@@ -347,6 +485,28 @@ export default function GroupConversationPage() {
         </button>
       </form>
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+      {activeMessage && (
+        <MessageActionSheet
+          hasBody={!!activeMessage.body}
+          myReaction={reactions[activeMessage.id]?.myReaction}
+          reactionCounts={reactions[activeMessage.id]?.counts}
+          isGroup
+          isPinned={pinnedMessageId === activeMessage.id}
+          isBookmarked={bookmarks.has(activeMessage.id)}
+          onReact={handleReact}
+          onCopy={handleCopy}
+          onReply={handleReply}
+          onForward={handleForward}
+          onTogglePin={handleTogglePin}
+          onToggleBookmark={handleToggleBookmark}
+          onClose={() => setActiveMessage(null)}
+        />
+      )}
+
+      {forwardContent && (
+        <ForwardPicker userId={user.id} forwardContent={forwardContent} onClose={() => setForwardContent(null)} />
+      )}
     </main>
   );
 }

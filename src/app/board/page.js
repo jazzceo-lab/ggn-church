@@ -8,6 +8,7 @@ import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { resizeImageFile } from "@/lib/resizeImage";
 import { isImageAttachment } from "@/lib/attachment";
+import { REACTIONS } from "@/lib/reactions";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { DISTRICT_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
@@ -27,13 +28,6 @@ const DEFAULT_CATEGORY = "help";
 // 청년부를 게시판 전용으로 추가한 목록 — 제직명단 구역 편성표에는 영향 없음.
 const BOARD_DISTRICTS = [...DISTRICT_NAMES, "청년부"];
 
-const REACTIONS = [
-  { key: "like", emoji: "❤️", label: "좋아요" },
-  { key: "pray", emoji: "🙏", label: "기도해요" },
-  { key: "grace", emoji: "😊", label: "은혜돼요" },
-  { key: "agree", emoji: "👍", label: "공감" },
-  { key: "comfort", emoji: "😢", label: "위로해요" },
-];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 

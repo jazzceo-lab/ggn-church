@@ -11,7 +11,12 @@ import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { resizeImageFile } from "@/lib/resizeImage";
 import { isImageAttachment } from "@/lib/attachment";
+import { REACTIONS } from "@/lib/reactions";
+import { loadMessageReactions, toggleMessageReaction } from "@/lib/messageReactions";
+import { loadMessageBookmarks, toggleMessageBookmark } from "@/lib/messageBookmarks";
 import AvatarLightbox from "@/components/AvatarLightbox";
+import MessageActionSheet from "@/components/MessageActionSheet";
+import ForwardPicker from "@/components/ForwardPicker";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -29,6 +34,11 @@ export default function ConversationPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [readError, setReadError] = useState("");
+  const [reactions, setReactions] = useState({});
+  const [bookmarks, setBookmarks] = useState(new Set());
+  const [activeMessage, setActiveMessage] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [forwardContent, setForwardContent] = useState(null);
   const bottomRef = useRef(null);
 
   async function loadThread() {
@@ -46,7 +56,7 @@ export default function ConversationPage() {
 
     const { data } = await supabase
       .from("messages")
-      .select("id, sender_id, recipient_id, body, created_at, read_at, attachment_url, attachment_name")
+      .select("id, sender_id, recipient_id, body, created_at, read_at, attachment_url, attachment_name, reply_to_id")
       .or(
         `and(sender_id.eq.${user.id},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${user.id})`
       )
@@ -54,6 +64,10 @@ export default function ConversationPage() {
 
     setThread(data ?? []);
     setLoading(false);
+
+    const ids = (data ?? []).map((m) => m.id);
+    loadMessageReactions("dm", ids, user.id).then(setReactions);
+    loadMessageBookmarks("dm", ids, user.id).then(setBookmarks);
 
     const { error: markReadError } = await supabase
       .from("messages")
@@ -172,6 +186,7 @@ export default function ConversationPage() {
       body,
       attachment_url: attachmentUrl,
       attachment_name: attachmentName,
+      reply_to_id: replyingTo?.id ?? null,
     });
 
     setSending(false);
@@ -181,7 +196,45 @@ export default function ConversationPage() {
     }
     setBody("");
     setFile(null);
+    setReplyingTo(null);
     loadThread();
+  }
+
+  async function handleReact(reactionType) {
+    if (!activeMessage) return;
+    const myReaction = reactions[activeMessage.id]?.myReaction ?? null;
+    await toggleMessageReaction("dm", activeMessage.id, user.id, myReaction, reactionType);
+    setActiveMessage(null);
+    const ids = thread.map((m) => m.id);
+    loadMessageReactions("dm", ids, user.id).then(setReactions);
+  }
+
+  async function handleToggleBookmark() {
+    if (!activeMessage) return;
+    const bookmarked = bookmarks.has(activeMessage.id);
+    await toggleMessageBookmark("dm", activeMessage.id, user.id, bookmarked);
+    setActiveMessage(null);
+    const ids = thread.map((m) => m.id);
+    loadMessageBookmarks("dm", ids, user.id).then(setBookmarks);
+  }
+
+  function handleCopy() {
+    if (activeMessage?.body) navigator.clipboard?.writeText(activeMessage.body);
+    setActiveMessage(null);
+  }
+
+  function handleReply() {
+    setReplyingTo(activeMessage);
+    setActiveMessage(null);
+  }
+
+  function handleForward() {
+    setForwardContent({
+      body: activeMessage.body,
+      attachment_url: activeMessage.attachment_url,
+      attachment_name: activeMessage.attachment_name,
+    });
+    setActiveMessage(null);
   }
 
   async function handleDeleteMessage(id) {
@@ -245,58 +298,113 @@ export default function ConversationPage() {
         )}
         {thread.map((m) => {
           const mine = m.sender_id === user?.id;
+          const repliedTo = m.reply_to_id ? thread.find((t) => t.id === m.reply_to_id) : null;
+          const myReaction = reactions[m.id]?.myReaction;
+          const counts = reactions[m.id]?.counts ?? {};
+          const hasReactions = Object.values(counts).some((c) => c > 0);
           return (
-            <div key={m.id} className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}>
-              {mine && !m.read_at && (
-                <button
-                  onClick={() => handleDeleteMessage(m.id)}
-                  className="text-xs text-foreground/30 hover:text-red-600"
-                >
-                  삭제
-                </button>
-              )}
-              <div
-                className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-                  mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"
-                }`}
-              >
-                {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
-                {m.attachment_url && isImageAttachment(m.attachment_name) ? (
-                  <a href={m.attachment_url} target="_blank" rel="noopener noreferrer" className="mt-1 block w-fit">
-                    <img
-                      src={m.attachment_url}
-                      alt={m.attachment_name}
-                      className="max-h-48 max-w-full rounded-lg object-contain"
-                    />
-                  </a>
-                ) : (
-                  m.attachment_url && (
-                    <a
-                      href={m.attachment_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={`mt-1 inline-flex items-center gap-1 text-sm underline ${
-                        mine ? "text-white" : "text-brand-dark"
-                      }`}
-                    >
-                      📎 {m.attachment_name}
-                    </a>
-                  )
+            <div key={m.id} className={`flex flex-col ${mine ? "items-end" : "items-start"}`}>
+              <div className={`flex items-end gap-1 ${mine ? "justify-end" : "justify-start"}`}>
+                {mine && !m.read_at && (
+                  <button
+                    onClick={() => handleDeleteMessage(m.id)}
+                    className="text-xs text-foreground/30 hover:text-red-600"
+                  >
+                    삭제
+                  </button>
                 )}
-                <p
-                  className={`mt-1 flex items-center gap-1 text-[10px] ${
-                    mine ? "justify-end text-white/70" : "text-foreground/40"
+                <button
+                  onClick={() => setActiveMessage(m)}
+                  className="text-xs text-foreground/30 hover:text-foreground/60"
+                  aria-label="더보기"
+                  title="더보기"
+                >
+                  ⋯
+                </button>
+                <div
+                  className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+                    mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"
                   }`}
                 >
-                  {mine && m.read_at && <span>읽음</span>}
-                  {new Date(m.created_at).toLocaleString("ko-KR")}
-                </p>
+                  {repliedTo && (
+                    <p
+                      className={`mb-1 truncate border-l-2 pl-2 text-xs ${
+                        mine ? "border-white/40 text-white/70" : "border-black/20 text-foreground/50"
+                      }`}
+                    >
+                      {repliedTo.body || (repliedTo.attachment_name ? `📎 ${repliedTo.attachment_name}` : "삭제된 메시지")}
+                    </p>
+                  )}
+                  {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
+                  {m.attachment_url && isImageAttachment(m.attachment_name) ? (
+                    <a href={m.attachment_url} target="_blank" rel="noopener noreferrer" className="mt-1 block w-fit">
+                      <img
+                        src={m.attachment_url}
+                        alt={m.attachment_name}
+                        className="max-h-48 max-w-full rounded-lg object-contain"
+                      />
+                    </a>
+                  ) : (
+                    m.attachment_url && (
+                      <a
+                        href={m.attachment_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`mt-1 inline-flex items-center gap-1 text-sm underline ${
+                          mine ? "text-white" : "text-brand-dark"
+                        }`}
+                      >
+                        📎 {m.attachment_name}
+                      </a>
+                    )
+                  )}
+                  <p
+                    className={`mt-1 flex items-center gap-1 text-[10px] ${
+                      mine ? "justify-end text-white/70" : "text-foreground/40"
+                    }`}
+                  >
+                    {bookmarks.has(m.id) && <span>🔖</span>}
+                    {mine && m.read_at && <span>읽음</span>}
+                    {new Date(m.created_at).toLocaleString("ko-KR")}
+                  </p>
+                </div>
               </div>
+              {hasReactions && (
+                <p className="mt-0.5 flex gap-1 px-1 text-xs">
+                  {REACTIONS.filter((r) => (counts[r.key] ?? 0) > 0).map((r) => (
+                    <span
+                      key={r.key}
+                      className={`rounded-full border px-1.5 py-0.5 ${
+                        myReaction === r.key
+                          ? "border-brand bg-brand-tint text-brand-dark"
+                          : "border-black/10 text-foreground/60 dark:border-white/10"
+                      }`}
+                    >
+                      {r.emoji} {counts[r.key]}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
           );
         })}
         <div ref={bottomRef} />
       </div>
+
+      {replyingTo && (
+        <p className="mt-2 flex items-center gap-2 rounded-lg bg-black/5 px-3 py-2 text-xs text-foreground/60 dark:bg-white/10">
+          <span className="min-w-0 flex-1 truncate">
+            ↩️ {replyingTo.body || (replyingTo.attachment_name ? `📎 ${replyingTo.attachment_name}` : "")}
+          </span>
+          <button
+            type="button"
+            onClick={() => setReplyingTo(null)}
+            className="shrink-0 text-foreground/40 hover:text-red-600"
+          >
+            ✕
+          </button>
+        </p>
+      )}
 
       {file && (
         <p className="mt-2 flex items-center gap-2 text-xs text-foreground/60">
@@ -351,6 +459,26 @@ export default function ConversationPage() {
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
       <AvatarLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+
+      {activeMessage && (
+        <MessageActionSheet
+          hasBody={!!activeMessage.body}
+          myReaction={reactions[activeMessage.id]?.myReaction}
+          reactionCounts={reactions[activeMessage.id]?.counts}
+          isGroup={false}
+          isBookmarked={bookmarks.has(activeMessage.id)}
+          onReact={handleReact}
+          onCopy={handleCopy}
+          onReply={handleReply}
+          onForward={handleForward}
+          onToggleBookmark={handleToggleBookmark}
+          onClose={() => setActiveMessage(null)}
+        />
+      )}
+
+      {forwardContent && (
+        <ForwardPicker userId={user.id} forwardContent={forwardContent} onClose={() => setForwardContent(null)} />
+      )}
     </main>
   );
 }
