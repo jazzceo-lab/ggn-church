@@ -191,7 +191,7 @@ export default function NavBar() {
           </div>
         </div>
 
-        <nav className="mt-2 flex gap-x-3 overflow-x-auto whitespace-nowrap pr-4 text-base tracking-tight text-foreground/70">
+        <nav className="mt-2 flex gap-x-3 overflow-x-auto whitespace-nowrap pr-4 text-[15px] tracking-tight text-foreground/70">
           {publicLinks.map((link) => (
             <NavLink key={link.href} href={link.href} plain className="text-center hover:text-brand-dark">
               {(pressed) => <ScaleLabel pressed={pressed}>{link.label}</ScaleLabel>}
