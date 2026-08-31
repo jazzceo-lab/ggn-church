@@ -24,6 +24,7 @@ export default function GroupConversationPage() {
   const [conversationName, setConversationName] = useState(null);
   const [pinnedMessageId, setPinnedMessageId] = useState(null);
   const [participants, setParticipants] = useState([]);
+  const [lastReadMap, setLastReadMap] = useState({});
   const [notFound, setNotFound] = useState(false);
   const [thread, setThread] = useState([]);
   const [body, setBody] = useState("");
@@ -52,6 +53,14 @@ export default function GroupConversationPage() {
 
   const memberOf = (id) => participants.find((p) => p.id === id) ?? null;
 
+  function unreadCountFor(m) {
+    const others = participants.filter((p) => p.id !== m.sender_id);
+    return others.filter((p) => {
+      const lastRead = lastReadMap[p.id];
+      return !lastRead || new Date(lastRead) < new Date(m.created_at);
+    }).length;
+  }
+
   async function loadThread() {
     if (!user) return;
     setLoading(true);
@@ -72,7 +81,7 @@ export default function GroupConversationPage() {
 
     const { data: participantRows } = await supabase
       .from("conversation_participants")
-      .select("user_id")
+      .select("user_id, last_read_at")
       .eq("conversation_id", conversationId);
 
     const memberIds = (participantRows ?? []).map((p) => p.user_id);
@@ -81,6 +90,7 @@ export default function GroupConversationPage() {
       .select("id, display_name, title, avatar_path")
       .in("id", memberIds);
     setParticipants(dir ?? []);
+    setLastReadMap(Object.fromEntries((participantRows ?? []).map((p) => [p.user_id, p.last_read_at])));
 
     const { data: msgs } = await supabase
       .from("conversation_messages")
@@ -131,6 +141,18 @@ export default function GroupConversationPage() {
               .eq("user_id", user.id)
               .then(() => refreshGroupUnreadCount());
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "conversation_participants",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          setLastReadMap((prev) => ({ ...prev, [payload.new.user_id]: payload.new.last_read_at }));
         }
       )
       .subscribe();
@@ -361,6 +383,9 @@ export default function GroupConversationPage() {
                 >
                   ⋯
                 </button>
+                {mine && unreadCountFor(m) > 0 && (
+                  <span className="text-[11px] font-medium text-amber-500">{unreadCountFor(m)}</span>
+                )}
                 <div
                   onTouchStart={() => startLongPress(m)}
                   onTouchEnd={cancelLongPress}

@@ -333,6 +333,9 @@ export default function ConversationPage() {
                 >
                   ⋯
                 </button>
+                {mine && !m.read_at && (
+                  <span className="text-[11px] font-medium text-amber-500">1</span>
+                )}
                 <div
                   onTouchStart={() => startLongPress(m)}
                   onTouchEnd={cancelLongPress}
@@ -383,7 +386,6 @@ export default function ConversationPage() {
                     }`}
                   >
                     {bookmarks.has(m.id) && <span>🔖</span>}
-                    {mine && m.read_at && <span>읽음</span>}
                     {new Date(m.created_at).toLocaleString("ko-KR")}
                   </p>
                 </div>
