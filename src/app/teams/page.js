@@ -146,7 +146,11 @@ export default function TeamsPage() {
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">2026년 제직명단·구역 편성</h1>
-      <p className="mt-2 text-sm text-foreground/50">로그인한 교인에게만 보이는 페이지입니다.</p>
+      <p className="mt-2 text-sm text-foreground/50">
+        로그인한 교인에게만 보이는 페이지입니다.
+        <br />
+        교인이름을 누르시면 쪽지를 보낼 수 있습니다.
+      </p>
 
       <Card title="성가대">
         <dl className="mt-3 space-y-1 text-sm">
