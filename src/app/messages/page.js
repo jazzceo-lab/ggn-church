@@ -24,6 +24,7 @@ export default function MessagesPage() {
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [members, setMembers] = useState([]);
+  const otherMembers = members.filter((m) => m.id !== user?.id);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState(null);
@@ -51,8 +52,7 @@ export default function MessagesPage() {
 
     const { data: dir } = await supabase
       .from("member_directory")
-      .select("id, display_name, district, title, avatar_path")
-      .neq("id", user.id);
+      .select("id, display_name, district, title, avatar_path");
 
     const nameOf = (id) => dir?.find((m) => m.id === id)?.display_name ?? "알 수 없음";
     const titleOf = (id) => dir?.find((m) => m.id === id)?.title ?? null;
@@ -303,7 +303,7 @@ export default function MessagesPage() {
             )}
           </p>
           <MemberPicker
-            members={members}
+            members={otherMembers}
             selectedIds={selectedIds}
             onToggle={toggleSelected}
             viewerDistrict={district}
@@ -361,12 +361,12 @@ export default function MessagesPage() {
                 type="button"
                 onClick={() =>
                   setGroupSelectedIds(
-                    groupSelectedIds.length === members.length ? [] : members.map((m) => m.id)
+                    groupSelectedIds.length === otherMembers.length ? [] : otherMembers.map((m) => m.id)
                   )
                 }
                 className="text-xs text-brand-dark underline"
               >
-                {groupSelectedIds.length === members.length ? "교인 전체 해제" : "교인 전체 선택"}
+                {groupSelectedIds.length === otherMembers.length ? "교인 전체 해제" : "교인 전체 선택"}
               </button>
             )}
           </div>
@@ -376,6 +376,7 @@ export default function MessagesPage() {
             onToggle={toggleGroupSelected}
             viewerDistrict={district}
             canSelectAllDistricts={canSelectAllMembers}
+            selfId={user?.id}
           />
 
           {groupSelectedIds.length > 0 && (
