@@ -69,7 +69,7 @@ function ScaleLabel({ pressed, children }) {
   );
 }
 
-function NavLink({ href, className, children }) {
+function NavLink({ href, className, compact, children }) {
   const [pressed, setPressed] = useState(false);
   const pressStartRef = useRef(0);
   const releaseTimerRef = useRef(null);
@@ -99,7 +99,9 @@ function NavLink({ href, className, children }) {
       onMouseDown={press}
       onMouseUp={release}
       onMouseLeave={release}
-      className={`-mx-2 -my-1 rounded-full border px-2 py-1 transition-colors duration-300 ${
+      className={`${
+        compact ? "-mx-1.5 -my-0.5 px-1.5 py-0.5" : "-mx-2 -my-1 px-2 py-1"
+      } rounded-full border transition-colors duration-300 ${
         pressed
           ? "border-brand-dark bg-brand-tint dark:border-brand dark:bg-brand-dark/40"
           : "border-brand-dark/20 bg-brand/10 dark:border-brand/20 dark:bg-brand-dark/15"
@@ -183,9 +185,9 @@ export default function NavBar() {
           </div>
         </div>
 
-        <nav className="mt-2 grid grid-cols-5 gap-x-2 gap-y-1 text-sm tracking-tight text-foreground/70">
+        <nav className="mt-2 grid grid-cols-5 gap-x-1 gap-y-1 text-xs tracking-tight text-foreground/70">
           {publicLinks.map((link) => (
-            <NavLink key={link.href} href={link.href} className="hover:text-brand-dark">
+            <NavLink key={link.href} href={link.href} compact className="text-center hover:text-brand-dark">
               {(pressed) => <ScaleLabel pressed={pressed}>{link.label}</ScaleLabel>}
             </NavLink>
           ))}
