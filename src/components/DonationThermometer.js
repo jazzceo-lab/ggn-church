@@ -47,7 +47,7 @@ export default function DonationThermometer({ goalKey }) {
         <div className="absolute bottom-0 left-1/2 h-9 w-9 -translate-x-1/2 rounded-full border-2 border-brand bg-brand" />
       </div>
 
-      <span className="mt-3 rounded-full bg-green-100 px-3 py-1 font-serif text-2xl font-bold text-foreground dark:bg-green-900/30">
+      <span className="mt-3 rounded-full px-3 py-1 font-serif text-2xl font-bold text-foreground">
         {pct}%
       </span>
     </div>
