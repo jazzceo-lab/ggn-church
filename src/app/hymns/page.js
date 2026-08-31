@@ -54,9 +54,19 @@ export default function HymnsPage() {
   const [rotated, setRotated] = useState(false);
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const pinchRef = useRef(null);
   const panRef = useRef(null);
   const lastTapRef = useRef(0);
+  const viewerRef = useRef(null);
+
+  useEffect(() => {
+    function onFullscreenChange() {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -179,6 +189,7 @@ export default function HymnsPage() {
   }
 
   function closeHymn() {
+    if (document.fullscreenElement) document.exitFullscreen();
     if (cameFromBulletin) {
       router.push("/bulletin");
       return;
@@ -186,6 +197,14 @@ export default function HymnsPage() {
     setFullscreenHymn(null);
     setRotated(false);
     resetZoom();
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      viewerRef.current?.requestFullscreen?.();
+    }
   }
 
   if (!authLoading && !user) {
@@ -243,7 +262,7 @@ export default function HymnsPage() {
       </div>
 
       {fullscreenHymn && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+        <div ref={viewerRef} className="fixed inset-0 z-50 flex flex-col bg-background">
           <div className="border-b border-black/5 bg-background px-4 py-3 dark:border-white/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -323,6 +342,12 @@ export default function HymnsPage() {
                 className="flex items-center gap-1.5 rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
               >
                 🔄 {rotated ? "세로로 보기" : "가로로 보기"}
+              </button>
+              <button
+                onClick={toggleFullscreen}
+                className="flex items-center gap-1.5 rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                ⛶ {isFullscreen ? "전체화면 종료" : "전체화면"}
               </button>
             </div>
           )}
