@@ -9,7 +9,7 @@ import { titleBadgeClass } from "@/lib/memberTitle";
 
 const UNASSIGNED = "미배정";
 const NO_TITLE = "없음";
-const TITLE_OPTIONS = ["목사", "장로"];
+const TITLE_OPTIONS = ["목사", "장로", "권사"];
 
 // 게시판의 구역게시판이 다루는 소속 목록과 동일해야 함 (src/app/board/page.js의 BOARD_DISTRICTS).
 const BOARD_DISTRICTS = [...DISTRICT_NAMES, "청년부"];
