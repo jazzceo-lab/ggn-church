@@ -4,75 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
-import { districts } from "@/lib/teamRoster";
-
-const choir = [
-  ["지휘", "나혜라"],
-  ["반주", "최진아"],
-  ["소프라노", "김윤주 송은옥 오현주 윤진영 이아소 황혜경 황희경"],
-  ["알토", "공미석 김인애 김호숙 김희선 조미경 조윤이 최지원"],
-  ["테너", "김상진 김지현 노희일 유헌 서홍욱 이형진 장성철"],
-  ["베이스", "김용민 김윤태 오창섭 임상주 조태형 주현진 최학수"],
-];
-
-const departments = [
-  {
-    name: "영유아부",
-    leads: [
-      ["부장", "여정숙"],
-      ["부감", "임선미"],
-      ["지도권사", "김정숙"],
-    ],
-    teachers: "김경준 김안나 박지선 배윤경 양유라 양유진 원지혜 조희애",
-  },
-  {
-    name: "아동부",
-    leads: [
-      ["부장", "변수연"],
-      ["부감", "신유정"],
-      ["지도권사", "이명순"],
-    ],
-    teachers: "박준홍 배예지 손정은 윤혜미 이다혜 이은혜 최인서 최현희",
-  },
-  {
-    name: "청소년부",
-    leads: [
-      ["부장", "최현"],
-      ["부감", "윤슬기"],
-      ["지도권사", "허정숙"],
-    ],
-    teachers: "김홍일 임다은 배은영 정하은 정하영 이성빈",
-  },
-  {
-    name: "청년부",
-    leads: [
-      ["부장", "유헌"],
-      ["부감", "조윤이"],
-      ["지도권사", "이종남"],
-    ],
-  },
-  {
-    name: "장년부",
-    leads: [
-      ["부장", "신경희"],
-      ["부감", "봉길선"],
-    ],
-  },
-  {
-    name: "백향숲",
-    leads: [
-      ["부장", "김택영"],
-      ["부감", "김호숙"],
-    ],
-  },
-  {
-    name: "새가족부",
-    leads: [
-      ["부장", "임상주"],
-      ["부감", "황희경"],
-    ],
-  },
-];
+import { districts, CHOIR as choir, DEPARTMENTS as departments } from "@/lib/teamRoster";
 
 function Card({ title, children }) {
   return (

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
-import { SIGNUP_GROUP_OPTIONS, DISTRICT_NAMES } from "@/lib/teamRoster";
+import { SIGNUP_GROUP_OPTIONS, DISTRICT_NAMES, TOTAL_ROSTER_COUNT } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
 
 const UNASSIGNED = "미배정";
@@ -104,6 +104,28 @@ export default function AdminMembersPage() {
 
   useEffect(() => {
     if (isAdmin) loadMembers();
+  }, [isAdmin]);
+
+  // 가입회원 수를 실시간으로 갱신 - 새 회원가입/탈퇴가 생기면 목록 전체를 다시 불러온다.
+  useEffect(() => {
+    if (!isAdmin) return;
+    const channel = supabase
+      .channel("admin-members-profiles")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "profiles" },
+        () => loadMembers()
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "profiles" },
+        () => loadMembers()
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
   async function toggleSuspend(member) {
@@ -244,6 +266,14 @@ export default function AdminMembersPage() {
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">회원 관리</h1>
       <p className="mt-2 text-sm text-foreground/50">가입한 교인 목록입니다.</p>
+      <div className="mt-2 flex gap-4 text-sm text-foreground/60">
+        <span>
+          총 제직명단 <strong className="font-semibold text-foreground">{TOTAL_ROSTER_COUNT}</strong>명
+        </span>
+        <span>
+          가입회원 <strong className="font-semibold text-foreground">{members.length}</strong>명
+        </span>
+      </div>
 
       <div className="mt-4 flex items-center gap-2">
         <input
