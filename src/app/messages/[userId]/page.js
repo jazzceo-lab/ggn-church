@@ -210,7 +210,7 @@ export default function ConversationPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-3 pb-12">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="text-sm text-foreground/50 hover:underline">
-          ← 쪽지함
+          ← GGN톡
         </Link>
         {avatarUrl(partnerAvatarPath) ? (
           <img

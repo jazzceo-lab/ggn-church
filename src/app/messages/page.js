@@ -243,7 +243,7 @@ export default function MessagesPage() {
   if (!authLoading && !user) {
     return (
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
-        <h1 className="font-serif text-2xl font-bold text-foreground">쪽지함</h1>
+        <h1 className="font-serif text-2xl font-bold text-foreground">GGN톡</h1>
         <p className="mt-3 text-sm text-foreground/60">
           쪽지는 로그인한 교인만 주고받을 수 있어요.
         </p>
@@ -260,7 +260,7 @@ export default function MessagesPage() {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <div className="flex items-center justify-between">
-        <h1 className="font-serif text-2xl font-bold text-foreground">쪽지함</h1>
+        <h1 className="font-serif text-2xl font-bold text-foreground">GGN톡</h1>
         <div className="flex gap-2">
           <button
             onClick={() => {

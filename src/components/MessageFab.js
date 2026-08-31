@@ -14,7 +14,7 @@ export default function MessageFab() {
   return (
     <Link
       href="/messages"
-      aria-label="쪽지함"
+      aria-label="GGN톡"
       className={`fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border text-xl shadow-lg shadow-black/15 transition-colors dark:shadow-black/40 ${
         totalUnread > 0
           ? "border-brand bg-brand text-white"

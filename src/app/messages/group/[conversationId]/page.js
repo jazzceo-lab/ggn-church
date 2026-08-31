@@ -198,7 +198,7 @@ export default function GroupConversationPage() {
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
         <p className="text-sm text-foreground/60">권한이 없거나 존재하지 않는 그룹이에요.</p>
         <Link href="/messages" className="mt-4 inline-block text-brand-dark underline">
-          ← 쪽지함으로
+          ← GGN톡으로
         </Link>
       </main>
     );
@@ -211,7 +211,7 @@ export default function GroupConversationPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-3 pb-12">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="text-sm text-foreground/50 hover:underline">
-          ← 쪽지함
+          ← GGN톡
         </Link>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-tint text-sm dark:bg-brand-dark/25">
           👥
