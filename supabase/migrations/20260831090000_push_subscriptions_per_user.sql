@@ -41,5 +41,14 @@ begin
   end loop;
 end $$;
 
-alter table public.push_subscriptions
-  add constraint push_subscriptions_user_endpoint_key unique (user_id, endpoint);
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.push_subscriptions'::regclass
+      and conname = 'push_subscriptions_user_endpoint_key'
+  ) then
+    alter table public.push_subscriptions
+      add constraint push_subscriptions_user_endpoint_key unique (user_id, endpoint);
+  end if;
+end $$;
