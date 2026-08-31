@@ -149,7 +149,7 @@ export default function TeamsPage() {
       <p className="mt-2 text-sm text-foreground/50">
         로그인한 교인에게만 보이는 페이지입니다.
         <br />
-        (교인이름을 누르면 채팅발송가능)
+        (교인이름을 누르면 GGN톡 실행)
       </p>
 
       <Card title="성가대">
