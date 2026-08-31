@@ -30,6 +30,17 @@ export default function AdminMembersPage() {
   const [rolesByMember, setRolesByMember] = useState({});
   const [newRoleByMember, setNewRoleByMember] = useState({});
   const [newScopeByMember, setNewScopeByMember] = useState({});
+  const [search, setSearch] = useState("");
+  const [openDistricts, setOpenDistricts] = useState(new Set());
+
+  function toggleDistrict(name) {
+    setOpenDistricts((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }
 
   async function loadMembers() {
     setLoading(true);
@@ -207,17 +218,89 @@ export default function AdminMembersPage() {
     );
   }
 
+  const query = search.trim().toLowerCase();
+  const filteredMembers = query
+    ? members.filter(
+        (m) =>
+          (m.display_name ?? "").toLowerCase().includes(query) ||
+          (m.email ?? "").toLowerCase().includes(query)
+      )
+    : members;
+
+  const groups = [...SIGNUP_GROUP_OPTIONS, UNASSIGNED]
+    .map((name) => ({
+      name,
+      members: filteredMembers.filter((m) => (m.district ?? UNASSIGNED) === name),
+    }))
+    .filter((g) => g.members.length > 0);
+
+  const allOpen = groups.length > 0 && groups.every((g) => openDistricts.has(g.name));
+
+  function toggleAllDistricts() {
+    setOpenDistricts(allOpen ? new Set() : new Set(groups.map((g) => g.name)));
+  }
+
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">회원 관리</h1>
       <p className="mt-2 text-sm text-foreground/50">가입한 교인 목록입니다.</p>
 
-      <ul className="mt-6 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
-        {loading && <li className="p-4 text-sm text-foreground/50">불러오는 중...</li>}
-        {!loading && members.length === 0 && (
-          <li className="p-4 text-sm text-foreground/50">가입한 교인이 없어요.</li>
+      <div className="mt-4 flex items-center gap-2">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="이름 또는 이메일로 검색"
+          className="flex-1 rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+        />
+        {!query && groups.length > 0 && (
+          <button
+            type="button"
+            onClick={toggleAllDistricts}
+            className="shrink-0 rounded-full border border-black/10 px-3 py-2 text-xs text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+          >
+            {allOpen ? "전체 접기" : "전체 펼치기"}
+          </button>
         )}
-        {members.map((m) => (
+      </div>
+
+      <div className="mt-4 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
+        {loading && <p className="p-4 text-sm text-foreground/50">불러오는 중...</p>}
+        {!loading && members.length === 0 && (
+          <p className="p-4 text-sm text-foreground/50">가입한 교인이 없어요.</p>
+        )}
+        {!loading && members.length > 0 && groups.length === 0 && (
+          <p className="p-4 text-sm text-foreground/50">검색 결과가 없어요.</p>
+        )}
+        {groups.map((g) => {
+          const open = query !== "" || openDistricts.has(g.name);
+          return (
+            <div key={g.name}>
+              <button
+                type="button"
+                onClick={() => toggleDistrict(g.name)}
+                className="flex w-full items-center justify-between gap-2 p-4 text-left hover:bg-black/5 dark:hover:bg-white/10"
+              >
+                <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    className={`h-4 w-4 shrink-0 text-foreground/40 transition-transform ${open ? "rotate-90" : ""}`}
+                  >
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                  {g.name === "목회자" && "🙏 "}
+                  {g.name}
+                </span>
+                <span className="rounded-full bg-black/5 px-2 py-0.5 text-xs font-medium text-foreground/50 dark:bg-white/10">
+                  {g.members.length}명
+                </span>
+              </button>
+              {open && (
+                <ul className="divide-y divide-black/10 border-t border-black/10 dark:divide-white/10 dark:border-white/10">
+                  {g.members.map((m) => (
           <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
             <div>
               <p className="font-medium text-foreground">
@@ -376,8 +459,13 @@ export default function AdminMembersPage() {
               </button>
             </div>
           </li>
-        ))}
-      </ul>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </main>
   );
 }
