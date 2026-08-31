@@ -316,7 +316,7 @@ export default function ConversationPage() {
           📎
           <input
             type="file"
-            accept="image/*,video/*,.pdf,.doc,.docx,.hwp,.txt,.zip"
+            accept="image/*,video/*"
             onChange={handleFileChange}
             className="hidden"
           />
