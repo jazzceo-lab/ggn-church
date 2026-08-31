@@ -312,14 +312,26 @@ export default function ConversationPage() {
       )}
 
       <form onSubmit={handleSend} className="mt-2 flex items-center gap-2">
-        <label className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 p-2 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
-          📎
+        <label
+          aria-label="사진/동영상 첨부"
+          title="사진/동영상 첨부"
+          className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 p-2 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+        >
+          🖼️
           <input
             type="file"
             accept="image/*,video/*"
             onChange={handleFileChange}
             className="hidden"
           />
+        </label>
+        <label
+          aria-label="파일 첨부"
+          title="파일 첨부"
+          className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 p-2 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+        >
+          📎
+          <input type="file" onChange={handleFileChange} className="hidden" />
         </label>
         <input
           type="text"
