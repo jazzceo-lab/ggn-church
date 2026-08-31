@@ -22,7 +22,7 @@ export default function MessageFab() {
       }`}
       style={{ bottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
     >
-      ✉️
+      💬
       {totalUnread > 0 && (
         <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-dark px-1 text-[11px] font-semibold text-white ring-2 ring-background">
           {totalUnread}
