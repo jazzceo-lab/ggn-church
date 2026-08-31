@@ -149,7 +149,7 @@ export default function TeamsPage() {
       <p className="mt-2 text-sm text-foreground/50">
         로그인한 교인에게만 보이는 페이지입니다.
         <br />
-        교인이름을 누르시면 쪽지를 보낼 수 있습니다.
+        (교인이름을 누르면 쪽지발송가능)
       </p>
 
       <Card title="성가대">
