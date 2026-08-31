@@ -249,6 +249,9 @@ export default function AdminMembersPage() {
                 )}
               </p>
               <p className="mt-1 text-xs text-foreground/50">{m.email}</p>
+              <p className="mt-0.5 text-xs text-foreground/40">
+                가입일 {new Date(m.created_at).toLocaleString("ko-KR")}
+              </p>
               <label className="mt-2 flex items-center gap-2 text-xs text-foreground/60">
                 구역
                 <select
