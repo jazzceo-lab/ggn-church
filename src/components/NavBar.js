@@ -102,7 +102,7 @@ function NavLink({ href, className, children }) {
       className={`-mx-2 -my-1 rounded-full border px-2 py-1 transition-colors duration-300 ${
         pressed
           ? "border-brand-dark bg-brand-tint dark:border-brand dark:bg-brand-dark/40"
-          : "border-brand-dark/35 bg-brand-tint/70 dark:border-brand/35 dark:bg-brand-dark/20"
+          : "border-brand-dark/20 bg-brand/10 dark:border-brand/20 dark:bg-brand-dark/15"
       } ${className}`}
     >
       {typeof children === "function" ? children(pressed) : children}
