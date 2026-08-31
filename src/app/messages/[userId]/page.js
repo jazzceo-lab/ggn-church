@@ -7,7 +7,13 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
+import { safeStoragePath } from "@/lib/storagePath";
+import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
+import { resizeImageFile } from "@/lib/resizeImage";
+import { isImageAttachment } from "@/lib/attachment";
 import AvatarLightbox from "@/components/AvatarLightbox";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function ConversationPage() {
   const { userId } = useParams();
@@ -18,6 +24,7 @@ export default function ConversationPage() {
   const [lightboxUrl, setLightboxUrl] = useState(null);
   const [thread, setThread] = useState([]);
   const [body, setBody] = useState("");
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -39,7 +46,7 @@ export default function ConversationPage() {
 
     const { data } = await supabase
       .from("messages")
-      .select("id, sender_id, recipient_id, body, created_at, read_at")
+      .select("id, sender_id, recipient_id, body, created_at, read_at, attachment_url, attachment_name")
       .or(
         `and(sender_id.eq.${user.id},recipient_id.eq.${userId}),and(sender_id.eq.${userId},recipient_id.eq.${user.id})`
       )
@@ -122,15 +129,50 @@ export default function ConversationPage() {
     bottomRef.current?.scrollIntoView({ block: "nearest" });
   }, [thread]);
 
+  function handleFileChange(e) {
+    const f = e.target.files?.[0] ?? null;
+    if (f && f.size > MAX_FILE_SIZE) {
+      setError("파일은 10MB 이하만 첨부할 수 있어요.");
+      e.target.value = "";
+      setFile(null);
+      return;
+    }
+    setError("");
+    setFile(f);
+  }
+
   async function handleSend(e) {
     e.preventDefault();
-    if (!body.trim()) return;
+    if (!body.trim() && !file) return;
     setSending(true);
     setError("");
 
-    const { error } = await supabase
-      .from("messages")
-      .insert({ sender_id: user.id, recipient_id: userId, body });
+    let attachmentUrl = null;
+    let attachmentName = null;
+
+    if (file) {
+      const uploadFile = file.type.startsWith("image/")
+        ? await resizeImageFile(file, { maxSize: 1600 })
+        : file;
+      const path = safeStoragePath(user.id, uploadFile.name);
+      const { error: uploadError } = await uploadFileWithRetry("attachments", path, uploadFile);
+
+      if (uploadError) {
+        setSending(false);
+        setError("파일 업로드에 실패했어요: " + uploadError.message);
+        return;
+      }
+      attachmentUrl = supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl;
+      attachmentName = uploadFile.name;
+    }
+
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user.id,
+      recipient_id: userId,
+      body,
+      attachment_url: attachmentUrl,
+      attachment_name: attachmentName,
+    });
 
     setSending(false);
     if (error) {
@@ -138,6 +180,7 @@ export default function ConversationPage() {
       return;
     }
     setBody("");
+    setFile(null);
     loadThread();
   }
 
@@ -217,7 +260,29 @@ export default function ConversationPage() {
                   mine ? "bg-brand text-white" : "bg-black/5 text-foreground dark:bg-white/10"
                 }`}
               >
-                <p className="whitespace-pre-wrap">{m.body}</p>
+                {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
+                {m.attachment_url && isImageAttachment(m.attachment_name) ? (
+                  <a href={m.attachment_url} target="_blank" rel="noopener noreferrer" className="mt-1 block w-fit">
+                    <img
+                      src={m.attachment_url}
+                      alt={m.attachment_name}
+                      className="max-h-48 max-w-full rounded-lg object-contain"
+                    />
+                  </a>
+                ) : (
+                  m.attachment_url && (
+                    <a
+                      href={m.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`mt-1 inline-flex items-center gap-1 text-sm underline ${
+                        mine ? "text-white" : "text-brand-dark"
+                      }`}
+                    >
+                      📎 {m.attachment_name}
+                    </a>
+                  )
+                )}
                 <p
                   className={`mt-1 flex items-center gap-1 text-[10px] ${
                     mine ? "justify-end text-white/70" : "text-foreground/40"
@@ -233,7 +298,24 @@ export default function ConversationPage() {
         <div ref={bottomRef} />
       </div>
 
-      <form onSubmit={handleSend} className="mt-4 flex gap-2">
+      {file && (
+        <p className="mt-2 flex items-center gap-2 text-xs text-foreground/60">
+          📎 {file.name}
+          <button
+            type="button"
+            onClick={() => setFile(null)}
+            className="text-foreground/40 hover:text-red-600"
+          >
+            ✕
+          </button>
+        </p>
+      )}
+
+      <form onSubmit={handleSend} className="mt-2 flex items-center gap-2">
+        <label className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 p-2 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+          📎
+          <input type="file" onChange={handleFileChange} className="hidden" />
+        </label>
         <input
           type="text"
           value={body}
@@ -244,7 +326,7 @@ export default function ConversationPage() {
         <button
           type="submit"
           disabled={sending}
-          className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+          className="shrink-0 rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
         >
           보내기
         </button>

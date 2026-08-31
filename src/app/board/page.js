@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { resizeImageFile } from "@/lib/resizeImage";
+import { isImageAttachment } from "@/lib/attachment";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { DISTRICT_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
@@ -35,11 +36,6 @@ const REACTIONS = [
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-
-const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i;
-function isImageAttachment(name) {
-  return !!name && IMAGE_EXTENSIONS.test(name);
-}
 
 export default function BoardPage() {
   const {
