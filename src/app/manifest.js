@@ -4,7 +4,9 @@ export default function manifest() {
     short_name: "길가는교회",
     description: "길가는교회 교회 앱 - 주보, 일정, 게시판",
     start_url: "/",
+    scope: "/",
     display: "standalone",
+    capture_links: "existing-client-navigate",
     background_color: "#faf6f2",
     theme_color: "#c19c89",
     icons: [
