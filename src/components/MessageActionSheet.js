@@ -26,7 +26,7 @@ export default function MessageActionSheet({
         className="w-full max-w-2xl rounded-t-2xl bg-background p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-center gap-0.5 border-b border-black/10 pb-3 dark:border-white/10">
+        <div className="flex items-center gap-1 overflow-x-auto border-b border-black/10 pb-3 dark:border-white/10">
           {REACTIONS.map((r) => {
             const mine = myReaction === r.key;
             const count = reactionCounts?.[r.key] ?? 0;
@@ -36,7 +36,7 @@ export default function MessageActionSheet({
                 type="button"
                 onClick={() => onReact(r.key)}
                 title={r.label}
-                className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg py-2 text-[clamp(0.85rem,4.5vw,1.25rem)] leading-none transition-colors ${
+                className={`flex w-14 shrink-0 flex-col items-center gap-0.5 rounded-lg py-2 text-xl leading-none transition-colors ${
                   mine ? "bg-brand-tint dark:bg-brand-dark/30" : "hover:bg-black/5 dark:hover:bg-white/10"
                 }`}
               >
