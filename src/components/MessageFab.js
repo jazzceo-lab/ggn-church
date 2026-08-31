@@ -14,10 +14,10 @@ export default function MessageFab() {
     <Link
       href="/messages"
       aria-label="쪽지함"
-      className={`fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border text-xl shadow-lg backdrop-blur-md transition-colors ${
+      className={`fixed right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full border text-xl shadow-lg shadow-black/15 transition-colors dark:shadow-black/40 ${
         unreadCount > 0
           ? "border-brand bg-brand text-white"
-          : "border-black/10 bg-background/90 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+          : "border-brand-dark/30 bg-brand-tint text-brand-dark hover:bg-brand/20 dark:border-brand/30 dark:bg-brand-dark/25 dark:text-brand"
       }`}
       style={{ bottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
     >
