@@ -109,7 +109,7 @@ function NavLink({ href, className, plain, children }) {
           : `-mx-2 -my-1 rounded-full border px-2 py-1 transition-colors duration-300 ${
               pressed
                 ? "border-brand-dark bg-brand-tint dark:border-brand dark:bg-brand-dark/40"
-                : "border-brand-dark/20 bg-brand/10 dark:border-brand/20 dark:bg-brand-dark/15"
+                : "border-brand-dark/10 bg-brand/5 dark:border-brand/10 dark:bg-brand-dark/8"
             } ${className}`
       }
     >
