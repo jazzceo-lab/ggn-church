@@ -3,8 +3,7 @@ import "./globals.css";
 import NavBar from "@/components/NavBar";
 import { AuthProvider } from "@/components/AuthProvider";
 import PopupNotice from "@/components/PopupNotice";
-import InstallAppBanner from "@/components/InstallAppBanner";
-import NotificationPromptBanner from "@/components/NotificationPromptBanner";
+import OnboardingBanners from "@/components/OnboardingBanners";
 import KakaoInAppEscape from "@/components/KakaoInAppEscape";
 import ScrollFadeBottom from "@/components/ScrollFadeBottom";
 import MessageFab from "@/components/MessageFab";
@@ -46,8 +45,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <KakaoInAppEscape />
         <AuthProvider>
-          <InstallAppBanner />
-          <NotificationPromptBanner />
+          <OnboardingBanners />
           <PopupNotice />
           <NavBar />
           <div className="flex flex-1 flex-col">{children}</div>

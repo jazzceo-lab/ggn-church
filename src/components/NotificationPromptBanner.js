@@ -8,7 +8,7 @@ import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
 const DISMISS_KEY = "notifBannerDismissedAt";
 const DISMISS_DAYS = 14;
 
-export default function NotificationPromptBanner() {
+export default function NotificationPromptBanner({ onResolved }) {
   const { user } = useAuth();
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,17 +16,29 @@ export default function NotificationPromptBanner() {
   useEffect(() => {
     if (!user) {
       setVisible(false);
+      onResolved?.();
       return;
     }
     const supported = "serviceWorker" in navigator && "PushManager" in window;
-    if (!supported) return;
+    if (!supported) {
+      onResolved?.();
+      return;
+    }
 
     const dismissedAt = Number(safeGetItem(DISMISS_KEY) || 0);
-    if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) return;
+    if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) {
+      onResolved?.();
+      return;
+    }
 
     isPushSubscribed(user).then((subscribed) => {
-      if (!subscribed) setVisible(true);
+      if (subscribed) {
+        onResolved?.();
+      } else {
+        setVisible(true);
+      }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   async function handleEnable() {
@@ -38,11 +50,13 @@ export default function NotificationPromptBanner() {
       return;
     }
     setVisible(false);
+    onResolved?.();
   }
 
   function handleDismiss() {
     safeSetItem(DISMISS_KEY, String(Date.now()));
     setVisible(false);
+    onResolved?.();
   }
 
   if (!visible) return null;
