@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import MemberPicker from "@/components/MemberPicker";
 
-export default function ForwardPicker({ userId, forwardContent, onClose }) {
+export default function ForwardPicker({
+  userId,
+  forwardContent,
+  onClose,
+  viewerDistrict,
+  canSelectAllDistricts,
+}) {
   const [members, setMembers] = useState([]);
   const [groups, setGroups] = useState([]);
   const [selectedMemberIds, setSelectedMemberIds] = useState([]);
@@ -149,7 +155,13 @@ export default function ForwardPicker({ userId, forwardContent, onClose }) {
             )}
 
             <p className="mt-4 text-xs font-semibold text-brand-dark">교인에게 전달</p>
-            <MemberPicker members={members} selectedIds={selectedMemberIds} onToggle={toggleMember} />
+            <MemberPicker
+              members={members}
+              selectedIds={selectedMemberIds}
+              onToggle={toggleMember}
+              viewerDistrict={viewerDistrict}
+              canSelectAllDistricts={canSelectAllDistricts}
+            />
 
             {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 

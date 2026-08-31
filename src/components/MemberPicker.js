@@ -6,7 +6,7 @@ import { avatarUrl } from "@/lib/avatar";
 
 const UNASSIGNED = "미배정";
 
-export default function MemberPicker({ members, selectedIds, onToggle }) {
+export default function MemberPicker({ members, selectedIds, onToggle, viewerDistrict, canSelectAllDistricts }) {
   return (
     <>
       {members.length === 0 && (
@@ -16,23 +16,26 @@ export default function MemberPicker({ members, selectedIds, onToggle }) {
         const group = members.filter((m) => (m.district ?? UNASSIGNED) === district);
         if (group.length === 0) return null;
         const allSelected = group.every((m) => selectedIds.includes(m.id));
+        const canSelectAllThisDistrict = canSelectAllDistricts || district === viewerDistrict;
         return (
           <div key={district} className="mt-3">
             <p className="flex items-center gap-2 text-xs font-semibold text-brand-dark">
               {district}
-              <button
-                type="button"
-                onClick={() => {
-                  group.forEach((m) => {
-                    const isSelected = selectedIds.includes(m.id);
-                    if (allSelected && isSelected) onToggle(m.id);
-                    else if (!allSelected && !isSelected) onToggle(m.id);
-                  });
-                }}
-                className="font-normal text-foreground/40 underline"
-              >
-                {allSelected ? "전체 해제" : "전체 선택"}
-              </button>
+              {canSelectAllThisDistrict && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    group.forEach((m) => {
+                      const isSelected = selectedIds.includes(m.id);
+                      if (allSelected && isSelected) onToggle(m.id);
+                      else if (!allSelected && !isSelected) onToggle(m.id);
+                    });
+                  }}
+                  className="font-normal text-foreground/40 underline"
+                >
+                  {allSelected ? "전체 해제" : "전체 선택"}
+                </button>
+              )}
             </p>
             <ul className="mt-1 flex flex-wrap gap-2">
               {group.map((m) => {

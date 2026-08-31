@@ -22,7 +22,8 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function GroupConversationPage() {
   const { conversationId } = useParams();
-  const { user, loading: authLoading, refreshGroupUnreadCount } = useAuth();
+  const { user, loading: authLoading, isAdmin, district, refreshGroupUnreadCount } = useAuth();
+  const canSelectAllMembers = isAdmin || district === "목회자";
   const [conversationName, setConversationName] = useState(null);
   const [pinnedMessageId, setPinnedMessageId] = useState(null);
   const [participants, setParticipants] = useState([]);
@@ -594,7 +595,13 @@ export default function GroupConversationPage() {
       )}
 
       {forwardContent && (
-        <ForwardPicker userId={user.id} forwardContent={forwardContent} onClose={() => setForwardContent(null)} />
+        <ForwardPicker
+          userId={user.id}
+          forwardContent={forwardContent}
+          onClose={() => setForwardContent(null)}
+          viewerDistrict={district}
+          canSelectAllDistricts={canSelectAllMembers}
+        />
       )}
     </main>
   );

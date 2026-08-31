@@ -302,7 +302,13 @@ export default function MessagesPage() {
               <span className="text-brand-dark">· {selectedIds.length}명 선택됨</span>
             )}
           </p>
-          <MemberPicker members={members} selectedIds={selectedIds} onToggle={toggleSelected} />
+          <MemberPicker
+            members={members}
+            selectedIds={selectedIds}
+            onToggle={toggleSelected}
+            viewerDistrict={district}
+            canSelectAllDistricts={canSelectAllMembers}
+          />
 
           {selectedIds.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
@@ -364,7 +370,13 @@ export default function MessagesPage() {
               </button>
             )}
           </div>
-          <MemberPicker members={members} selectedIds={groupSelectedIds} onToggle={toggleGroupSelected} />
+          <MemberPicker
+            members={members}
+            selectedIds={groupSelectedIds}
+            onToggle={toggleGroupSelected}
+            viewerDistrict={district}
+            canSelectAllDistricts={canSelectAllMembers}
+          />
 
           {groupSelectedIds.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-black/10 pt-4 dark:border-white/10">

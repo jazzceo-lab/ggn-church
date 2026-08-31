@@ -24,7 +24,8 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function ConversationPage() {
   const { userId } = useParams();
-  const { user, loading: authLoading, refreshUnreadCount } = useAuth();
+  const { user, loading: authLoading, isAdmin, district, refreshUnreadCount } = useAuth();
+  const canSelectAllMembers = isAdmin || district === "목회자";
   const [partnerName, setPartnerName] = useState("");
   const [partnerTitle, setPartnerTitle] = useState(null);
   const [partnerAvatarPath, setPartnerAvatarPath] = useState(null);
@@ -532,7 +533,13 @@ export default function ConversationPage() {
       )}
 
       {forwardContent && (
-        <ForwardPicker userId={user.id} forwardContent={forwardContent} onClose={() => setForwardContent(null)} />
+        <ForwardPicker
+          userId={user.id}
+          forwardContent={forwardContent}
+          onClose={() => setForwardContent(null)}
+          viewerDistrict={district}
+          canSelectAllDistricts={canSelectAllMembers}
+        />
       )}
 
       {deleteTarget && (
