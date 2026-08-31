@@ -23,7 +23,7 @@ const ROLE_LABELS = Object.fromEntries(ROLE_OPTIONS.map((r) => [r.key, r.label])
 const SCOPED_ROLE_KEYS = new Set(ROLE_OPTIONS.filter((r) => r.scoped).map((r) => r.key));
 
 export default function AdminMembersPage() {
-  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { user, loading: authLoading, isAdmin, onlineUserIds } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notifyingIds, setNotifyingIds] = useState(new Set());
@@ -245,6 +245,11 @@ export default function AdminMembersPage() {
                 {notifyingIds.has(m.id) && (
                   <span className="ml-2 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
                     🔔 알림 켜짐
+                  </span>
+                )}
+                {onlineUserIds.has(m.id) && (
+                  <span className="ml-2 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                    🟢 접속 중
                   </span>
                 )}
               </p>

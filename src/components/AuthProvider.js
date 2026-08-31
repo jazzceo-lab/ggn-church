@@ -21,6 +21,7 @@ const AuthContext = createContext({
   groupUnreadCount: 0,
   refreshGroupUnreadCount: () => {},
   refreshGroupConversationIds: () => {},
+  onlineUserIds: new Set(),
 });
 
 export function AuthProvider({ children }) {
@@ -38,9 +39,11 @@ export function AuthProvider({ children }) {
   const [groupUnreadCount, setGroupUnreadCount] = useState(0);
   const [groupConversationIds, setGroupConversationIds] = useState([]);
   const [toast, setToast] = useState(null);
+  const [onlineUserIds, setOnlineUserIds] = useState(new Set());
   const channelRef = useRef(null);
   const boardChannelRef = useRef(null);
   const groupChannelRef = useRef(null);
+  const presenceChannelRef = useRef(null);
 
   async function loadProfile(currentUser) {
     if (!currentUser) {
@@ -311,6 +314,39 @@ export function AuthProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, groupConversationIds]);
 
+  // 관리자 회원관리 화면에서 "지금 앱을 켜놓은 회원"을 보여주기 위한 접속 현황.
+  // Supabase Presence는 채널 단위로 상태를 공유하므로 별도 테이블 없이,
+  // 로그인한 사람은 누구나 자신을 이 채널에 등록하고 전체 목록을 함께 받는다.
+  useEffect(() => {
+    if (presenceChannelRef.current) {
+      supabase.removeChannel(presenceChannelRef.current);
+      presenceChannelRef.current = null;
+    }
+    if (!user) {
+      setOnlineUserIds(new Set());
+      return;
+    }
+
+    const channel = supabase.channel("online-users", {
+      config: { presence: { key: user.id } },
+    });
+
+    channel.on("presence", { event: "sync" }, () => {
+      setOnlineUserIds(new Set(Object.keys(channel.presenceState())));
+    });
+
+    channel.subscribe(async (status) => {
+      if (status === "SUBSCRIBED") {
+        await channel.track({ online_at: new Date().toISOString() });
+      }
+    });
+
+    presenceChannelRef.current = channel;
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 5000);
@@ -347,6 +383,7 @@ export function AuthProvider({ children }) {
         groupUnreadCount,
         refreshGroupUnreadCount: () => refreshGroupUnreadCount(),
         refreshGroupConversationIds: () => refreshGroupConversationIds(),
+        onlineUserIds,
       }}
     >
       {children}
