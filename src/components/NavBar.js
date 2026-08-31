@@ -195,7 +195,7 @@ export default function NavBar() {
           <p className="text-xs font-medium text-brand-dark">
             교인전용{!user && " · 로그인 후 이용"}
           </p>
-          <nav className="mt-1 grid grid-cols-3 gap-x-3 gap-y-1 text-sm">
+          <nav className="mt-1 grid grid-cols-3 gap-x-3 gap-y-3 text-sm">
             {memberLinks.map((link) => (
               <NavLink
                 key={link.href}
