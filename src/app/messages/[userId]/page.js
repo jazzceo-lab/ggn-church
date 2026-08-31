@@ -19,6 +19,7 @@ import MessageActionSheet from "@/components/MessageActionSheet";
 import ForwardPicker from "@/components/ForwardPicker";
 import DeleteMessageDialog from "@/components/DeleteMessageDialog";
 import { loadHiddenMessageIds, hideMessageLocally } from "@/lib/hiddenMessages";
+import { getClearedAt } from "@/lib/clearedConversations";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -89,10 +90,15 @@ export default function ConversationPage() {
       )
       .order("created_at", { ascending: true });
 
-    setThread(data ?? []);
+    const clearedAt = getClearedAt("dm", userId);
+    const visible = clearedAt
+      ? (data ?? []).filter((m) => new Date(m.created_at) > new Date(clearedAt))
+      : data ?? [];
+
+    setThread(visible);
     setLoading(false);
 
-    const ids = (data ?? []).map((m) => m.id);
+    const ids = visible.map((m) => m.id);
     loadMessageReactions("dm", ids, user.id).then(setReactions);
     loadMessageBookmarks("dm", ids, user.id).then(setBookmarks);
 

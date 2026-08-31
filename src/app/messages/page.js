@@ -9,6 +9,7 @@ import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
 import AvatarLightbox from "@/components/AvatarLightbox";
 import MemberPicker from "@/components/MemberPicker";
+import { getClearedAt, clearConversationLocally } from "@/lib/clearedConversations";
 
 export default function MessagesPage() {
   const {
@@ -61,6 +62,8 @@ export default function MessagesPage() {
     const byPartner = new Map();
     for (const m of msgs ?? []) {
       const partnerId = m.sender_id === user.id ? m.recipient_id : m.sender_id;
+      const clearedAt = getClearedAt("dm", partnerId);
+      if (clearedAt && new Date(m.created_at) <= new Date(clearedAt)) continue;
       if (!byPartner.has(partnerId)) {
         byPartner.set(partnerId, {
           type: "1:1",
@@ -162,17 +165,21 @@ export default function MessagesPage() {
   }
 
   async function handleDeleteConversation(partnerId, partnerName) {
-    if (!window.confirm(`${partnerName}님과 나눈 채팅을 모두 삭제할까요?`)) return;
-    const { error } = await supabase
-      .from("messages")
-      .delete()
-      .or(
-        `and(sender_id.eq.${user.id},recipient_id.eq.${partnerId}),and(sender_id.eq.${partnerId},recipient_id.eq.${user.id})`
-      );
-    if (error) {
-      window.alert("삭제에 실패했어요: " + error.message);
+    if (
+      !window.confirm(
+        `${partnerName}님과 나눈 채팅을 목록에서 지울까요?\n(내 화면에서만 지워지고, 상대방 화면에는 그대로 남아있어요)`
+      )
+    )
       return;
-    }
+
+    await supabase
+      .from("messages")
+      .update({ read_at: new Date().toISOString() })
+      .eq("sender_id", partnerId)
+      .eq("recipient_id", user.id)
+      .is("read_at", null);
+
+    clearConversationLocally("dm", partnerId, new Date().toISOString());
     load();
     refreshUnreadCount();
   }
