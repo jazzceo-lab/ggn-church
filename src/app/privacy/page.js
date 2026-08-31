@@ -22,7 +22,7 @@ export default function PrivacyPage() {
           </h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>회원가입 시: 이메일 주소, 비밀번호, 이름, 소속 구분(구역/부서)</li>
-            <li>서비스 이용 시: 게시판 글·댓글, 쪽지(1:1 메시지) 내용, 첨부파일·이미지</li>
+            <li>서비스 이용 시: 게시판 글·댓글, 채팅(1:1 메시지) 내용, 첨부파일·이미지</li>
             <li>알림 신청 시: 푸시 알림 수신을 위한 기기 구독 정보</li>
           </ul>
         </section>
@@ -33,8 +33,8 @@ export default function PrivacyPage() {
           </h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>회원 확인 및 로그인 등 서비스 이용</li>
-            <li>교회소식·주보·일정 안내 및 교인 간 소통(게시판, 쪽지)</li>
-            <li>쪽지 수신 등 알림 발송</li>
+            <li>교회소식·주보·일정 안내 및 교인 간 소통(게시판, 채팅)</li>
+            <li>채팅 수신 등 알림 발송</li>
             <li>부정 이용 방지 및 서비스 운영·관리</li>
           </ul>
         </section>

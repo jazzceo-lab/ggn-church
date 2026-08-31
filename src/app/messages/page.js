@@ -154,7 +154,7 @@ export default function MessagesPage() {
   }
 
   async function handleDeleteConversation(partnerId, partnerName) {
-    if (!window.confirm(`${partnerName}님과 나눈 쪽지를 모두 삭제할까요?`)) return;
+    if (!window.confirm(`${partnerName}님과 나눈 채팅을 모두 삭제할까요?`)) return;
     const { error } = await supabase
       .from("messages")
       .delete()
@@ -245,7 +245,7 @@ export default function MessagesPage() {
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
         <h1 className="font-serif text-2xl font-bold text-foreground">GGN톡</h1>
         <p className="mt-3 text-sm text-foreground/60">
-          쪽지는 로그인한 교인만 주고받을 수 있어요.
+          채팅은 로그인한 교인만 주고받을 수 있어요.
         </p>
         <Link
           href="/login"
@@ -269,7 +269,7 @@ export default function MessagesPage() {
             }}
             className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
           >
-            + 새 쪽지
+            + 새 채팅
           </button>
           <button
             onClick={() => {
@@ -369,7 +369,7 @@ export default function MessagesPage() {
       <ul className="mt-6 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
         {loading && <li className="p-4 text-sm text-foreground/50">불러오는 중...</li>}
         {!loading && conversations.length === 0 && (
-          <li className="p-4 text-sm text-foreground/50">아직 나눈 쪽지가 없어요.</li>
+          <li className="p-4 text-sm text-foreground/50">아직 나눈 채팅이 없어요.</li>
         )}
         {conversations.map((c) => (
           <li

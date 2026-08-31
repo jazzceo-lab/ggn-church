@@ -200,7 +200,7 @@ export default function AccountPage() {
     setDeleteError("");
     if (
       !window.confirm(
-        "정말 탈퇴하시겠어요?\n작성한 글, 쪽지 등 모든 정보가 삭제되며 되돌릴 수 없어요."
+        "정말 탈퇴하시겠어요?\n작성한 글, 채팅 등 모든 정보가 삭제되며 되돌릴 수 없어요."
       )
     )
       return;
@@ -329,7 +329,7 @@ export default function AccountPage() {
           <p className="text-sm text-foreground/50">받고 싶은 알림만 골라서 켜둘 수 있어요.</p>
 
           <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
-            쪽지 알림
+            채팅 알림
             <input
               type="checkbox"
               checked={notifyMessages}
@@ -435,7 +435,7 @@ export default function AccountPage() {
         <div className="mt-6 space-y-3 rounded-xl border border-red-200 bg-red-50/60 p-5 dark:border-red-900/40 dark:bg-red-900/10">
           <h2 className="font-medium text-red-700 dark:text-red-300">회원 탈퇴</h2>
           <p className="text-sm text-foreground/60">
-            탈퇴하면 계정과 작성한 글, 쪽지 등 모든 정보가 삭제되며 되돌릴 수 없어요.
+            탈퇴하면 계정과 작성한 글, 채팅 등 모든 정보가 삭제되며 되돌릴 수 없어요.
           </p>
           {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
           <button

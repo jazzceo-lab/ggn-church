@@ -64,7 +64,7 @@ export default function NotificationPromptBanner({ onResolved }) {
   return (
     <div className="flex items-center justify-between gap-3 bg-brand-tint px-4 py-2.5 text-sm text-brand-dark">
       <span className="break-keep">
-        🔔 새 소식을 놓치지 마세요 — 주보·공지·쪽지 알림을 폰으로 바로 받아보세요.
+        🔔 새 소식을 놓치지 마세요 — 주보·공지·채팅 알림을 폰으로 바로 받아보세요.
       </span>
       <div className="flex shrink-0 items-center gap-2">
         <button

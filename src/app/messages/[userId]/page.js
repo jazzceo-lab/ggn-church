@@ -185,7 +185,7 @@ export default function ConversationPage() {
   }
 
   async function handleDeleteMessage(id) {
-    if (!window.confirm("이 쪽지를 삭제할까요?")) return;
+    if (!window.confirm("이 채팅을 삭제할까요?")) return;
     const { error } = await supabase.from("messages").delete().eq("id", id);
     if (error) {
       window.alert("삭제에 실패했어요: " + error.message);
@@ -241,7 +241,7 @@ export default function ConversationPage() {
       <div className="mt-4 flex-1 space-y-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
         {loading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
         {!loading && thread.length === 0 && (
-          <p className="text-sm text-foreground/50">아직 나눈 쪽지가 없어요. 먼저 인사해보세요!</p>
+          <p className="text-sm text-foreground/50">아직 나눈 채팅이 없어요. 먼저 인사해보세요!</p>
         )}
         {thread.map((m) => {
           const mine = m.sender_id === user?.id;
