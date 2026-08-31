@@ -11,8 +11,16 @@ import AvatarLightbox from "@/components/AvatarLightbox";
 import MemberPicker from "@/components/MemberPicker";
 
 export default function MessagesPage() {
-  const { user, loading: authLoading, refreshUnreadCount, refreshGroupUnreadCount, refreshGroupConversationIds } =
-    useAuth();
+  const {
+    user,
+    loading: authLoading,
+    isAdmin,
+    district,
+    refreshUnreadCount,
+    refreshGroupUnreadCount,
+    refreshGroupConversationIds,
+  } = useAuth();
+  const canSelectAllMembers = isAdmin || district === "목회자";
   const router = useRouter();
   const [conversations, setConversations] = useState([]);
   const [members, setMembers] = useState([]);
@@ -335,12 +343,27 @@ export default function MessagesPage() {
             className="mt-2 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
           />
 
-          <p className="mt-4 text-sm font-medium text-foreground/80">
-            참여할 사람 선택{" "}
-            {groupSelectedIds.length > 0 && (
-              <span className="text-brand-dark">· {groupSelectedIds.length}명 선택됨</span>
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-sm font-medium text-foreground/80">
+              참여할 사람 선택{" "}
+              {groupSelectedIds.length > 0 && (
+                <span className="text-brand-dark">· {groupSelectedIds.length}명 선택됨</span>
+              )}
+            </p>
+            {canSelectAllMembers && (
+              <button
+                type="button"
+                onClick={() =>
+                  setGroupSelectedIds(
+                    groupSelectedIds.length === members.length ? [] : members.map((m) => m.id)
+                  )
+                }
+                className="text-xs text-brand-dark underline"
+              >
+                {groupSelectedIds.length === members.length ? "교인 전체 해제" : "교인 전체 선택"}
+              </button>
             )}
-          </p>
+          </div>
           <MemberPicker members={members} selectedIds={groupSelectedIds} onToggle={toggleGroupSelected} />
 
           {groupSelectedIds.length > 0 && (

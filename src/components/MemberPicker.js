@@ -15,9 +15,25 @@ export default function MemberPicker({ members, selectedIds, onToggle }) {
       {[...SIGNUP_GROUP_OPTIONS, UNASSIGNED].map((district) => {
         const group = members.filter((m) => (m.district ?? UNASSIGNED) === district);
         if (group.length === 0) return null;
+        const allSelected = group.every((m) => selectedIds.includes(m.id));
         return (
           <div key={district} className="mt-3">
-            <p className="text-xs font-semibold text-brand-dark">{district}</p>
+            <p className="flex items-center gap-2 text-xs font-semibold text-brand-dark">
+              {district}
+              <button
+                type="button"
+                onClick={() => {
+                  group.forEach((m) => {
+                    const isSelected = selectedIds.includes(m.id);
+                    if (allSelected && isSelected) onToggle(m.id);
+                    else if (!allSelected && !isSelected) onToggle(m.id);
+                  });
+                }}
+                className="font-normal text-foreground/40 underline"
+              >
+                {allSelected ? "전체 해제" : "전체 선택"}
+              </button>
+            </p>
             <ul className="mt-1 flex flex-wrap gap-2">
               {group.map((m) => {
                 const checked = selectedIds.includes(m.id);
