@@ -12,7 +12,7 @@ import PushSubscribeButton from "@/components/PushSubscribeButton";
 
 const publicLinks = [
   { href: "/", label: "소개" },
-  { href: "/bulletin", label: "주보/소식" },
+  { href: "/bulletin", label: "주보" },
   { href: "/calendar", label: "교회일정" },
   { href: "/scripture", label: "성경" },
   { href: "/donate", label: "헌금안내" },
@@ -191,7 +191,7 @@ export default function NavBar() {
           </div>
         </div>
 
-        <nav className="mt-2 grid grid-cols-5 gap-x-1 gap-y-1 text-xs tracking-tight text-foreground/70">
+        <nav className="mt-2 grid grid-cols-5 gap-x-1 gap-y-1 text-sm tracking-tight text-foreground/70">
           {publicLinks.map((link) => (
             <NavLink key={link.href} href={link.href} plain className="text-center hover:text-brand-dark">
               {(pressed) => <ScaleLabel pressed={pressed}>{link.label}</ScaleLabel>}
