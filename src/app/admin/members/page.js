@@ -250,6 +250,7 @@ export default function AdminMembersPage() {
     : members;
 
   const unassignedCount = members.filter((m) => !m.district).length;
+  const onlineCount = members.filter((m) => onlineUserIds.has(m.id)).length;
 
   const groups = [...SIGNUP_GROUP_OPTIONS, UNASSIGNED]
     .map((name) => ({
@@ -277,6 +278,10 @@ export default function AdminMembersPage() {
         </span>
         <span>
           미배정회원 <strong className="font-semibold text-foreground">{unassignedCount}</strong>명
+        </span>
+        <span>
+          🟢 접속중 회원{" "}
+          <strong className="font-semibold text-foreground">{onlineCount}</strong>명
         </span>
       </div>
 
