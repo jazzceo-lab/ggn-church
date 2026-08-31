@@ -34,9 +34,15 @@ export default function NotificationPromptBanner({ onResolved }) {
     isPushSubscribed(user).then((subscribed) => {
       if (subscribed) {
         onResolved?.();
-      } else {
-        setVisible(true);
+        return;
       }
+      if (Notification.permission === "granted") {
+        // 권한은 이미 허용됐는데 구독만 끊어진 경우(브라우저 재설치, 구독 만료 등) —
+        // 다시 물어볼 필요 없이 조용히 복구한다.
+        subscribeToPush(user).finally(() => onResolved?.());
+        return;
+      }
+      setVisible(true);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
