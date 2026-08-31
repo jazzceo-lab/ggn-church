@@ -199,7 +199,7 @@ export default function NavBar() {
           ))}
         </nav>
 
-        <div className="mt-1 border-t border-black/5 pt-2 dark:border-white/10">
+        <div className="mt-[5px] border-t border-black/5 pt-2 dark:border-white/10">
           <p className="text-xs font-medium text-brand-dark">
             교인전용{!user && " · 로그인 후 이용"}
           </p>
