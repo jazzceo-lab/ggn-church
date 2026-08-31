@@ -76,6 +76,26 @@ Deno.serve(async (req) => {
       body: "📋 이번 주 주보가 올라왔어요",
       url: "/bulletin",
     };
+  } else if (table === "comments") {
+    // 내 글에 댓글이 달렸을 때 글쓴이에게만 알림(본인이 자기 글에 단 댓글은 제외).
+    const { data: post } = await supabase
+      .from("posts")
+      .select("user_id, title")
+      .eq("id", record.post_id)
+      .single();
+
+    if (!post || post.user_id === record.user_id) {
+      return new Response(JSON.stringify({ skipped: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    notification = {
+      title: "길가는교회",
+      body: `💬 ${record.author_name}님이 내 글에 댓글을 남겼어요: ${record.body}`,
+      url: "/board",
+    };
+    recipientIds = [post.user_id];
   } else if (table === "posts" && record.category === "suggestion") {
     // 교회건의는 비공개 게시판이라 토글 없이 관리자/목회자(pastor_reply 역할)에게만 무조건 발송.
     const { data: admins } = await supabase.from("profiles").select("id").eq("is_admin", true);
