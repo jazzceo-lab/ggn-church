@@ -354,12 +354,20 @@ export function AuthProvider({ children }) {
   }, [toast]);
 
   useEffect(() => {
-    if (!("setAppBadge" in navigator)) return;
     const total = unreadCount + groupUnreadCount;
     if (total > 0) {
-      navigator.setAppBadge(total).catch(() => {});
-    } else {
-      navigator.clearAppBadge().catch(() => {});
+      if ("setAppBadge" in navigator) navigator.setAppBadge(total).catch(() => {});
+      return;
+    }
+    if ("setAppBadge" in navigator) navigator.clearAppBadge().catch(() => {});
+    // 안드로이드 일부 런처는 앱 배지를 "알림창에 안 지워진 알림이 있는지"로도
+    // 판단해서, setAppBadge만 지워도 예전에 뜬 알림이 남아있으면 아이콘 점이
+    // 안 사라질 수 있다. 다 읽은 시점(총 안읽음 0)엔 남은 알림도 같이 지운다.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.ready
+        .then((reg) => reg.getNotifications())
+        .then((notifications) => notifications.forEach((n) => n.close()))
+        .catch(() => {});
     }
   }, [unreadCount, groupUnreadCount]);
 
