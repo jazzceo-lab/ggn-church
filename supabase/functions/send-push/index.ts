@@ -76,6 +76,19 @@ Deno.serve(async (req) => {
       body: "📋 이번 주 주보가 올라왔어요",
       url: "/bulletin",
     };
+  } else if (table === "popup_notices") {
+    // 공지는 팝업으로 바로 노출되는 성격상 긴급성이 있어, 알림 설정 토글 없이
+    // 구독한 회원 전체에게 발송한다(관리자가 비활성 처리한 이전 공지는 제외).
+    if (record.is_active === false) {
+      return new Response(JSON.stringify({ skipped: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    notification = {
+      title: "길가는교회",
+      body: record.title ? `📢 새 공지: ${record.title}` : "📢 새 공지가 올라왔어요",
+      url: "/",
+    };
   } else if (table === "comments") {
     // 내 글에 댓글이 달렸을 때 글쓴이에게만 알림(본인이 자기 글에 단 댓글은 제외).
     const { data: post } = await supabase
