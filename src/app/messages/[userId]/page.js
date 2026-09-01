@@ -341,7 +341,7 @@ export default function ConversationPage() {
       <div className="relative mt-4 flex-1 overflow-hidden rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-[0.14]"
+          className="pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-[0.12]"
           style={{ backgroundImage: "url('/images/logo-mark.jpg')", backgroundSize: "260px" }}
         />
         <div className="space-y-3">
