@@ -338,7 +338,13 @@ export default function ConversationPage() {
         <p className="mt-2 text-xs text-red-600">읽음 처리 실패: {readError}</p>
       )}
 
-      <div className="mt-4 flex-1 space-y-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
+      <div className="relative mt-4 flex-1 overflow-hidden rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10 bg-center bg-no-repeat opacity-[0.055]"
+          style={{ backgroundImage: "url('/images/logo-mark.jpg')", backgroundSize: "260px" }}
+        />
+        <div className="space-y-3">
         {loading && <p className="text-sm text-foreground/50">불러오는 중...</p>}
         {!loading && thread.length === 0 && (
           <p className="text-sm text-foreground/50">아직 나눈 채팅이 없어요. 먼저 인사해보세요!</p>
@@ -449,6 +455,7 @@ export default function ConversationPage() {
           );
         })}
         <div ref={bottomRef} />
+        </div>
       </div>
 
       {replyingTo && (
