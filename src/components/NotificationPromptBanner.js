@@ -25,12 +25,6 @@ export default function NotificationPromptBanner({ onResolved }) {
       return;
     }
 
-    const dismissedAt = Number(safeGetItem(DISMISS_KEY) || 0);
-    if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) {
-      onResolved?.();
-      return;
-    }
-
     isPushSubscribed(user).then((subscribed) => {
       if (subscribed) {
         onResolved?.();
@@ -38,17 +32,27 @@ export default function NotificationPromptBanner({ onResolved }) {
       }
       if (Notification.permission === "granted") {
         // 권한은 이미 허용됐는데 구독만 끊어진 경우(브라우저 재설치, 구독 만료 등) —
-        // 다시 물어볼 필요 없이 조용히 복구를 시도한다. 단, 복구 자체가 실패하면
-        // (예: 구독 생성 실패, DB 저장 실패) 조용히 넘어가지 않고 배너를 띄워서
-        // 사용자가 직접 "알림 켜기"를 눌러 재시도하고 실패 사유도 볼 수 있게 한다.
+        // 화면에 아무것도 띄우지 않는 조용한 복구라서, "배너 닫기" 쿨다운과 무관하게
+        // 항상 시도한다. 복구 자체가 실패하면(구독 생성 실패, DB 저장 실패 등) 그때는
+        // 사용자가 직접 볼 수 있게 배너를 띄운다(단, 이때는 닫기 쿨다운을 존중한다).
         subscribeToPush(user).then(({ error }) => {
-          if (error) {
-            console.error("알림 자동 재구독 실패:", error);
-            setVisible(true);
-          } else {
+          if (!error) {
             onResolved?.();
+            return;
+          }
+          console.error("알림 자동 재구독 실패:", error);
+          const dismissedAt = Number(safeGetItem(DISMISS_KEY) || 0);
+          if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) {
+            onResolved?.();
+          } else {
+            setVisible(true);
           }
         });
+        return;
+      }
+      const dismissedAt = Number(safeGetItem(DISMISS_KEY) || 0);
+      if (Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000) {
+        onResolved?.();
         return;
       }
       setVisible(true);
