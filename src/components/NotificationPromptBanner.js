@@ -38,8 +38,17 @@ export default function NotificationPromptBanner({ onResolved }) {
       }
       if (Notification.permission === "granted") {
         // 권한은 이미 허용됐는데 구독만 끊어진 경우(브라우저 재설치, 구독 만료 등) —
-        // 다시 물어볼 필요 없이 조용히 복구한다.
-        subscribeToPush(user).finally(() => onResolved?.());
+        // 다시 물어볼 필요 없이 조용히 복구를 시도한다. 단, 복구 자체가 실패하면
+        // (예: 구독 생성 실패, DB 저장 실패) 조용히 넘어가지 않고 배너를 띄워서
+        // 사용자가 직접 "알림 켜기"를 눌러 재시도하고 실패 사유도 볼 수 있게 한다.
+        subscribeToPush(user).then(({ error }) => {
+          if (error) {
+            console.error("알림 자동 재구독 실패:", error);
+            setVisible(true);
+          } else {
+            onResolved?.();
+          }
+        });
         return;
       }
       setVisible(true);
