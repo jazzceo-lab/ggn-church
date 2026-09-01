@@ -44,11 +44,20 @@ export default function PushSubscribeButton() {
           .eq("user_id", user.id)
           .eq("endpoint", sub.endpoint);
         if (deleteError) {
-          // 이 기기에서는 알림이 꺼지지만(아래 unsubscribe), 서버에 구독 정보가
-          // 남아있을 수 있어 최소한 콘솔에는 남긴다.
           console.error("푸시 구독 삭제 실패:", deleteError.message);
         }
-        await sub.unsubscribe();
+        // 브라우저 푸시 구독은 기기(엔드포인트) 단위라 계정별로 따로 없다.
+        // 같은 기기에서 다른 계정도 이 엔드포인트로 구독 중이면 여기서
+        // unsubscribe()해버리는 순간 그 계정의 알림까지 같이 끊긴다
+        // (한 폰에서 관리자 계정을 번갈아 로그인하는 경우가 실제로 있었음).
+        // 이 엔드포인트를 쓰는 다른 계정이 없을 때만 브라우저 구독도 정리한다.
+        const { count } = await supabase
+          .from("push_subscriptions")
+          .select("id", { count: "exact", head: true })
+          .eq("endpoint", sub.endpoint);
+        if (!count) {
+          await sub.unsubscribe();
+        }
       }
       setSubscribed(false);
     } catch (e) {
