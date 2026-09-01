@@ -71,7 +71,7 @@ export default function PushSubscribeButton() {
           : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
       }`}
     >
-      {subscribed ? "🔕" : "🔔"}
+      {subscribed ? "🔔" : "🔕"}
     </button>
   );
 }
