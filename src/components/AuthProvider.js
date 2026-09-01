@@ -100,7 +100,8 @@ export function AuthProvider({ children }) {
       .from("messages")
       .select("id", { count: "exact", head: true })
       .eq("recipient_id", u.id)
-      .is("read_at", null);
+      .is("read_at", null)
+      .is("deleted_at", null);
     setUnreadCount(count ?? 0);
   }
 

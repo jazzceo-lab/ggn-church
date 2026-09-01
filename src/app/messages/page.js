@@ -47,7 +47,7 @@ export default function MessagesPage() {
 
     const { data: msgs } = await supabase
       .from("messages")
-      .select("sender_id, recipient_id, body, created_at, read_at")
+      .select("sender_id, recipient_id, body, created_at, read_at, deleted_at")
       .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
       .order("created_at", { ascending: false });
 
@@ -78,7 +78,7 @@ export default function MessagesPage() {
           unread: false,
         });
       }
-      if (m.recipient_id === user.id && !m.read_at) {
+      if (m.recipient_id === user.id && !m.read_at && !m.deleted_at) {
         byPartner.get(partnerId).unread = true;
       }
     }
