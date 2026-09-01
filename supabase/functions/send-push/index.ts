@@ -89,6 +89,19 @@ Deno.serve(async (req) => {
       body: record.title ? `📢 새 공지: ${record.title}` : "📢 새 공지가 올라왔어요",
       url: "/",
     };
+  } else if (table === "profiles") {
+    // 신규 회원가입 안내: 실제 쪽지(messages)를 만들지 않고 관리자에게만 푸시로
+    // 직접 보낸다(쪽지로 만들면 신규 회원 본인도 그 대화방에서 볼 수 있게 되므로).
+    const { data: admins } = await supabase.from("profiles").select("id").eq("is_admin", true);
+    recipientIds = (admins ?? []).map((a) => a.id);
+    excludeUserId = record.id;
+    notification = {
+      title: "길가는교회",
+      body: `🎉 새 회원이 가입했어요: ${record.display_name || "이름 미입력"} (${record.email})${
+        record.district ? ` · 소속: ${record.district}` : ""
+      }`,
+      url: "/admin/members",
+    };
   } else if (table === "comments") {
     // 내 글에 댓글이 달렸을 때 글쓴이에게만 알림(본인이 자기 글에 단 댓글은 제외).
     const { data: post } = await supabase
