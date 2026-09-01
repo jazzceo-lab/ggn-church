@@ -11,6 +11,8 @@ const accounts = [
   { key: "building", title: "건축헌금", bank: "농협", number: "301-0141-2913-81" },
 ];
 
+const SHOW_CARD_PAYMENT_BANNER = false;
+
 // 은행 앱의 커스텀 스킴은 공식 문서가 없고, 크롬은 보안 정책상 BROWSABLE로 등록된
 // 액티비티만 웹링크로 실행을 허용해서 스킴을 정확히 몰라도 무조건 앱을 열 수는 없음.
 // 그래서 구글 플레이스토어의 해당 앱 페이지로 연결 - 이미 설치되어 있으면 "열기"
@@ -153,15 +155,18 @@ export default function DonatePage() {
         </p>
       </div>
 
-      <div className="mt-6 flex items-center gap-3 rounded-xl border border-black/10 bg-black/5 p-4 dark:border-white/10 dark:bg-white/5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/10 text-white/70 dark:bg-white/10">
-          💳
-        </span>
-        <span>
-          <span className="block text-sm font-medium text-foreground/50">신용카드 헌금 결제</span>
-          <span className="block text-xs text-foreground/40">오픈예정</span>
-        </span>
-      </div>
+      {/* 카드 결제 오픈 시점 다시 논의 후 노출 예정 - 코드는 남겨두고 렌더링만 끔 */}
+      {SHOW_CARD_PAYMENT_BANNER && (
+        <div className="mt-6 flex items-center gap-3 rounded-xl border border-black/10 bg-black/5 p-4 dark:border-white/10 dark:bg-white/5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-black/10 text-white/70 dark:bg-white/10">
+            💳
+          </span>
+          <span>
+            <span className="block text-sm font-medium text-foreground/50">신용카드 헌금 결제</span>
+            <span className="block text-xs text-foreground/40">오픈예정</span>
+          </span>
+        </div>
+      )}
 
       {receiptOpen ? (
         <Link
