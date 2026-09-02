@@ -40,7 +40,7 @@ const memberLinks = [
   { href: "/media", label: "설교·찬양" },
   { href: "/hymns", label: "찬송가" },
   { href: "/board", label: "공지/게시판", countKey: "board" },
-  { href: "/messages", label: "GGN톡", countKey: "messages" },
+  { href: "/messages", label: "GGN톡", countKey: "messages", icon: "💬" },
   { href: "/account", label: "회원정보" },
 ];
 
@@ -214,7 +214,10 @@ export default function NavBar() {
               >
                 {(pressed) => (
                   <>
-                    <ScaleLabel pressed={pressed}>{link.label}</ScaleLabel>
+                    <ScaleLabel pressed={pressed}>
+                      {link.icon && <span className="mr-1">{link.icon}</span>}
+                      {link.label}
+                    </ScaleLabel>
                     {link.countKey && user && counts[link.countKey] > 0 && (
                       <span className="ml-1 rounded-full bg-brand px-1.5 py-0.5 text-[10px] font-semibold text-white">
                         {counts[link.countKey]}
