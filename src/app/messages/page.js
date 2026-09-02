@@ -41,9 +41,17 @@ export default function MessagesPage() {
   const [groupBody, setGroupBody] = useState("");
   const [creatingGroup, setCreatingGroup] = useState(false);
   const [groupError, setGroupError] = useState("");
+  const [pinnedKeys, setPinnedKeys] = useState(new Set());
 
   async function load() {
     setLoading(true);
+
+    const { data: pins } = await supabase
+      .from("pinned_conversations")
+      .select("conversation_type, conversation_key")
+      .eq("user_id", user.id);
+    const pinnedSet = new Set((pins ?? []).map((p) => `${p.conversation_type}:${p.conversation_key}`));
+    setPinnedKeys(pinnedSet);
 
     const { data: msgs } = await supabase
       .from("messages")
@@ -70,6 +78,8 @@ export default function MessagesPage() {
           key: `partner-${partnerId}`,
           href: `/messages/${partnerId}`,
           partnerId,
+          pinType: "dm",
+          pinKey: partnerId,
           name: nameOf(partnerId),
           title: titleOf(partnerId),
           avatarPath: avatarOf(partnerId),
@@ -131,6 +141,8 @@ export default function MessagesPage() {
           type: "group",
           key: `group-${conv.id}`,
           href: `/messages/group/${conv.id}`,
+          pinType: "group",
+          pinKey: conv.id,
           title,
           participantCount: otherIds.length + 1,
           lastBody: last.body,
@@ -141,6 +153,9 @@ export default function MessagesPage() {
     }
 
     const merged = [...Array.from(byPartner.values()), ...groupItems].sort((a, b) => {
+      const aPinned = pinnedSet.has(`${a.pinType}:${a.pinKey}`);
+      const bPinned = pinnedSet.has(`${b.pinType}:${b.pinKey}`);
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
       if (a.unread !== b.unread) return a.unread ? -1 : 1;
       return new Date(b.lastAt) - new Date(a.lastAt);
     });
@@ -162,6 +177,35 @@ export default function MessagesPage() {
 
   function toggleGroupSelected(id) {
     setGroupSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  async function togglePin(pinType, pinKey) {
+    const mapKey = `${pinType}:${pinKey}`;
+    const isPinned = pinnedKeys.has(mapKey);
+
+    if (isPinned) {
+      await supabase
+        .from("pinned_conversations")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("conversation_type", pinType)
+        .eq("conversation_key", pinKey);
+    } else {
+      await supabase
+        .from("pinned_conversations")
+        .upsert(
+          { user_id: user.id, conversation_type: pinType, conversation_key: pinKey },
+          { onConflict: "user_id,conversation_type,conversation_key" }
+        );
+    }
+
+    setPinnedKeys((prev) => {
+      const next = new Set(prev);
+      if (isPinned) next.delete(mapKey);
+      else next.add(mapKey);
+      return next;
+    });
+    load();
   }
 
   async function handleDeleteConversation(partnerId, partnerName) {
@@ -444,6 +488,7 @@ export default function MessagesPage() {
               )}
               <span className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 font-medium text-foreground">
+                  {pinnedKeys.has(`${c.pinType}:${c.pinKey}`) && <span aria-hidden>📌</span>}
                   {c.unread && (
                     <span
                       className="h-3 w-3 shrink-0 rounded-full bg-[#c6ff00] shadow-[0_0_5px_1px_rgba(198,255,0,0.7)]"
@@ -474,14 +519,28 @@ export default function MessagesPage() {
                 </p>
               </span>
             </Link>
-            {c.type === "1:1" && (
+            <div className="flex shrink-0 items-center gap-2">
               <button
-                onClick={() => handleDeleteConversation(c.partnerId, c.name)}
-                className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+                onClick={() => togglePin(c.pinType, c.pinKey)}
+                aria-label={pinnedKeys.has(`${c.pinType}:${c.pinKey}`) ? "고정 해제" : "상단 고정"}
+                title={pinnedKeys.has(`${c.pinType}:${c.pinKey}`) ? "고정 해제" : "상단 고정"}
+                className={`text-sm ${
+                  pinnedKeys.has(`${c.pinType}:${c.pinKey}`)
+                    ? "text-brand-dark"
+                    : "text-foreground/30 hover:text-foreground/60"
+                }`}
               >
-                삭제
+                📌
               </button>
-            )}
+              {c.type === "1:1" && (
+                <button
+                  onClick={() => handleDeleteConversation(c.partnerId, c.name)}
+                  className="text-xs text-foreground/40 hover:text-red-600"
+                >
+                  삭제
+                </button>
+              )}
+            </div>
           </li>
         ))}
       </ul>
