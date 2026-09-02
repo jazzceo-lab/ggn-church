@@ -35,6 +35,23 @@ function PowerIcon({ className }) {
   );
 }
 
+function PersonIcon({ className }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c1.4-4 4-6 7.5-6s6.1 2 7.5 6" />
+    </svg>
+  );
+}
+
 const memberLinks = [
   { href: "/teams", label: "제직명단" },
   { href: "/media", label: "설교·찬양" },
@@ -159,6 +176,14 @@ export default function NavBar() {
                     관리자
                   </span>
                 )}
+                <Link
+                  href="/account"
+                  aria-label="회원정보"
+                  title="회원정보"
+                  className="flex items-center justify-center rounded-full border border-black/10 p-2 text-foreground/60 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                >
+                  <PersonIcon className="h-4 w-4" />
+                </Link>
                 <button
                   onClick={handleLogout}
                   aria-label="로그아웃"
