@@ -15,7 +15,7 @@ const TITLE_OPTIONS = ["목사", "장로", "권사"];
 const BOARD_DISTRICTS = [...DISTRICT_NAMES, "청년부"];
 
 const ROLE_OPTIONS = [
-  { key: "pastor_reply", label: "교회건의 답변 권한" },
+  { key: "pastor_reply", label: "교회제안 답변 권한" },
   { key: "media_manager", label: "찬양팀 영상 관리 권한" },
   { key: "district_leader", label: "구역장 (구역공지 권한)", scoped: true },
 ];

@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     ];
     notification = {
       title: "길가는교회",
-      body: `📌 교회건의에 새 글이 올라왔어요: ${record.title}`,
+      body: `📌 교회제안에 새 글이 올라왔어요: ${record.title}`,
       url: "/board?category=suggestion",
     };
     excludeUserId = record.user_id;

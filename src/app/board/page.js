@@ -19,7 +19,7 @@ const CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
-  { key: "suggestion", label: "교회건의" },
+  { key: "suggestion", label: "교회제안" },
 ];
 
 const DEFAULT_CATEGORY = "help";
