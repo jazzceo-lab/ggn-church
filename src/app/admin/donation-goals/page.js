@@ -188,7 +188,7 @@ export default function AdminDonationGoalsPage() {
   if (!authLoading && !isAdmin) {
     return (
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
-        <h1 className="font-serif text-2xl font-bold text-foreground">헌금 목표 관리</h1>
+        <h1 className="font-serif text-2xl font-bold text-foreground">헌금목표</h1>
         <p className="mt-3 text-sm text-foreground/60">관리자만 볼 수 있는 페이지예요.</p>
         {!user && (
           <Link href="/login" className="mt-6 inline-block text-brand-dark underline">
