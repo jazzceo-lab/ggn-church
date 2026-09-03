@@ -30,6 +30,7 @@ const BOARD_DISTRICTS = [...DISTRICT_NAMES, "청년부"];
 
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 5;
 
 export default function BoardPage() {
   const {
@@ -59,7 +60,7 @@ export default function BoardPage() {
   const [showCompose, setShowCompose] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -111,10 +112,25 @@ export default function BoardPage() {
       loadComments(data.map((p) => p.id));
       loadLikes(data.map((p) => p.id));
       loadAvatarsFor(data.map((p) => p.user_id));
+      loadAttachments(data.map((p) => p.id));
     } else {
       setComments({});
       setLikes({});
     }
+  }
+
+  async function loadAttachments(postIds) {
+    const { data, error } = await supabase
+      .from("post_attachments")
+      .select("post_id, url, name")
+      .in("post_id", postIds);
+    if (error) return;
+
+    const grouped = {};
+    for (const a of data) {
+      (grouped[a.post_id] ??= []).push({ url: a.url, name: a.name });
+    }
+    setPosts((prev) => prev.map((p) => ({ ...p, attachments: grouped[p.id] ?? [] })));
   }
 
   async function loadAvatarsFor(userIds) {
@@ -281,15 +297,29 @@ export default function BoardPage() {
   }, [category, user]);
 
   function handleFileChange(e) {
-    const f = e.target.files?.[0] ?? null;
-    if (f && f.size > MAX_FILE_SIZE) {
-      setError("파일은 10MB 이하만 첨부할 수 있어요.");
-      e.target.value = "";
-      setFile(null);
+    const picked = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (picked.length === 0) return;
+
+    const oversized = picked.some((f) => f.size > MAX_FILE_SIZE);
+    if (oversized) {
+      setError("파일은 하나당 10MB 이하만 첨부할 수 있어요.");
       return;
     }
-    setError("");
-    setFile(f);
+
+    setFiles((prev) => {
+      const merged = [...prev, ...picked].slice(0, MAX_FILES);
+      if (prev.length + picked.length > MAX_FILES) {
+        setError(`첨부파일은 최대 ${MAX_FILES}개까지 가능해요.`);
+      } else {
+        setError("");
+      }
+      return merged;
+    });
+  }
+
+  function removeFile(index) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleSubmit(e) {
@@ -297,13 +327,9 @@ export default function BoardPage() {
     setError("");
     setSubmitting(true);
 
-    let attachmentUrl = null;
-    let attachmentName = null;
-
-    if (file) {
-      const uploadFile = file.type.startsWith("image/")
-        ? await resizeImageFile(file, { maxSize: 1600 })
-        : file;
+    const uploaded = [];
+    for (const f of files) {
+      const uploadFile = f.type.startsWith("image/") ? await resizeImageFile(f, { maxSize: 1600 }) : f;
       const path = safeStoragePath(user.id, uploadFile.name);
       const { error: uploadError } = await uploadFileWithRetry("attachments", path, uploadFile);
 
@@ -312,31 +338,48 @@ export default function BoardPage() {
         setError("파일 업로드에 실패했어요: " + uploadError.message);
         return;
       }
-      attachmentUrl = supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl;
-      attachmentName = file.name;
+      uploaded.push({
+        url: supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl,
+        name: f.name,
+      });
     }
 
     const authorName = displayName || user.email;
-    const { error } = await supabase.from("posts").insert({
-      title,
-      body,
-      user_id: user.id,
-      author_name: authorName,
-      author_title: memberTitle || null,
-      category,
-      district: activeDistrict,
-      attachment_url: attachmentUrl,
-      attachment_name: attachmentName,
-    });
+    const { data: newPost, error } = await supabase
+      .from("posts")
+      .insert({
+        title,
+        body,
+        user_id: user.id,
+        author_name: authorName,
+        author_title: memberTitle || null,
+        category,
+        district: activeDistrict,
+      })
+      .select("id")
+      .single();
 
-    setSubmitting(false);
     if (error) {
+      setSubmitting(false);
       setError("글 등록에 실패했어요: " + error.message);
       return;
     }
+
+    if (uploaded.length > 0) {
+      const { error: attachError } = await supabase
+        .from("post_attachments")
+        .insert(uploaded.map((u) => ({ post_id: newPost.id, url: u.url, name: u.name })));
+      if (attachError) {
+        setSubmitting(false);
+        setError("글은 등록됐지만 첨부파일 저장에 실패했어요: " + attachError.message);
+        return;
+      }
+    }
+
+    setSubmitting(false);
     setTitle("");
     setBody("");
-    setFile(null);
+    setFiles([]);
     setShowCompose(false);
     loadPosts(category, activeDistrict);
   }
@@ -521,14 +564,31 @@ export default function BoardPage() {
               className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
             />
             <div>
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
+              <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-foreground/60">
                 <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
                   📎 파일 첨부
                 </span>
-                <input type="file" onChange={handleFileChange} className="hidden" />
-                {file && <span className="text-foreground/70">{file.name}</span>}
+                <input type="file" multiple onChange={handleFileChange} className="hidden" />
               </label>
-              <p className="mt-1 text-xs text-foreground/40">최대 10MB</p>
+              <p className="mt-1 text-xs text-foreground/40">
+                파일당 최대 10MB, 최대 {MAX_FILES}개까지 첨부할 수 있어요.
+              </p>
+              {files.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {files.map((f, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm text-foreground/70">
+                      <span className="truncate">{f.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(i)}
+                        className="shrink-0 text-foreground/40 hover:text-red-600"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
             <button
@@ -623,31 +683,38 @@ export default function BoardPage() {
             ) : (
               <p className="mt-1 text-sm whitespace-pre-line text-foreground/70">{post.body}</p>
             )}
-            {post.attachment_url && isImageAttachment(post.attachment_name) ? (
-              <a
-                href={post.attachment_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 block w-fit"
-              >
-                <img
-                  src={post.attachment_url}
-                  alt={post.attachment_name}
-                  className="max-h-64 max-w-full rounded-lg border border-black/10 object-contain dark:border-white/10"
-                />
-              </a>
-            ) : (
-              post.attachment_url && (
-                <a
-                  href={post.attachment_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center gap-1 text-sm text-brand-dark underline"
-                >
-                  📎 {post.attachment_name}
-                </a>
-              )
-            )}
+            {(() => {
+              const legacy = post.attachment_url
+                ? [{ url: post.attachment_url, name: post.attachment_name }]
+                : [];
+              const allAttachments = [...legacy, ...(post.attachments ?? [])];
+              if (allAttachments.length === 0) return null;
+              return (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {allAttachments.map((a, i) =>
+                    isImageAttachment(a.name) ? (
+                      <a key={i} href={a.url} target="_blank" rel="noopener noreferrer" className="block w-fit">
+                        <img
+                          src={a.url}
+                          alt={a.name}
+                          className="max-h-64 max-w-full rounded-lg border border-black/10 object-contain dark:border-white/10"
+                        />
+                      </a>
+                    ) : (
+                      <a
+                        key={i}
+                        href={a.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-brand-dark underline"
+                      >
+                        📎 {a.name}
+                      </a>
+                    )
+                  )}
+                </div>
+              );
+            })()}
             <p className="mt-2 flex items-center gap-1.5 text-xs text-foreground/50">
               {avatarUrl(avatars[post.user_id]) ? (
                 <img
