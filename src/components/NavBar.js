@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,9 +9,6 @@ import { supabase } from "@/lib/supabaseClient";
 import FontSizeControl from "@/components/FontSizeControl";
 import ThemeToggle from "@/components/ThemeToggle";
 import PushSubscribeButton from "@/components/PushSubscribeButton";
-import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
-
-const MEMBER_MENU_COLLAPSED_KEY = "memberMenuCollapsed";
 
 const publicLinks = [
   { href: "/", label: "소개" },
@@ -160,15 +157,8 @@ export default function NavBar() {
   const router = useRouter();
   const [memberMenuOpen, setMemberMenuOpen] = useState(true);
 
-  useEffect(() => {
-    const saved = safeGetItem(MEMBER_MENU_COLLAPSED_KEY);
-    if (saved === "1") setMemberMenuOpen(false);
-  }, []);
-
   function toggleMemberMenu() {
-    const next = !memberMenuOpen;
-    setMemberMenuOpen(next);
-    safeSetItem(MEMBER_MENU_COLLAPSED_KEY, next ? "0" : "1");
+    setMemberMenuOpen((open) => !open);
   }
 
   async function handleLogout() {
