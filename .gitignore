@@ -41,3 +41,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 supabase/.temp/
+
+# 개인용 클로드코드 자동 실행 스크립트 (프로젝트 코드와 무관)
+autoaccept.ps1
+inner_claude.bat
+run_claude_auto.bat
