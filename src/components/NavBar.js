@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,9 @@ import { supabase } from "@/lib/supabaseClient";
 import FontSizeControl from "@/components/FontSizeControl";
 import ThemeToggle from "@/components/ThemeToggle";
 import PushSubscribeButton from "@/components/PushSubscribeButton";
+import { safeGetItem, safeSetItem } from "@/lib/safeStorage";
+
+const MEMBER_MENU_COLLAPSED_KEY = "memberMenuCollapsed";
 
 const publicLinks = [
   { href: "/", label: "소개" },
@@ -31,6 +34,22 @@ function PowerIcon({ className }) {
     >
       <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
       <line x1="12" y1="2" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ className }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M6 9l6 6 6-6" />
     </svg>
   );
 }
@@ -139,6 +158,18 @@ export default function NavBar() {
   const { user, loading, isAdmin, unreadCount, boardNewCount, groupUnreadCount } = useAuth();
   const counts = { messages: unreadCount + groupUnreadCount, board: boardNewCount };
   const router = useRouter();
+  const [memberMenuOpen, setMemberMenuOpen] = useState(true);
+
+  useEffect(() => {
+    const saved = safeGetItem(MEMBER_MENU_COLLAPSED_KEY);
+    if (saved === "1") setMemberMenuOpen(false);
+  }, []);
+
+  function toggleMemberMenu() {
+    const next = !memberMenuOpen;
+    setMemberMenuOpen(next);
+    safeSetItem(MEMBER_MENU_COLLAPSED_KEY, next ? "0" : "1");
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -225,9 +256,25 @@ export default function NavBar() {
         </nav>
 
         <div className="mt-[5px] border-t border-black/5 pt-2 dark:border-white/10">
-          <p className="text-xs font-medium text-brand-dark">
-            교인전용{!user && " · 로그인 후 이용"}
-          </p>
+          <button
+            type="button"
+            onClick={toggleMemberMenu}
+            aria-expanded={memberMenuOpen}
+            className="flex items-center gap-1.5 text-xs font-medium text-brand-dark"
+          >
+            <span>
+              교인전용{!user && " · 로그인 후 이용"}
+            </span>
+            <span className="flex items-center gap-0.5 rounded-full border border-brand-dark/30 bg-brand-tint px-1.5 py-0.5 text-[10px] font-semibold">
+              {memberMenuOpen ? "접기" : "펼치기"}
+              <ChevronIcon
+                className={`h-3 w-3 shrink-0 transition-transform duration-200 ${
+                  memberMenuOpen ? "rotate-180" : "rotate-0"
+                }`}
+              />
+            </span>
+          </button>
+          {memberMenuOpen && (
           <nav className="mt-1 grid grid-cols-3 gap-x-6 gap-y-2 text-sm">
             {memberLinks.map((link) => (
               <NavLink
@@ -273,6 +320,7 @@ export default function NavBar() {
               </NavLink>
             )}
           </nav>
+          )}
         </div>
       </div>
     </header>
