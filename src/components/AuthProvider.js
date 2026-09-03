@@ -3,26 +3,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-
-// 관리자 회원관리 화면에 "지금 위치"로 보여줄 사람이 읽는 이름.
-// 세부 게시판 탭(구역/기도/나눔 등)까지는 URL에 안 남아있어서 페이지 단위까지만 표시.
-function locationLabel(path) {
-  if (!path) return null;
-  if (path === "/") return "홈";
-  if (path.startsWith("/board")) return "공지/게시판";
-  if (path.startsWith("/messages")) return "GGN톡";
-  if (path.startsWith("/bulletin")) return "주보";
-  if (path.startsWith("/calendar")) return "교회일정";
-  if (path.startsWith("/scripture")) return "성경";
-  if (path.startsWith("/donate")) return "헌금안내";
-  if (path.startsWith("/teams")) return "제직명단";
-  if (path.startsWith("/media")) return "설교·찬양";
-  if (path.startsWith("/hymns")) return "찬송가";
-  if (path.startsWith("/account")) return "회원정보";
-  if (path.startsWith("/admin")) return "관리자 화면";
-  if (path.startsWith("/login") || path.startsWith("/signup")) return "로그인/가입";
-  return path;
-}
+import { pathLabel } from "@/lib/pageLabels";
 
 const AuthContext = createContext({
   user: null,
@@ -367,7 +348,7 @@ export function AuthProvider({ children }) {
 
     channel.subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
-        await channel.track({ online_at: new Date().toISOString(), location: locationLabel(pathname) });
+        await channel.track({ online_at: new Date().toISOString(), location: pathLabel(pathname) });
       }
     });
 
@@ -380,7 +361,13 @@ export function AuthProvider({ children }) {
   // 페이지를 이동할 때마다(채널을 다시 만들지 않고) 위치 정보만 갱신한다.
   useEffect(() => {
     if (!user || !presenceChannelRef.current) return;
-    presenceChannelRef.current.track({ online_at: new Date().toISOString(), location: locationLabel(pathname) });
+    presenceChannelRef.current.track({ online_at: new Date().toISOString(), location: pathLabel(pathname) });
+  }, [pathname, user]);
+
+  // 방문 통계: 게시판은 카테고리까지 자체적으로 더 자세히 기록하므로 여기서는 제외.
+  useEffect(() => {
+    if (!user || !pathname || pathname.startsWith("/board") || pathname.startsWith("/admin")) return;
+    supabase.from("page_views").insert({ user_id: user.id, path: pathname }).then(() => {});
   }, [pathname, user]);
 
   useEffect(() => {

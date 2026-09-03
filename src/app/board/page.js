@@ -274,6 +274,12 @@ export default function BoardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 방문 통계: 어느 게시판 카테고리를 많이 보는지 관리자가 파악할 수 있도록 기록.
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("page_views").insert({ user_id: user.id, path: "/board", detail: category }).then(() => {});
+  }, [category, user]);
+
   function handleFileChange(e) {
     const f = e.target.files?.[0] ?? null;
     if (f && f.size > MAX_FILE_SIZE) {
