@@ -108,7 +108,7 @@ export default function AdminNoticesPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">공지 관리</h1>
       <p className="mt-2 text-sm text-foreground/50">
         앱을 처음 열었을 때 뜨는 팝업 공지를 등록해요. 활성화된 공지 1개만 팝업으로 떠요.

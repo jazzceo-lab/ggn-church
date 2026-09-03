@@ -99,7 +99,7 @@ export default function AdminStatsPage() {
   const boardTotal = boardRows.reduce((sum, r) => sum + r.count, 0);
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">방문 통계</h1>
       <p className="mt-2 text-sm text-foreground/50">
         로그인한 회원의 페이지 방문을 기록해서 집계해요(관리자 화면은 집계에서 제외).

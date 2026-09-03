@@ -200,7 +200,7 @@ export default function AdminDonationGoalsPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">헌금 목표 관리</h1>
       <p className="mt-2 text-sm text-foreground/50">
         목표 금액을 설정하고, 매주 들어온 헌금액을 입력하면 헌금안내 페이지의 온도계에 자동 반영돼요.

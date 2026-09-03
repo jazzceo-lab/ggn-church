@@ -88,7 +88,7 @@ export default function AdminReceiptsPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">기부금영수증 신청 목록</h1>
       <p className="mt-2 text-sm text-foreground/50">교인들이 신청한 기부금영수증 내역이에요.</p>
 

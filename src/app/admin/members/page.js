@@ -266,7 +266,7 @@ export default function AdminMembersPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">회원 관리</h1>
       <p className="mt-2 text-sm text-foreground/50">가입한 교인 목록입니다.</p>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground/60">
