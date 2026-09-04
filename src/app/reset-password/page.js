@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwordPolicy";
+import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -49,12 +51,13 @@ export default function ResetPasswordPage() {
           <input
             type="password"
             required
-            minLength={6}
+            minLength={MIN_PASSWORD_LENGTH}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="6자 이상"
+            placeholder={`${MIN_PASSWORD_LENGTH}자 이상`}
             className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
           />
+          <PasswordStrengthMeter password={password} />
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

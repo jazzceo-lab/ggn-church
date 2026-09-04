@@ -9,6 +9,8 @@ import { safeStoragePath } from "@/lib/storagePath";
 import { avatarUrl } from "@/lib/avatar";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { resizeImageFile } from "@/lib/resizeImage";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwordPolicy";
+import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -173,8 +175,8 @@ export default function AccountPage() {
     setPwError("");
     setPwSuccess(false);
 
-    if (newPassword.length < 6) {
-      setPwError("비밀번호는 6자 이상이어야 해요.");
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      setPwError(`비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 해요.`);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -403,9 +405,10 @@ export default function AccountPage() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="6자 이상"
+              placeholder={`${MIN_PASSWORD_LENGTH}자 이상`}
               className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
             />
+            <PasswordStrengthMeter password={newPassword} />
           </div>
           <div>
             <label className="block text-sm text-foreground/60">새 비밀번호 확인</label>

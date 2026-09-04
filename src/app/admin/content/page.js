@@ -66,6 +66,9 @@ function BulletinManager() {
   const [form, setForm] = useState(emptyBulletinForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [parseFiles, setParseFiles] = useState([]);
+  const [parsing, setParsing] = useState(false);
+  const [parseError, setParseError] = useState("");
 
   async function load() {
     setLoading(true);
@@ -107,7 +110,64 @@ function BulletinManager() {
   function cancelEdit() {
     setEditingId(null);
     setForm(emptyBulletinForm);
+    setParseFiles([]);
+    setParseError("");
     setError("");
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const [, data] = reader.result.split(",");
+        resolve({ mediaType: file.type, data });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 사진 속 텍스트가 있는 항목만 결과에 채워서 돌아오니, 값이 있는 필드만 폼에 반영하고
+  // 나머지(예: 표어·기도제목처럼 이 사진에는 안 나온 항목)는 이미 입력된 값을 그대로 둔다.
+  async function handleAutoFill() {
+    if (parseFiles.length === 0) return;
+    setParsing(true);
+    setParseError("");
+    try {
+      const images = await Promise.all(parseFiles.map(fileToBase64));
+      const { data: sessionData } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/parse-bulletin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionData.session?.access_token}`,
+        },
+        body: JSON.stringify({ images }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setParseError(data.error ?? "AI 처리에 실패했어요.");
+        setParsing(false);
+        return;
+      }
+      const r = data.result;
+      setForm((f) => ({
+        ...f,
+        issue: r.issue || f.issue,
+        bulletin_date: r.bulletin_date || f.bulletin_date,
+        year: r.theme_year || f.year,
+        verse: r.theme_verse || f.verse,
+        goals: r.goals?.length ? arrayToLines(r.goals) : f.goals,
+        prayers: r.prayers?.length ? arrayToLines(r.prayers) : f.prayers,
+        order: r.order?.length ? arrayToPairs(r.order.map((o) => [o.label, o.detail])) : f.order,
+        news: r.news?.length ? arrayToLines(r.news) : f.news,
+        staff: r.staff?.length ? arrayToPairs(r.staff.map((s) => [s.role, s.names])) : f.staff,
+      }));
+      setParseFiles([]);
+    } catch (err) {
+      setParseError("AI 처리에 실패했어요: " + err.message);
+    }
+    setParsing(false);
   }
 
   async function handleSave() {
@@ -176,6 +236,38 @@ function BulletinManager() {
           <p className="font-serif font-semibold text-foreground">
             {editingId === "new" ? "새 주보" : "주보 수정"}
           </p>
+
+          <div className="space-y-2 rounded-lg border border-brand-dark/20 bg-brand-tint/40 p-4 dark:border-brand/20">
+            <p className="text-sm font-medium text-brand-dark">📷 사진으로 자동 채우기 (AI)</p>
+            <p className="text-xs text-foreground/50">
+              예배순서·교회소식이 나온 주보 사진을 올리면 AI가 읽어서 아래 항목을 채워줘요. 채운 뒤에는
+              꼭 내용을 확인하고 필요한 부분만 고쳐주세요.
+            </p>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
+              <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                🖼️ 사진 선택 (여러 장 가능)
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => setParseFiles(Array.from(e.target.files ?? []))}
+                className="hidden"
+              />
+            </label>
+            {parseFiles.length > 0 && (
+              <p className="text-xs text-foreground/70">{parseFiles.map((f) => f.name).join(", ")}</p>
+            )}
+            {parseError && <p className="text-sm text-red-600">{parseError}</p>}
+            <button
+              onClick={handleAutoFill}
+              disabled={parsing || parseFiles.length === 0}
+              className="rounded-full bg-brand-dark px-4 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {parsing ? "AI가 읽는 중..." : "자동 채우기"}
+            </button>
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-xs text-foreground/60">호수 (예: 27권 35호)</label>
