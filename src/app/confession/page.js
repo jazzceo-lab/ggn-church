@@ -25,7 +25,7 @@ const STANZAS = [
 export default function ConfessionPage() {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
-      <div className="border-b border-black/5 bg-background px-4 py-3 dark:border-white/10">
+      <div className="border-b border-black/5 bg-background px-4 py-2 dark:border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
@@ -46,19 +46,19 @@ export default function ConfessionPage() {
             ← 되돌아가기
           </Link>
         </div>
-        <p className="mt-2 text-sm font-medium text-foreground">새번역 · 사도신경</p>
+        <p className="mt-1 text-sm font-medium text-foreground">새번역 · 사도신경</p>
       </div>
 
-      <div className="flex-1 overflow-auto px-6 py-6">
-        <div className="mx-auto max-w-lg space-y-5 text-lg leading-8 text-foreground/90">
+      <div className="flex-1 overflow-auto px-6 pt-2 pb-6">
+        <div className="mx-auto max-w-lg space-y-2.5 text-base leading-6 text-foreground/90">
           {STANZAS.map((stanza, i) => (
-            <div key={i} className="space-y-1">
+            <div key={i} className="space-y-0.5">
               {stanza.map((line, j) => (
                 <p key={j}>{line}</p>
               ))}
             </div>
           ))}
-          <p className="pt-2 font-semibold text-brand-dark">아멘</p>
+          <p className="pt-1 font-semibold text-brand-dark">아멘</p>
         </div>
       </div>
     </div>
