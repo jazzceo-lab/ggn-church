@@ -204,24 +204,18 @@ function BulletinManager() {
   return (
     <div>
       <p className="text-sm text-foreground/50">
-        가장 최근 날짜의 주보가 &lsquo;주보&rsquo; 페이지 맨 위에 자동으로 표시돼요. 예배순서·섬김이는
-        보통 매주 비슷하니 &ldquo;최근 주보 복사해서 새로 만들기&rdquo;로 시작하면 편해요.
+        가장 최근 날짜의 주보가 &lsquo;주보&rsquo; 페이지 맨 위에 자동으로 표시돼요. &ldquo;새 주보
+        만들기&rdquo;를 누르면 표어·기도제목·섬김이처럼 매주 비슷한 항목은 최근 주보에서 그대로
+        가져와서 시작해요.
       </p>
 
       {!editingId && (
-        <div className="mt-4 flex gap-2">
+        <div className="mt-4">
           <button
-            onClick={() => startNew(true)}
-            disabled={bulletins.length === 0}
-            className="rounded-full bg-brand px-4 py-2 text-sm text-white hover:bg-brand-dark disabled:opacity-50"
+            onClick={() => startNew(bulletins.length > 0)}
+            className="rounded-full bg-brand px-4 py-2 text-sm text-white hover:bg-brand-dark"
           >
-            최근 주보 복사해서 새로 만들기
-          </button>
-          <button
-            onClick={() => startNew(false)}
-            className="rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-          >
-            빈 주보 새로 만들기
+            새 주보 만들기
           </button>
         </div>
       )}
@@ -236,8 +230,8 @@ function BulletinManager() {
             <p className="text-sm font-medium text-brand-dark">📷 사진으로 자동 채우기 (AI)</p>
             <p className="text-xs text-foreground/50">
               표지 사진(호수·날짜)과 예배순서·교회소식이 나온 사진, 두 장을 함께 올리면 AI가 읽어서
-              채워줘요. 표어·기도제목·섬김이는 위 &ldquo;최근 주보 복사해서 새로 만들기&rdquo;로 이미
-              채워졌다면 그대로 둬요. 채운 뒤에는 꼭 내용을 확인하고 필요한 부분만 고쳐주세요.
+              채워줘요. 표어·기도제목·섬김이는 최근 주보에서 이미 채워져 있으니 그대로 둬요. 채운
+              뒤에는 꼭 내용을 확인하고 필요한 부분만 고쳐주세요.
             </p>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
               <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
