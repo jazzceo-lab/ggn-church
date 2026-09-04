@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import CrossBackground from "@/components/CrossBackground";
 
 export default function GyodokmunPage() {
   const [number, setNumber] = useState(null);
@@ -31,7 +32,9 @@ export default function GyodokmunPage() {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
-      <div className="border-b border-black/5 bg-background px-4 py-3 dark:border-white/10">
+      <CrossBackground />
+
+      <div className="relative border-b border-black/5 bg-background px-4 py-3 dark:border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
@@ -59,7 +62,7 @@ export default function GyodokmunPage() {
         )}
       </div>
 
-      <div className="flex-1 overflow-auto px-6 py-6">
+      <div className="relative flex-1 overflow-auto px-6 py-6">
         {!loaded ? (
           <p className="text-sm text-foreground/50">불러오는 중...</p>
         ) : !entry ? (

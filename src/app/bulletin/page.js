@@ -41,6 +41,31 @@ function formatKoreanDate(iso) {
   return `${y}. ${m}. ${d}`;
 }
 
+// 기도제목 카드에만 쓰는 오솔길 일러스트 배경. 사진 대신 앱 색상만으로 그려서
+// 화면 톤과 항상 어울리고 글씨 대비에도 영향이 없다.
+function PrayerPathBackground() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMax slice" className="h-full w-full">
+        <circle cx="200" cy="18" r="70" className="fill-[var(--brand-tint)]" />
+        <polygon points="150,260 250,260 214,10 186,10" className="fill-[var(--brand)] opacity-[0.14]" />
+        <polygon points="40,120 62,120 51,88" className="fill-[var(--brand-dark)] opacity-10" />
+        <polygon points="60,132 86,132 73,96" className="fill-[var(--brand-dark)] opacity-10" />
+        <polygon points="314,120 336,120 325,88" className="fill-[var(--brand-dark)] opacity-10" />
+        <polygon points="290,132 316,132 303,96" className="fill-[var(--brand-dark)] opacity-10" />
+        <polygon points="10,190 46,190 28,140" className="fill-[var(--brand-dark)] opacity-[0.14]" />
+        <polygon points="40,205 80,205 60,150" className="fill-[var(--brand-dark)] opacity-[0.14]" />
+        <polygon points="320,190 356,190 338,140" className="fill-[var(--brand-dark)] opacity-[0.14]" />
+        <polygon points="286,205 326,205 306,150" className="fill-[var(--brand-dark)] opacity-[0.14]" />
+        <polygon points="-20,260 40,260 10,180" className="fill-[var(--brand-dark)] opacity-20" />
+        <polygon points="20,260 90,260 55,168" className="fill-[var(--brand-dark)] opacity-20" />
+        <polygon points="360,260 420,260 390,180" className="fill-[var(--brand-dark)] opacity-20" />
+        <polygon points="310,260 380,260 345,168" className="fill-[var(--brand-dark)] opacity-20" />
+      </svg>
+    </div>
+  );
+}
+
 function BulletinContent({ bulletin, members }) {
   return (
     <>
@@ -155,13 +180,16 @@ function BulletinContent({ bulletin, members }) {
         </ol>
       </section>
 
-      <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
-        <h2 className="font-serif font-semibold text-foreground">기도제목</h2>
-        <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
-          {bulletin.prayers.map((p, i) => (
-            <li key={i}>· {p}</li>
-          ))}
-        </ul>
+      <section className="relative mt-6 overflow-hidden rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+        <PrayerPathBackground />
+        <div className="relative">
+          <h2 className="font-serif font-semibold text-foreground">기도제목</h2>
+          <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
+            {bulletin.prayers.map((p, i) => (
+              <li key={i}>· {p}</li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
