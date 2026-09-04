@@ -42,118 +42,13 @@ function bulletinImageUrl(item) {
   return supabase.storage.from("attachments").getPublicUrl(item.file_path).data.publicUrl;
 }
 
-// 새 주보가 나오면 이 배열의 맨 앞에 새 항목을 추가하세요.
-// 이전 항목은 그대로 두면 하단 "지난 주보"에 자동으로 쌓입니다.
-const bulletins = [
-  {
-    issue: "27권 35호",
-    date: "2026. 8. 30",
-    theme: {
-      year: "2026년 표어",
-      verse: "매일, 매사에 겸손히 하나님과 동행하자! (미가 6:8)",
-      goals: [
-        "마음에 할례를 받자! (신 30:6)",
-        "하나님의 뜻을 분별하자! (롬 12:2)",
-        "긍휼, 정의, 공의를 실천하자! (렘 9:24)",
-      ],
-    },
-    prayers: [
-      "우리가 살아온 먼 길을 돌아보며 끊임없이 일하시는 하나님의 섭리의 손길을 깨달아 알도록",
-      "아직도 회복되지 않은 북한 땅에도 하나님의 섭리의 손길 안에서 부활의 새 역사가 이뤄지길",
-      "교회의 리더십 변화의 때에 모든 항존직이 든든한 교회의 기둥으로서 제 역할을 다하도록",
-      "담임목사 청빙위원회 구성을 필두로 리더십 변화의 때에 온 교회가 기도로 참여하도록",
-    ],
-    order: [
-      ["인사와 나눔", ""],
-      ["묵도", ""],
-      ["찬송", "주 우리 하나님 14장 (2,3절)"],
-      ["기원", ""],
-      ["교독문", "10번 (시편 16편)"],
-      ["신앙고백", "사도신경"],
-      ["찬송", "어린 양들아 두려워 말아라 399장"],
-      ["기도", "조태형 집사"],
-      ["성경봉독", "사무엘기상 16:6~13 · 양혜림 집사"],
-      ["찬양대", "예배"],
-      ["말씀", "임원일 목사 · 「처음 가는 길 찾기」"],
-      ["기도", ""],
-      ["찬송", "주 사랑 안에 살면 397장"],
-      ["헌금기도", ""],
-      ["축도", ""],
-    ],
-    news: [
-      "담임목사 청빙위원회 구성 / 23일 당회 결의: 청빙위원회를 다음과 같이 구성하기로 한다. 장로 당회원 3인, 권사 2인, 안수집사 2인, 서리집사 2인(단 안수집사, 권사로 피택된 자 중 남녀 각 1인), 청년 1인(20~30대 미혼 청년 중). 이상 10인. 청빙위원장은 청빙위원 중 장로가 맡기로 한다. 각 부서는 다음주(9월 6일)까지 청빙위원을 선출하여 당회 서기 최학수 장로님께 알려주시기 바랍니다.",
-      "성찬식 / 다음주 예배 중 성찬식을 거행합니다.",
-      "항존직 재교육 / 7월~8월 매주일 오후 2시, 본당",
-      "청소년부, 청년부(1,2청) 찬양 집회 / 9월 5일(토) 저녁 7시, 장소: 청소년·청년부실, 대상: 청소년부+청년부(1,2청)",
-      "구역장 성경공부 개강 / 9월 6일(주일) 오후 4시",
-      "백향숲 개강 / 9월 6일(주일) 오후 2시",
-      "군입대 / 장한서 청년(8월 31일 입대) 포항 해병대 교육훈련단 입소",
-      "다음주 예배위원 / 기도: 이형진 집사, 성경봉독: 유효림 집사",
-    ],
-    staff: [
-      ["교역자", "임원일, 정상우, 송혜영, 김태민"],
-      ["장로", "김택영, 최학수, 주현진, 이건주, 김윤태"],
-      ["후원선교사", "권성찬, 최미언"],
-      ["성가대지휘", "나혜라"],
-      ["반주", "최진아, 양혜림"],
-    ],
-  },
-  {
-    issue: "27권 34호",
-    date: "2026. 8. 23",
-    theme: {
-      year: "2026년 표어",
-      verse: "매일, 매사에 겸손히 하나님과 동행하자! (미가 6:8)",
-      goals: [
-        "마음에 할례를 받자! (신 30:6)",
-        "하나님의 뜻을 분별하자! (롬 12:2)",
-        "긍휼, 정의, 공의를 실천하자! (렘 9:24)",
-      ],
-    },
-    prayers: [
-      "우리가 살아온 먼 길을 돌아보며 끊임없이 일하시는 하나님의 섭리의 손길을 깨달아 알도록",
-      "아직도 회복되지 않은 북한 땅에도 하나님의 섭리의 손길 안에서 부활의 새 역사가 이뤄지길",
-      "교회의 리더십 변화의 때에 모든 항존직이 든든한 교회의 기둥으로서 제 역할을 다하도록",
-      "담임목사 청빙위원회 구성을 필두로 리더십 변화의 때에 온 교회가 기도로 참여하도록",
-    ],
-    order: [
-      ["인사와 나눔", ""],
-      ["묵도", ""],
-      ["찬송", "주 우리 하나님 14장 (1,4절)"],
-      ["기원", ""],
-      ["교독문", "9번 (시편 15편)"],
-      ["신앙고백", "사도신경"],
-      ["찬송", "삼천리 반도 금수강산 580장"],
-      ["기도", "노희일 집사"],
-      ["성경봉독", "이사야 51:1~3 · 신유정 집사"],
-      ["찬양대", "주님 약속하신 말씀 위에서"],
-      ["말씀", "임원일 목사 · 「멀리 1,300년 전을 돌아봐라」"],
-      ["기도", ""],
-      ["찬송", "어둔 밤 마음에 잠겨 582장"],
-      ["헌금기도", ""],
-      ["축도", ""],
-    ],
-    news: [
-      "식탁 교제 / 낮 예배 후 온 교우가 함께하는 식탁교제가 있습니다.",
-      "당회 / 오늘 오후 3시 30분, 교역자실",
-      "항존직 재교육 / 7월~8월 매주일 오후 2시, 본당",
-      "청소년부, 청년부(1,2청) 찬양 집회 / 9월 5일(토) 저녁 8시, 청소년·청년부실",
-      "구역장 성경공부 개강 / 9월 6일(주일) 오후 4시",
-      "백향숲 개강 / 9월 6일(주일) 오후 2시",
-      "금요기도회 / 8월 28일(금) 저녁 8시 · 찬양과 기도의 자리에 많은 참여를 바랍니다.",
-      "이사 / 정상우 목사 가정",
-      "다음주 예배위원 / 기도: 조태형 집사, 성경봉독: 양혜림 집사",
-      "헌금 계좌 / 일반헌금 [농협] 141-01-317160 · 건축헌금 [농협] 301-0141-2913-81",
-    ],
-    staff: [
-      ["교역자", "임원일, 정상우, 송혜영, 김태민"],
-      ["장로", "김택영, 최학수, 주현진, 이건주, 김윤태"],
-      ["후원선교사", "권성찬, 최미언"],
-      ["성가대지휘", "나혜라"],
-      ["반주", "최진아, 양혜림"],
-    ],
-  },
-];
+// 이전에는 여기에 주보 내용을 코드로 직접 추가했지만, 이제는 관리자가 /admin/content
+// 화면에서 등록한 bulletins 테이블 내용을 불러와서 보여준다.
+function formatKoreanDate(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${y}. ${m}. ${d}`;
+}
 
 function BulletinContent({ bulletin, members }) {
   return (
@@ -295,7 +190,9 @@ function BulletinContent({ bulletin, members }) {
 
 export default function BulletinPage() {
   const { user, isAdmin } = useAuth();
-  const [current, ...past] = bulletins;
+  const [bulletins, setBulletins] = useState([]);
+  const [bulletinsLoading, setBulletinsLoading] = useState(true);
+  const [bulletinsError, setBulletinsError] = useState(false);
   const [openIssue, setOpenIssue] = useState(null);
   const [members, setMembers] = useState([]);
 
@@ -304,6 +201,32 @@ export default function BulletinPage() {
   const [imageFile, setImageFile] = useState(null);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
+
+  useEffect(() => {
+    supabase
+      .from("bulletins")
+      .select("id, issue, bulletin_date, content")
+      .order("bulletin_date", { ascending: false })
+      .order("id", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("주보 조회 실패:", error.message);
+          setBulletinsError(true);
+          setBulletinsLoading(false);
+          return;
+        }
+        setBulletins(
+          (data ?? []).map((row) => ({
+            issue: row.issue,
+            date: formatKoreanDate(row.bulletin_date),
+            ...row.content,
+          }))
+        );
+        setBulletinsLoading(false);
+      });
+  }, []);
+
+  const [current, ...past] = bulletins;
 
   async function loadBulletinImages() {
     const { data, error } = await supabase
@@ -395,6 +318,45 @@ export default function BulletinPage() {
     loadBulletinImages();
   }
 
+  if (bulletinsLoading) {
+    return (
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
+        <h1 className="font-serif text-2xl font-bold text-foreground">주보</h1>
+        <p className="mt-4 text-sm text-foreground/50">불러오는 중...</p>
+      </main>
+    );
+  }
+
+  if (bulletinsError) {
+    return (
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
+        <h1 className="font-serif text-2xl font-bold text-foreground">주보</h1>
+        <p className="mt-4 text-sm text-red-600">
+          주보를 불러오지 못했어요. 새로고침해서 다시 시도해주세요.
+        </p>
+      </main>
+    );
+  }
+
+  if (!current) {
+    return (
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
+        <h1 className="font-serif text-2xl font-bold text-foreground">주보</h1>
+        <p className="mt-4 text-sm text-foreground/50">
+          등록된 주보가 없어요.
+          {isAdmin && (
+            <>
+              {" "}
+              <Link href="/admin/content" className="text-brand-dark underline">
+                콘텐츠 관리에서 등록하기
+              </Link>
+            </>
+          )}
+        </p>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
       <div className="flex items-baseline justify-between gap-3">
@@ -410,6 +372,12 @@ export default function BulletinPage() {
           />
         </div>
       </div>
+
+      {isAdmin && (
+        <Link href="/admin/content" className="mt-2 inline-block text-xs text-brand-dark underline">
+          주보 내용 수정하기 (콘텐츠 관리)
+        </Link>
+      )}
 
       {isAdmin && (
         <form

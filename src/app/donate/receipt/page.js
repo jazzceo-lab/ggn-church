@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
-
-const YEAR_OPTIONS = ["2026년 귀속분", "2025년 귀속분"];
+import { YEAR_OPTIONS } from "@/lib/receiptYears";
 
 export default function DonationReceiptPage() {
   const { user, loading: authLoading } = useAuth();

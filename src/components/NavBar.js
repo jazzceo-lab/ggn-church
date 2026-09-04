@@ -314,6 +314,11 @@ export default function NavBar() {
                 {(pressed) => <ScaleLabel pressed={pressed}>방문 통계</ScaleLabel>}
               </NavLink>
             )}
+            {isAdmin && (
+              <NavLink href="/admin/content" className="text-foreground/70 hover:text-brand-dark">
+                {(pressed) => <ScaleLabel pressed={pressed}>콘텐츠 관리</ScaleLabel>}
+              </NavLink>
+            )}
           </nav>
           )}
         </div>

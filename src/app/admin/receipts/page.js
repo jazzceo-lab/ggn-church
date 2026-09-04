@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import { YEAR_OPTIONS } from "@/lib/receiptYears";
+
+const ALL_YEARS = "전체 연도";
+// 전체 연도를 고르면 기간 제한 없이 조회되니, 무한정 쌓이지 않도록 최근 신청 500건까지만 불러온다.
+const ALL_YEARS_LIMIT = 500;
 
 const STATUS_LABELS = {
   waiting: "대기",
@@ -23,13 +28,20 @@ export default function AdminReceiptsPage() {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [yearFilter, setYearFilter] = useState(YEAR_OPTIONS[0]);
+  const [search, setSearch] = useState("");
 
   async function loadRequests() {
     setLoading(true);
-    const { data } = await supabase
+    let query = supabase
       .from("receipt_requests")
       .select("id, name, birth_date, phone, year_label, status, created_at")
       .order("created_at", { ascending: false });
+    query =
+      yearFilter === ALL_YEARS
+        ? query.limit(ALL_YEARS_LIMIT)
+        : query.eq("year_label", yearFilter);
+    const { data } = await query;
     setRequests(data ?? []);
     setLoading(false);
   }
@@ -48,7 +60,12 @@ export default function AdminReceiptsPage() {
       loadRequests();
       loadSetting();
     }
-  }, [isAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, yearFilter]);
+
+  const filteredRequests = search.trim()
+    ? requests.filter((r) => r.name.includes(search.trim()))
+    : requests;
 
   async function toggleOpen() {
     setToggling(true);
@@ -118,12 +135,34 @@ export default function AdminReceiptsPage() {
         </button>
       </div>
 
-      <ul className="mt-6 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
+      <div className="mt-6 flex flex-wrap gap-2">
+        <select
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value)}
+          className="rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+        >
+          {YEAR_OPTIONS.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+          <option value={ALL_YEARS}>{ALL_YEARS}</option>
+        </select>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="이름으로 찾기"
+          className="min-w-0 flex-1 rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+        />
+      </div>
+
+      <ul className="mt-3 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
         {loading && <li className="p-4 text-sm text-foreground/50">불러오는 중...</li>}
-        {!loading && requests.length === 0 && (
+        {!loading && filteredRequests.length === 0 && (
           <li className="p-4 text-sm text-foreground/50">신청 내역이 없어요.</li>
         )}
-        {requests.map((r) => (
+        {filteredRequests.map((r) => (
           <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
             <div>
               <p className="font-medium text-foreground">

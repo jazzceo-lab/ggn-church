@@ -18,6 +18,10 @@ const TABS = [
 // 새로 업로드하면 최신 2개(이번 주 + 지난주)만 남기고 이전 파일은 자동 삭제
 const MAX_KEPT_AUDIO = 2;
 
+// 직접 업로드한 영상 파일도 음성과 같은 이유(용량)로 최신 2개만 남긴다.
+// 클라우드 링크로 등록한 영상(external_url)은 저장공간을 안 쓰므로 대상에서 제외.
+const MAX_KEPT_VIDEO_FILES = 2;
+
 const PENDING_APPROVAL_NOTICE = "교인전용 콘텐츠로 교회승인대기중입니다";
 
 export default function MediaPage() {
@@ -117,6 +121,24 @@ export default function MediaPage() {
       .in("id", toDelete.map((d) => d.id));
   }
 
+  async function pruneOldVideoFiles() {
+    const { data } = await supabase
+      .from("media_items")
+      .select("id, file_path")
+      .eq("media_type", "video")
+      .not("file_path", "is", null)
+      .order("created_at", { ascending: false });
+
+    if (!data || data.length <= MAX_KEPT_VIDEO_FILES) return;
+
+    const toDelete = data.slice(MAX_KEPT_VIDEO_FILES);
+    await supabase.storage.from("media").remove(toDelete.map((d) => d.file_path));
+    await supabase
+      .from("media_items")
+      .delete()
+      .in("id", toDelete.map((d) => d.id));
+  }
+
   async function handleUpload(e) {
     e.preventDefault();
     if (!file) return;
@@ -150,6 +172,8 @@ export default function MediaPage() {
 
     if (tab === "audio") {
       await pruneOldAudio();
+    } else if (tab === "video") {
+      await pruneOldVideoFiles();
     }
 
     setUploading(false);

@@ -99,11 +99,21 @@ export default function CalendarPage() {
     }월 ${last.getDate()}일`;
   })();
 
-  async function loadEvents() {
+  // 화면에 보이는 달의 앞뒤 한 달씩만 불러온다. 연도가 쌓여도 달력을 열 때마다
+  // 전체 일정을 다 내려받지 않도록 하기 위함 (달/주 이동 시 범위가 바뀌면 다시 불러옴).
+  async function loadEvents(rangeYear, rangeMonth) {
     setLoadingEvents(true);
+    // new Date()가 month의 범위(음수/12 이상)를 알아서 연도까지 넘겨서 정규화해주므로
+    // 그 결과에서 다시 연/월/일을 꺼내 쓴다 (직접 문자열로 조립하면 연도가 안 바뀜).
+    const startDate = new Date(rangeYear, rangeMonth - 1, 1);
+    const endDate = new Date(rangeYear, rangeMonth + 2, 1);
+    const start = toDateKey(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    const end = toDateKey(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
     const { data, error } = await supabase
       .from("calendar_events")
       .select("id, event_date, title, description, time_label, link_url, image_url")
+      .gte("event_date", start)
+      .lt("event_date", end)
       .order("event_date", { ascending: true });
 
     if (!error) setEvents(data);
@@ -111,8 +121,9 @@ export default function CalendarPage() {
   }
 
   useEffect(() => {
-    loadEvents();
-  }, []);
+    loadEvents(year, month);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year, month]);
 
   const eventsByDate = useMemo(() => {
     const map = {};
@@ -235,7 +246,7 @@ export default function CalendarPage() {
     }
     resetForm();
     setShowForm(false);
-    loadEvents();
+    loadEvents(year, month);
   }
 
   async function handleDeleteEvent(id) {
@@ -245,7 +256,7 @@ export default function CalendarPage() {
       window.alert("삭제에 실패했어요: " + error.message);
       return;
     }
-    loadEvents();
+    loadEvents(year, month);
   }
 
   // 월간/주간 보기 공통으로 쓰는 날짜 칸 렌더링. date가 null이면 빈 칸(월간 보기 앞뒤 여백).

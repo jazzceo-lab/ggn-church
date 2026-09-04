@@ -3,18 +3,31 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { GYODOKMUN } from "@/lib/gyodokmun";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function GyodokmunPage() {
   const [number, setNumber] = useState(null);
+  const [entry, setEntry] = useState(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const num = parseInt(params.get("open"), 10);
-    if (num && GYODOKMUN[num]) setNumber(num);
+    if (!num) {
+      setLoaded(true);
+      return;
+    }
+    setNumber(num);
+    supabase
+      .from("gyodokmun_readings")
+      .select("title, lines")
+      .eq("number", num)
+      .maybeSingle()
+      .then(({ data }) => {
+        setEntry(data ?? null);
+        setLoaded(true);
+      });
   }, []);
-
-  const entry = number ? GYODOKMUN[number] : null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
@@ -47,7 +60,9 @@ export default function GyodokmunPage() {
       </div>
 
       <div className="flex-1 overflow-auto px-6 py-6">
-        {!entry ? (
+        {!loaded ? (
+          <p className="text-sm text-foreground/50">불러오는 중...</p>
+        ) : !entry ? (
           <p className="text-sm text-foreground/50">교독문을 찾을 수 없어요.</p>
         ) : (
           <div className="mx-auto max-w-lg space-y-3 text-lg leading-8 text-foreground/90">

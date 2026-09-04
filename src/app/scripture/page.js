@@ -1,4 +1,5 @@
-import { getTodayVerse } from "@/lib/dailyVerses";
+import { supabase } from "@/lib/supabaseClient";
+import { pickVerseForDay } from "@/lib/dailyVerses";
 import DailyVerseCard from "@/components/DailyVerseCard";
 
 export const dynamic = "force-dynamic";
@@ -15,14 +16,19 @@ const apps = [
   },
 ];
 
-export default function ScripturePage() {
-  const verse = getTodayVerse();
+export default async function ScripturePage() {
+  const { data } = await supabase
+    .from("daily_verses")
+    .select("ref, verse_text")
+    .order("id", { ascending: true });
+  const verses = (data ?? []).map((v) => ({ ref: v.ref, text: v.verse_text }));
+  const verse = pickVerseForDay(verses);
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">성경</h1>
 
-      <DailyVerseCard initialVerse={verse} />
+      <DailyVerseCard initialVerse={verse} verses={verses} />
 
       <div className="mt-4 grid gap-4">
         {apps.map((app) => (

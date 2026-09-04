@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 import { buildBibleLink } from "@/lib/bibleBooks";
-import { DAILY_VERSES } from "@/lib/dailyVerses";
 
-export default function DailyVerseCard({ initialVerse }) {
+export default function DailyVerseCard({ initialVerse, verses = [] }) {
   const [verse, setVerse] = useState(initialVerse);
   const verseLink = buildBibleLink(verse.ref);
 
   function showAnother() {
-    if (DAILY_VERSES.length <= 1) return;
+    if (verses.length <= 1) return;
     let next;
     do {
-      next = DAILY_VERSES[Math.floor(Math.random() * DAILY_VERSES.length)];
+      next = verses[Math.floor(Math.random() * verses.length)];
     } while (next.ref === verse.ref);
     setVerse(next);
   }
