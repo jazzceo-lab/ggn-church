@@ -22,10 +22,29 @@ const STANZAS = [
   ["나는", "성령을 믿으며,", "거룩한 공교회와 성도의 교제와", "죄를 용서 받는 것과", "몸의 부활과 영생을 믿습니다."],
 ];
 
+// 사도신경의 중심 고백("십자가에 못 박혀 죽으시고 ... 다시 살아나셨으며")을 떠올리는
+// 아주 옅은 십자가 워터마크. 글씨 가독성을 해치지 않도록 낮은 투명도로만 넣는다.
+function CrossBackground() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute inset-[-8%] bg-[radial-gradient(ellipse_70%_60%_at_50%_42%,transparent_55%,rgba(0,0,0,0.08)_100%)]" />
+      <svg
+        viewBox="0 0 100 140"
+        fill="none"
+        className="absolute left-1/2 top-1/2 w-[46%] max-w-xs -translate-x-1/2 -translate-y-[46%] text-brand-dark/15"
+      >
+        <path d="M50 4 V136 M18 42 H82" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
+      </svg>
+    </div>
+  );
+}
+
 export default function ConfessionPage() {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background">
-      <div className="border-b border-black/5 bg-background px-4 py-2 dark:border-white/10">
+      <CrossBackground />
+
+      <div className="relative border-b border-black/5 bg-background px-4 py-2 dark:border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Image
@@ -49,7 +68,7 @@ export default function ConfessionPage() {
         <p className="mt-1 text-sm font-medium text-foreground">새번역 · 사도신경</p>
       </div>
 
-      <div className="flex-1 overflow-auto px-6 pt-2 pb-6">
+      <div className="relative flex-1 overflow-auto px-6 pt-2 pb-6">
         <div className="mx-auto max-w-lg space-y-2.5 text-base leading-6 text-foreground/90">
           {STANZAS.map((stanza, i) => (
             <div key={i} className="space-y-0.5">
