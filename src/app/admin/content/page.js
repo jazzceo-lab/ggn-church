@@ -155,13 +155,8 @@ function BulletinManager() {
         ...f,
         issue: r.issue || f.issue,
         bulletin_date: r.bulletin_date || f.bulletin_date,
-        year: r.theme_year || f.year,
-        verse: r.theme_verse || f.verse,
-        goals: r.goals?.length ? arrayToLines(r.goals) : f.goals,
-        prayers: r.prayers?.length ? arrayToLines(r.prayers) : f.prayers,
         order: r.order?.length ? arrayToPairs(r.order.map((o) => [o.label, o.detail])) : f.order,
         news: r.news?.length ? arrayToLines(r.news) : f.news,
-        staff: r.staff?.length ? arrayToPairs(r.staff.map((s) => [s.role, s.names])) : f.staff,
       }));
       setParseFiles([]);
     } catch (err) {
@@ -240,8 +235,9 @@ function BulletinManager() {
           <div className="space-y-2 rounded-lg border border-brand-dark/20 bg-brand-tint/40 p-4 dark:border-brand/20">
             <p className="text-sm font-medium text-brand-dark">📷 사진으로 자동 채우기 (AI)</p>
             <p className="text-xs text-foreground/50">
-              예배순서·교회소식이 나온 주보 사진을 올리면 AI가 읽어서 아래 항목을 채워줘요. 채운 뒤에는
-              꼭 내용을 확인하고 필요한 부분만 고쳐주세요.
+              표지 사진(호수·날짜)과 예배순서·교회소식이 나온 사진, 두 장을 함께 올리면 AI가 읽어서
+              채워줘요. 표어·기도제목·섬김이는 위 &ldquo;최근 주보 복사해서 새로 만들기&rdquo;로 이미
+              채워졌다면 그대로 둬요. 채운 뒤에는 꼭 내용을 확인하고 필요한 부분만 고쳐주세요.
             </p>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
               <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
