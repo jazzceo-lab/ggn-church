@@ -27,9 +27,11 @@ Deno.serve(async (req) => {
   // 회원이 profiles에서 종류별로 끌 수 있는 알림 설정 컬럼.
   // posts는 서브게시판(카테고리)별로 컬럼이 다르므로 아래 posts 분기에서 따로 정한다.
   let NOTIFY_COLUMN =
-    { messages: "notify_messages", conversation_messages: "notify_messages", media_items: "notify_bulletin" }[
-      table
-    ] ?? null;
+    {
+      messages: "notify_messages",
+      conversation_messages: "notify_messages",
+      bulletins: "notify_bulletin",
+    }[table] ?? null;
 
   if (table === "messages") {
     const { data: sender } = await supabase
@@ -74,10 +76,10 @@ Deno.serve(async (req) => {
       url: `/messages/group/${record.conversation_id}`,
     };
     recipientIds = (participants ?? []).map((p) => p.user_id).filter((id) => id !== record.sender_id);
-  } else if (table === "media_items" && record.media_type === "bulletin") {
+  } else if (table === "bulletins") {
     notification = {
       title: "길가는교회",
-      body: "📋 이번 주 주보가 올라왔어요",
+      body: record.issue ? `📋 새 주보가 올라왔어요 (${record.issue})` : "📋 새 주보가 올라왔어요",
       url: "/bulletin",
     };
   } else if (table === "popup_notices") {
