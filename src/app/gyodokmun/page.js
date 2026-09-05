@@ -62,7 +62,7 @@ export default function GyodokmunPage() {
         )}
       </div>
 
-      <div className="relative flex-1 overflow-auto px-6 py-6">
+      <div className="relative flex-1 overflow-auto px-6 pb-6 pt-2">
         {!loaded ? (
           <p className="text-sm text-foreground/50">불러오는 중...</p>
         ) : !entry ? (
