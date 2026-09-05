@@ -72,17 +72,19 @@ export default function MessagesPage() {
       const partnerId = m.sender_id === user.id ? m.recipient_id : m.sender_id;
       const clearedAt = getClearedAt("dm", partnerId);
       if (clearedAt && new Date(m.created_at) <= new Date(clearedAt)) continue;
+      const isSelf = partnerId === user.id;
       if (!byPartner.has(partnerId)) {
         byPartner.set(partnerId, {
           type: "1:1",
           key: `partner-${partnerId}`,
           href: `/messages/${partnerId}`,
           partnerId,
+          isSelf,
           pinType: "dm",
           pinKey: partnerId,
-          name: nameOf(partnerId),
-          title: titleOf(partnerId),
-          avatarPath: avatarOf(partnerId),
+          name: isSelf ? "나에게 보내기" : nameOf(partnerId),
+          title: isSelf ? null : titleOf(partnerId),
+          avatarPath: isSelf ? null : avatarOf(partnerId),
           lastBody: m.body,
           lastAt: m.created_at,
           unread: false,
@@ -152,7 +154,28 @@ export default function MessagesPage() {
       }
     }
 
+    // 아직 나에게 보낸 메시지가 없어도 "나에게 보내기"는 항상 목록에서 바로 열 수 있어야 하니
+    // 메시지가 없으면 자리만 만들어둔다 (실제 메시지가 있으면 위에서 이미 채워져 있음).
+    if (!byPartner.has(user.id)) {
+      byPartner.set(user.id, {
+        type: "1:1",
+        key: `partner-${user.id}`,
+        href: `/messages/${user.id}`,
+        partnerId: user.id,
+        isSelf: true,
+        pinType: "dm",
+        pinKey: user.id,
+        name: "나에게 보내기",
+        title: null,
+        avatarPath: null,
+        lastBody: "나만 볼 수 있는 메모장이에요",
+        lastAt: null,
+        unread: false,
+      });
+    }
+
     const merged = [...Array.from(byPartner.values()), ...groupItems].sort((a, b) => {
+      if (!!a.isSelf !== !!b.isSelf) return a.isSelf ? -1 : 1;
       const aPinned = pinnedSet.has(`${a.pinType}:${a.pinKey}`);
       const bPinned = pinnedSet.has(`${b.pinType}:${b.pinKey}`);
       if (aPinned !== bPinned) return aPinned ? -1 : 1;
@@ -208,13 +231,11 @@ export default function MessagesPage() {
     load();
   }
 
-  async function handleDeleteConversation(partnerId, partnerName) {
-    if (
-      !window.confirm(
-        `${partnerName}님과 나눈 채팅을 목록에서 지울까요?\n(내 화면에서만 지워지고, 상대방 화면에는 그대로 남아있어요)`
-      )
-    )
-      return;
+  async function handleDeleteConversation(partnerId, partnerName, isSelf) {
+    const confirmText = isSelf
+      ? "나에게 보낸 메시지를 목록에서 지울까요?"
+      : `${partnerName}님과 나눈 채팅을 목록에서 지울까요?\n(내 화면에서만 지워지고, 상대방 화면에는 그대로 남아있어요)`;
+    if (!window.confirm(confirmText)) return;
 
     await supabase
       .from("messages")
@@ -470,6 +491,10 @@ export default function MessagesPage() {
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-tint text-lg dark:bg-brand-dark/25">
                   👥
                 </span>
+              ) : c.isSelf ? (
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-tint text-lg dark:bg-brand-dark/25">
+                  📝
+                </span>
               ) : avatarUrl(c.avatarPath) ? (
                 <img
                   src={avatarUrl(c.avatarPath)}
@@ -514,9 +539,11 @@ export default function MessagesPage() {
                 >
                   {c.lastBody}
                 </p>
-                <p className="mt-1 text-xs text-foreground/40">
-                  {new Date(c.lastAt).toLocaleString("ko-KR")}
-                </p>
+                {c.lastAt && (
+                  <p className="mt-1 text-xs text-foreground/40">
+                    {new Date(c.lastAt).toLocaleString("ko-KR")}
+                  </p>
+                )}
               </span>
             </Link>
             <div className="flex shrink-0 items-center gap-2">
@@ -534,7 +561,7 @@ export default function MessagesPage() {
               </button>
               {c.type === "1:1" && (
                 <button
-                  onClick={() => handleDeleteConversation(c.partnerId, c.name)}
+                  onClick={() => handleDeleteConversation(c.partnerId, c.name, c.isSelf)}
                   className="text-xs text-foreground/40 hover:text-red-600"
                 >
                   삭제

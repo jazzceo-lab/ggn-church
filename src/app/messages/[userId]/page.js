@@ -67,18 +67,26 @@ export default function ConversationPage() {
     }
   }
 
+  const isSelf = user?.id === userId;
+
   async function loadThread() {
     if (!user) return;
     setLoading(true);
 
-    const { data: partner } = await supabase
-      .from("member_directory")
-      .select("display_name, title, avatar_path")
-      .eq("id", userId)
-      .single();
-    setPartnerName(partner?.display_name ?? "알 수 없음");
-    setPartnerTitle(partner?.title ?? null);
-    setPartnerAvatarPath(partner?.avatar_path ?? null);
+    if (isSelf) {
+      setPartnerName("나에게 보내기");
+      setPartnerTitle(null);
+      setPartnerAvatarPath(null);
+    } else {
+      const { data: partner } = await supabase
+        .from("member_directory")
+        .select("display_name, title, avatar_path")
+        .eq("id", userId)
+        .single();
+      setPartnerName(partner?.display_name ?? "알 수 없음");
+      setPartnerTitle(partner?.title ?? null);
+      setPartnerAvatarPath(partner?.avatar_path ?? null);
+    }
 
     const { data } = await supabase
       .from("messages")
@@ -135,7 +143,10 @@ export default function ConversationPage() {
         },
         (payload) => {
           if (payload.new.sender_id !== userId) return;
-          setThread((prev) => [...prev, payload.new]);
+          // "나에게 보내기"는 내가 곧 상대방이라 방금 보낸 메시지가 이 realtime 이벤트로도
+          // 들어오는데, handleSend가 이미 loadThread()로 같은 메시지를 넣어둔 뒤일 수 있어
+          // id로 중복 여부를 확인하고 넣는다.
+          setThread((prev) => (prev.some((m) => m.id === payload.new.id) ? prev : [...prev, payload.new]));
           supabase
             .from("messages")
             .update({ read_at: new Date().toISOString() })
@@ -312,7 +323,11 @@ export default function ConversationPage() {
         <Link href="/messages" className="text-sm text-foreground/50 hover:underline">
           ← GGN톡
         </Link>
-        {avatarUrl(partnerAvatarPath) ? (
+        {isSelf ? (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-tint text-sm dark:bg-brand-dark/25">
+            📝
+          </span>
+        ) : avatarUrl(partnerAvatarPath) ? (
           <img
             src={avatarUrl(partnerAvatarPath)}
             alt=""

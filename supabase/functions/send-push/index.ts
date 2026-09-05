@@ -45,6 +45,10 @@ Deno.serve(async (req) => {
       url: `/messages/${record.sender_id}`,
     };
     recipientIds = [record.recipient_id];
+    // "나에게 보내기"(자기 자신에게 쪽지)로 sender와 recipient가 같을 때 스스로에게
+    // 알림이 가지 않도록 제외한다. 평소 1:1 대화에서는 sender와 recipient가 다르므로
+    // 영향 없음.
+    excludeUserId = record.sender_id;
   } else if (table === "conversation_messages") {
     const { data: sender } = await supabase
       .from("profiles")

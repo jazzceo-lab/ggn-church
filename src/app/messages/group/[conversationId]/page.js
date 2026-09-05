@@ -25,6 +25,9 @@ export default function GroupConversationPage() {
   const { user, loading: authLoading, isAdmin, district, refreshGroupUnreadCount } = useAuth();
   const canSelectAllMembers = isAdmin || district === "목회자";
   const [conversationName, setConversationName] = useState(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [renaming, setRenaming] = useState(false);
   const [pinnedMessageId, setPinnedMessageId] = useState(null);
   const [participants, setParticipants] = useState([]);
   const [lastReadMap, setLastReadMap] = useState({});
@@ -275,6 +278,26 @@ export default function GroupConversationPage() {
     setActiveMessage(null);
   }
 
+  function startEditName() {
+    setNameInput(conversationName ?? "");
+    setEditingName(true);
+  }
+
+  async function handleSaveName() {
+    setRenaming(true);
+    const { error: renameError } = await supabase
+      .from("conversations")
+      .update({ name: nameInput.trim() || null })
+      .eq("id", conversationId);
+    setRenaming(false);
+    if (renameError) {
+      window.alert("이름 변경에 실패했어요: " + renameError.message);
+      return;
+    }
+    setConversationName(nameInput.trim() || null);
+    setEditingName(false);
+  }
+
   async function handleTogglePin() {
     if (!activeMessage) return;
     const nextPinnedId = pinnedMessageId === activeMessage.id ? null : activeMessage.id;
@@ -352,12 +375,46 @@ export default function GroupConversationPage() {
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-tint text-sm dark:bg-brand-dark/25">
           👥
         </span>
-        <h1 className="flex min-w-0 items-center gap-1.5 truncate font-serif text-xl font-bold text-foreground">
-          {title}
-          {participants.length > 0 && (
-            <span className="shrink-0 text-sm font-normal text-foreground/50">({participants.length}명)</span>
-          )}
-        </h1>
+        {editingName ? (
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <input
+              type="text"
+              autoFocus
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder={otherParticipants.map((p) => p.display_name).join(", ") || "그룹 채팅"}
+              className="min-w-0 flex-1 rounded-md border border-black/10 px-2 py-1 text-sm dark:border-white/10 dark:bg-white/10"
+            />
+            <button
+              onClick={handleSaveName}
+              disabled={renaming}
+              className="shrink-0 rounded-full bg-brand px-3 py-1 text-xs text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+            >
+              {renaming ? "저장 중..." : "저장"}
+            </button>
+            <button
+              onClick={() => setEditingName(false)}
+              className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
+            >
+              취소
+            </button>
+          </div>
+        ) : (
+          <h1 className="flex min-w-0 items-center gap-1.5 truncate font-serif text-xl font-bold text-foreground">
+            {title}
+            {participants.length > 0 && (
+              <span className="shrink-0 text-sm font-normal text-foreground/50">({participants.length}명)</span>
+            )}
+            <button
+              onClick={startEditName}
+              aria-label="채팅방 이름 바꾸기"
+              title="채팅방 이름 바꾸기"
+              className="shrink-0 text-sm text-foreground/30 hover:text-brand-dark"
+            >
+              ✏️
+            </button>
+          </h1>
+        )}
       </div>
 
       {pinnedMessageId &&
