@@ -68,9 +68,9 @@ export default function GyodokmunPage() {
         ) : !entry ? (
           <p className="text-sm text-foreground/50">교독문을 찾을 수 없어요.</p>
         ) : (
-          <div className="mx-auto max-w-lg space-y-3 text-lg leading-8 text-foreground/90">
+          <div className="mx-auto max-w-lg space-y-1 text-lg leading-snug text-foreground/90">
             {entry.lines.map((line, i) => (
-              <p key={i} className={line.startsWith("(다같이)") ? "font-semibold text-brand-dark" : ""}>
+              <p key={i} className={line.startsWith("(다같이)") ? "text-xl font-semibold text-brand-dark" : ""}>
                 {line}
               </p>
             ))}

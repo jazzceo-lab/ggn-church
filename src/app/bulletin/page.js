@@ -42,25 +42,26 @@ function formatKoreanDate(iso) {
 }
 
 // 기도제목 카드에만 쓰는 오솔길 일러스트 배경. 사진 대신 앱 색상만으로 그려서
-// 화면 톤과 항상 어울리고 글씨 대비에도 영향이 없다.
+// 화면 톤과 항상 어울리고 글씨 대비에도 영향이 없다. 폰에서는 카드가 세로로
+// 길쭉해서, 나무들이 옆으로 잘려나가지 않도록 세로 비율(viewBox)로 그렸다.
 function PrayerPathBackground() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <svg viewBox="0 0 400 260" preserveAspectRatio="xMidYMax slice" className="h-full w-full">
-        <circle cx="200" cy="18" r="70" className="fill-[var(--brand-tint)]" />
-        <polygon points="150,260 250,260 214,10 186,10" className="fill-[var(--brand)] opacity-[0.14]" />
-        <polygon points="40,120 62,120 51,88" className="fill-[var(--brand-dark)] opacity-10" />
-        <polygon points="60,132 86,132 73,96" className="fill-[var(--brand-dark)] opacity-10" />
-        <polygon points="314,120 336,120 325,88" className="fill-[var(--brand-dark)] opacity-10" />
-        <polygon points="290,132 316,132 303,96" className="fill-[var(--brand-dark)] opacity-10" />
-        <polygon points="10,190 46,190 28,140" className="fill-[var(--brand-dark)] opacity-[0.14]" />
-        <polygon points="40,205 80,205 60,150" className="fill-[var(--brand-dark)] opacity-[0.14]" />
-        <polygon points="320,190 356,190 338,140" className="fill-[var(--brand-dark)] opacity-[0.14]" />
-        <polygon points="286,205 326,205 306,150" className="fill-[var(--brand-dark)] opacity-[0.14]" />
-        <polygon points="-20,260 40,260 10,180" className="fill-[var(--brand-dark)] opacity-20" />
-        <polygon points="20,260 90,260 55,168" className="fill-[var(--brand-dark)] opacity-20" />
-        <polygon points="360,260 420,260 390,180" className="fill-[var(--brand-dark)] opacity-20" />
-        <polygon points="310,260 380,260 345,168" className="fill-[var(--brand-dark)] opacity-20" />
+      <svg viewBox="0 0 300 420" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
+        <circle cx="150" cy="26" r="60" className="fill-[var(--brand-tint)]" />
+        <polygon points="120,420 180,420 158,20 142,20" className="fill-[var(--brand)] opacity-[0.14]" />
+        <polygon points="118,70 132,70 125,48" className="fill-[var(--brand-dark)] opacity-[0.09]" />
+        <polygon points="168,70 182,70 175,48" className="fill-[var(--brand-dark)] opacity-[0.09]" />
+        <polygon points="102,110 122,110 112,76" className="fill-[var(--brand-dark)] opacity-[0.09]" />
+        <polygon points="178,110 198,110 188,76" className="fill-[var(--brand-dark)] opacity-[0.09]" />
+        <polygon points="80,165 108,165 94,118" className="fill-[var(--brand-dark)] opacity-[0.14]" />
+        <polygon points="192,165 220,165 206,118" className="fill-[var(--brand-dark)] opacity-[0.14]" />
+        <polygon points="60,225 94,225 77,168" className="fill-[var(--brand-dark)] opacity-[0.14]" />
+        <polygon points="206,225 240,225 223,168" className="fill-[var(--brand-dark)] opacity-[0.14]" />
+        <polygon points="26,300 74,300 50,220" className="fill-[var(--brand-dark)] opacity-20" />
+        <polygon points="226,300 274,300 250,220" className="fill-[var(--brand-dark)] opacity-20" />
+        <polygon points="-20,400 40,400 10,290" className="fill-[var(--brand-dark)] opacity-20" />
+        <polygon points="260,400 320,400 290,290" className="fill-[var(--brand-dark)] opacity-20" />
       </svg>
     </div>
   );
