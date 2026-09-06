@@ -283,10 +283,13 @@ export default function BulletinPage() {
   useEffect(() => {
     const previousPathname = sessionStorage.getItem("previousPathname");
 
+    console.log("Pathname changed:", { previousPathname, currentPathname: pathname });
+
     // /bulletin에서 다른 경로로 이동했을 때 또는 다른 페이지에서 /bulletin으로 돌아왔을 때
     if (previousPathname !== null) {
       if ((previousPathname === "/bulletin" && pathname !== "/bulletin") ||
           (previousPathname !== "/bulletin" && pathname === "/bulletin")) {
+        console.log("Setting returnFromBulletinLink flag");
         sessionStorage.setItem("returnFromBulletinLink", "true");
       }
     }
