@@ -216,6 +216,18 @@ export default function BulletinPage() {
   const [openIssue, setOpenIssue] = useState(null);
   const [members, setMembers] = useState([]);
 
+  // 예배순서 섹션에 scroll-margin-top CSS 추가
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      #worship-order {
+        scroll-margin-top: 120px;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+
   useEffect(() => {
     supabase
       .from("bulletins")
