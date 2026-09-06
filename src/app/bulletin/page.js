@@ -276,6 +276,16 @@ export default function BulletinPage() {
       });
   }, [user]);
 
+  // 핸드폰 뒤로 가기 버튼 감지
+  useEffect(() => {
+    const handlePopState = () => {
+      sessionStorage.setItem("returnFromBulletinLink", "true");
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   // 페이지 로드 후 예배순서 섹션으로 자동 스크롤
   // 링크에서 돌아올 때만 스크롤 (앱 재시작이나 카톡 링크로 직접 진입하면 스크롤 안 함)
   useEffect(() => {
