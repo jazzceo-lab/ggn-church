@@ -26,6 +26,7 @@ export default function AdminMembersPage() {
   const { user, loading: authLoading, isAdmin, onlineUserIds, onlinePresence } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [notifyingIds, setNotifyingIds] = useState(new Set());
   const [rolesByMember, setRolesByMember] = useState({});
   const [newRoleByMember, setNewRoleByMember] = useState({});
@@ -44,6 +45,7 @@ export default function AdminMembersPage() {
 
   async function loadMembers() {
     setLoading(true);
+    setError(null);
     const { data, error } = await supabase
       .from("profiles")
       .select(
@@ -52,7 +54,7 @@ export default function AdminMembersPage() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("회원 조회 실패:", error.message);
+      console.error("회원 조회 실패 (phone_number 포함):", error.message);
       // phone_number 필드가 없을 수 있으니 재시도
       const { data: fallbackData, error: fallbackError } = await supabase
         .from("profiles")
@@ -60,7 +62,10 @@ export default function AdminMembersPage() {
           "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at"
         )
         .order("created_at", { ascending: false });
-      if (!fallbackError) {
+      if (fallbackError) {
+        console.error("회원 조회 실패 (재시도):", fallbackError.message);
+        setError(fallbackError.message);
+      } else {
         setMembers(fallbackData ?? []);
       }
     } else {
@@ -320,7 +325,12 @@ export default function AdminMembersPage() {
 
       <div className="mt-4 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
         {loading && <p className="p-4 text-sm text-foreground/50">불러오는 중...</p>}
-        {!loading && members.length === 0 && (
+        {error && (
+          <p className="p-4 text-sm text-red-600 dark:text-red-400">
+            에러: {error}
+          </p>
+        )}
+        {!loading && !error && members.length === 0 && (
           <p className="p-4 text-sm text-foreground/50">가입한 교인이 없어요.</p>
         )}
         {!loading && members.length > 0 && groups.length === 0 && (
