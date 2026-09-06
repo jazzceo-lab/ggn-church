@@ -57,6 +57,7 @@ export default function AdminMembersPage() {
       console.error("회원 조회 실패:", error.message);
       setError(error.message);
     } else {
+      console.log("조회된 회원 데이터 샘플:", data?.[0]);
       setMembers(data ?? []);
     }
 
