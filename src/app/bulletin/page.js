@@ -287,23 +287,19 @@ export default function BulletinPage() {
     }, 300);
   };
 
-  // 첫 진입 여부 추적
-  const isFirstLoad = useRef(true);
-
   // 핸드폰 뒤로 가기 버튼 감지
   useEffect(() => {
-    console.log("주보: 뒤로 가기 리스너 등록");
-
     const handlePopState = () => {
-      console.log("주보: popstate 이벤트 감지");
-      // 뒤로 가기 시 항상 스크롤
+      console.log("주보: popstate 감지, 스크롤");
+      if (sessionStorage.getItem("isFirstLoadBulletin")) {
+        return;
+      }
       scrollToWorship();
     };
 
     const handlePageShow = (event) => {
-      console.log("주보: pageshow 이벤트 감지, persisted:", event.persisted);
-      if (event.persisted) {
-        console.log("주보: 페이지 복원됨, 자동 스크롤 실행");
+      console.log("주보: pageshow, persisted:", event.persisted);
+      if (event.persisted && !sessionStorage.getItem("isFirstLoadBulletin")) {
         scrollToWorship();
       }
     };
@@ -312,35 +308,31 @@ export default function BulletinPage() {
     window.addEventListener("pageshow", handlePageShow);
 
     return () => {
-      console.log("주보: 뒤로 가기 리스너 제거");
       window.removeEventListener("popstate", handlePopState);
       window.removeEventListener("pageshow", handlePageShow);
     };
   }, []);
 
   // 페이지 로드 후 예배순서 섹션으로 자동 스크롤
-  // 다른 페이지에서 돌아왔을 때만 스크롤
   useEffect(() => {
-    console.log("주보: 스크롤 useEffect 실행, isFirstLoad:", isFirstLoad.current);
+    const isFirstLoad = !sessionStorage.getItem("isFirstLoadBulletin");
+
+    // 첫 진입 표시
+    sessionStorage.setItem("isFirstLoadBulletin", "false");
 
     // 첫 진입이면 스크롤 안 함
-    if (isFirstLoad.current) {
-      isFirstLoad.current = false;
-      sessionStorage.setItem("returnedFromBulletin", "false");
+    if (isFirstLoad) {
+      console.log("주보: 첫 진입, 스크롤 안 함");
       return;
     }
 
     // "돌아가기" 버튼으로 온 경우
     const shouldScroll = sessionStorage.getItem("returnFromBulletinLink");
     if (shouldScroll) {
-      console.log("주보: returnFromBulletinLink flag로 스크롤");
+      console.log("주보: 돌아가기로 온 경우, 스크롤");
       sessionStorage.removeItem("returnFromBulletinLink");
       scrollToWorship();
-      return;
     }
-
-    // 스크롤 안 함
-    console.log("주보: 첫 진입이 아니지만 flag가 없어 스크롤 안 함");
   }, []);
 
   const handleLinkClick = () => {
