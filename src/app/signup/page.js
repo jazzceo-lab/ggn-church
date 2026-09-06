@@ -177,6 +177,7 @@ export default function SignupPage() {
           />
           <PasswordStrengthMeter password={password} />
         </div>
+        {/* 전화번호 필드 - 나중에 활성화 예정
         <div>
           <label className="block text-sm font-medium text-foreground/80">전화번호 (선택)</label>
           <p className="mt-0.5 text-xs text-foreground/50">핸드폰 번호는 노출되지 않으며 교회에서 단체문자 발송시에만 사용됩니다.</p>
@@ -193,6 +194,7 @@ export default function SignupPage() {
             />
           </div>
         </div>
+        */}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
