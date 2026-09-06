@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { MIN_PASSWORD_LENGTH } from "@/lib/passwordPolicy";
 import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -48,8 +49,7 @@ export default function ResetPasswordPage() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
           <label className="block text-sm font-medium text-foreground/80">새 비밀번호</label>
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={MIN_PASSWORD_LENGTH}
             value={password}

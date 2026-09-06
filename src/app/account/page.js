@@ -11,6 +11,7 @@ import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { resizeImageFile } from "@/lib/resizeImage";
 import { MIN_PASSWORD_LENGTH } from "@/lib/passwordPolicy";
 import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
+import PasswordInput from "@/components/PasswordInput";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -401,8 +402,7 @@ export default function AccountPage() {
 
           <div>
             <label className="block text-sm text-foreground/60">새 비밀번호</label>
-            <input
-              type="password"
+            <PasswordInput
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder={`${MIN_PASSWORD_LENGTH}자 이상`}
@@ -412,8 +412,7 @@ export default function AccountPage() {
           </div>
           <div>
             <label className="block text-sm text-foreground/60">새 비밀번호 확인</label>
-            <input
-              type="password"
+            <PasswordInput
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="한 번 더 입력"

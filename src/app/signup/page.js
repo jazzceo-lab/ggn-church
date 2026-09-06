@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { DISTRICT_NAMES, DEPARTMENT_GROUPS } from "@/lib/teamRoster";
 import { MIN_PASSWORD_LENGTH } from "@/lib/passwordPolicy";
 import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
+import PasswordInput from "@/components/PasswordInput";
 
 const DISTRICT_OPTIONS = [...DISTRICT_NAMES, ...DEPARTMENT_GROUPS];
 
@@ -166,8 +167,7 @@ export default function SignupPage() {
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground/80">비밀번호</label>
-          <input
-            type="password"
+          <PasswordInput
             required
             minLength={MIN_PASSWORD_LENGTH}
             value={password}
