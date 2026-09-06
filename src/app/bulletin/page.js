@@ -315,13 +315,23 @@ export default function BulletinPage() {
   }, []);
 
   // 페이지 로드 후 예배순서 섹션으로 자동 스크롤
-  // 링크에서 돌아올 때만 스크롤 (앱 재시작이나 카톡 링크로 직접 진입하면 스크롤 안 함)
+  // 다른 페이지에서 돌아왔을 때만 스크롤
   useEffect(() => {
+    // flag 또는 이전 경로 확인
     const shouldScroll = sessionStorage.getItem("returnFromBulletinLink");
-    if (!shouldScroll) {
+    const previousPath = sessionStorage.getItem("previousPath");
+
+    // flag가 있거나, 이전 경로가 다른 페이지면 스크롤
+    if (!shouldScroll && previousPath === "/bulletin") {
+      sessionStorage.setItem("previousPath", "/bulletin");
       return;
     }
+
+    // flag 제거
     sessionStorage.removeItem("returnFromBulletinLink");
+
+    // 현재 경로 저장
+    sessionStorage.setItem("previousPath", "/bulletin");
 
     let userInteracted = false;
 
