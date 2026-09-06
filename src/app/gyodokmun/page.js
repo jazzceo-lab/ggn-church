@@ -72,9 +72,11 @@ export default function GyodokmunPage() {
             {entry.lines.map((line, i) => (
               <p key={i} className={line.startsWith("(다같이)") ? "text-xl font-semibold text-brand-dark" : ""}>
                 {line}
+                {i === entry.lines.length - 1 && (
+                  <span className="text-brand-dark">  (아멘)</span>
+                )}
               </p>
             ))}
-            <p className="mt-4 text-xl font-semibold text-brand-dark">(아멘)</p>
           </div>
         )}
       </div>
