@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
@@ -275,6 +276,21 @@ export default function BulletinPage() {
         setMembers(data ?? []);
       });
   }, [user]);
+
+  const pathname = usePathname();
+
+  // 주보에서 다른 페이지로 이동할 때 flag 설정
+  useEffect(() => {
+    const previousPathname = sessionStorage.getItem("previousPathname");
+
+    // /bulletin에서 다른 경로로 이동했을 때
+    if (previousPathname === "/bulletin" && pathname !== "/bulletin") {
+      sessionStorage.setItem("returnFromBulletinLink", "true");
+    }
+
+    // 현재 경로 저장
+    sessionStorage.setItem("previousPathname", pathname);
+  }, [pathname]);
 
   // 핸드폰 뒤로 가기 버튼 감지
   useEffect(() => {
