@@ -67,7 +67,7 @@ function PrayerPathBackground() {
   );
 }
 
-function BulletinContent({ bulletin, members }) {
+function BulletinContent({ bulletin, members, onLinkClick }) {
   return (
     <>
       <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15" id="news-section">
@@ -105,6 +105,7 @@ function BulletinContent({ bulletin, members }) {
                 {hymnNumber ? (
                   <Link
                     href={`/hymns?open=${hymnNumber}`}
+                    onClick={onLinkClick}
                     className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                   >
                     {detail}
@@ -112,6 +113,7 @@ function BulletinContent({ bulletin, members }) {
                 ) : gyodokmunNumber ? (
                   <Link
                     href={`/gyodokmun?open=${gyodokmunNumber}`}
+                    onClick={onLinkClick}
                     className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                   >
                     {detail}
@@ -121,6 +123,7 @@ function BulletinContent({ bulletin, members }) {
                     {bibleLink ? (
                       <a
                         href={bibleLink}
+                        onClick={onLinkClick}
                         className="text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                       >
                         {refPart}
@@ -134,6 +137,7 @@ function BulletinContent({ bulletin, members }) {
                         {readerMemberId ? (
                           <Link
                             href={`/messages/${readerMemberId}`}
+                            onClick={onLinkClick}
                             className="text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                           >
                             {namePart}
@@ -147,6 +151,7 @@ function BulletinContent({ bulletin, members }) {
                 ) : isConfession ? (
                   <Link
                     href="/confession"
+                    onClick={onLinkClick}
                     className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                   >
                     {detail}
@@ -154,6 +159,7 @@ function BulletinContent({ bulletin, members }) {
                 ) : prayerMemberId ? (
                   <Link
                     href={`/messages/${prayerMemberId}`}
+                    onClick={onLinkClick}
                     className="flex-1 text-right text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
                   >
                     {detail}
@@ -271,8 +277,14 @@ export default function BulletinPage() {
   }, [user]);
 
   // 페이지 로드 후 예배순서 섹션으로 자동 스크롤
-  // 사용자가 이미 스크롤/터치했으면 무시
+  // 링크에서 돌아올 때만 스크롤 (앱 재시작이나 카톡 링크로 직접 진입하면 스크롤 안 함)
   useEffect(() => {
+    const shouldScroll = sessionStorage.getItem("returnFromBulletinLink");
+    if (!shouldScroll) {
+      return;
+    }
+    sessionStorage.removeItem("returnFromBulletinLink");
+
     let userInteracted = false;
 
     const handleUserInteraction = () => {
@@ -301,6 +313,10 @@ export default function BulletinPage() {
       window.removeEventListener("wheel", handleUserInteraction);
     };
   }, [bulletins.length]);
+
+  const handleLinkClick = () => {
+    sessionStorage.setItem("returnFromBulletinLink", "true");
+  };
 
   if (bulletinsLoading) {
     return (
@@ -363,7 +379,7 @@ export default function BulletinPage() {
         </Link>
       )}
 
-      <BulletinContent bulletin={current} members={members} />
+      <BulletinContent bulletin={current} members={members} onLinkClick={handleLinkClick} />
 
       {past.length > 0 && (
         <section className="mt-10 border-t border-black/10 pt-6 dark:border-white/10">
@@ -382,7 +398,7 @@ export default function BulletinPage() {
                 </button>
                 {openIssue === b.issue && (
                   <div className="px-4 pb-6">
-                    <BulletinContent bulletin={b} members={members} />
+                    <BulletinContent bulletin={b} members={members} onLinkClick={handleLinkClick} />
                   </div>
                 )}
               </li>
