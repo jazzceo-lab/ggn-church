@@ -341,7 +341,7 @@ export default function BulletinPage() {
       window.removeEventListener("touchstart", handleUserInteraction);
       window.removeEventListener("wheel", handleUserInteraction);
     };
-  }, [bulletins.length]);
+  }, [bulletins.length, pathname]);
 
   const handleLinkClick = () => {
     sessionStorage.setItem("returnFromBulletinLink", "true");
