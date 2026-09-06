@@ -289,12 +289,19 @@ export default function BulletinPage() {
 
   // 핸드폰 뒤로 가기 버튼 감지
   useEffect(() => {
+    console.log("주보: popstate 리스너 등록");
+
     const handlePopState = () => {
+      console.log("주보: popstate 이벤트 감지됨, 스크롤 실행");
       scrollToWorship();
     };
 
     window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+
+    return () => {
+      console.log("주보: popstate 리스너 제거");
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, []);
 
   // 페이지 로드 후 예배순서 섹션으로 자동 스크롤
