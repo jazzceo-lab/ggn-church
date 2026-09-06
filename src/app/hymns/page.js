@@ -191,6 +191,7 @@ export default function HymnsPage() {
   function closeHymn() {
     if (document.fullscreenElement) document.exitFullscreen();
     if (cameFromBulletin) {
+      sessionStorage.setItem("returnFromBulletinLink", "true");
       router.push("/bulletin");
       return;
     }

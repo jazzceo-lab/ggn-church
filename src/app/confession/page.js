@@ -44,6 +44,7 @@ export default function ConfessionPage() {
           </div>
           <Link
             href="/bulletin"
+            onClick={() => sessionStorage.setItem("returnFromBulletinLink", "true")}
             className="whitespace-nowrap rounded-full border border-black/10 px-3 py-1 text-sm text-foreground/80 transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
           >
             ← 되돌아가기
