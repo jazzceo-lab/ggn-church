@@ -272,7 +272,7 @@ export default function BulletinPage() {
     window.addEventListener("touchstart", handleUserInteraction, { once: true });
     window.addEventListener("wheel", handleUserInteraction, { once: true });
 
-    // 페이지 로드 후 100ms 후 스크롤
+    // 페이지 로드 후 300ms 후 스크롤
     const timer = setTimeout(() => {
       if (!userInteracted) {
         const element = document.getElementById("worship-order");
@@ -280,7 +280,7 @@ export default function BulletinPage() {
           element.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }
-    }, 100);
+    }, 300);
 
     return () => {
       clearTimeout(timer);
