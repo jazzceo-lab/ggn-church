@@ -277,26 +277,6 @@ export default function BulletinPage() {
       });
   }, [user]);
 
-  const pathname = usePathname();
-
-  // 주보와 다른 페이지 사이 이동 감지
-  useEffect(() => {
-    const previousPathname = sessionStorage.getItem("previousPathname");
-
-    console.log("Pathname changed:", { previousPathname, currentPathname: pathname });
-
-    // /bulletin에서 다른 경로로 이동했을 때 또는 다른 페이지에서 /bulletin으로 돌아왔을 때
-    if (previousPathname !== null) {
-      if ((previousPathname === "/bulletin" && pathname !== "/bulletin") ||
-          (previousPathname !== "/bulletin" && pathname === "/bulletin")) {
-        console.log("Setting returnFromBulletinLink flag");
-        sessionStorage.setItem("returnFromBulletinLink", "true");
-      }
-    }
-
-    // 현재 경로 저장
-    sessionStorage.setItem("previousPathname", pathname);
-  }, [pathname]);
 
   // 핸드폰 뒤로 가기 버튼 감지
   useEffect(() => {
@@ -344,7 +324,7 @@ export default function BulletinPage() {
       window.removeEventListener("touchstart", handleUserInteraction);
       window.removeEventListener("wheel", handleUserInteraction);
     };
-  }, [bulletins.length, pathname]);
+  }, [bulletins.length]);
 
   const handleLinkClick = () => {
     sessionStorage.setItem("returnFromBulletinLink", "true");
