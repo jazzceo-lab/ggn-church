@@ -74,6 +74,7 @@ export default function GyodokmunPage() {
                 {line}
               </p>
             ))}
+            <p className="mt-4 text-xl font-semibold text-brand-dark">(아멘)</p>
           </div>
         )}
       </div>
