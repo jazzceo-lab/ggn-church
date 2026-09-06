@@ -287,12 +287,16 @@ export default function BulletinPage() {
     }, 300);
   };
 
+  // 첫 진입 여부 추적
+  const isFirstLoad = useRef(true);
+
   // 핸드폰 뒤로 가기 버튼 감지
   useEffect(() => {
     console.log("주보: 뒤로 가기 리스너 등록");
 
     const handlePopState = () => {
-      console.log("주보: popstate 이벤트 감지, 자동 스크롤 실행");
+      console.log("주보: popstate 이벤트 감지");
+      // 뒤로 가기 시 항상 스크롤
       scrollToWorship();
     };
 
@@ -317,49 +321,26 @@ export default function BulletinPage() {
   // 페이지 로드 후 예배순서 섹션으로 자동 스크롤
   // 다른 페이지에서 돌아왔을 때만 스크롤
   useEffect(() => {
-    // flag 또는 이전 경로 확인
-    const shouldScroll = sessionStorage.getItem("returnFromBulletinLink");
-    const previousPath = sessionStorage.getItem("previousPath");
+    console.log("주보: 스크롤 useEffect 실행, isFirstLoad:", isFirstLoad.current);
 
-    // flag가 있거나, 이전 경로가 다른 페이지면 스크롤
-    if (!shouldScroll && previousPath === "/bulletin") {
-      sessionStorage.setItem("previousPath", "/bulletin");
+    // 첫 진입이면 스크롤 안 함
+    if (isFirstLoad.current) {
+      isFirstLoad.current = false;
+      sessionStorage.setItem("returnedFromBulletin", "false");
       return;
     }
 
-    // flag 제거
-    sessionStorage.removeItem("returnFromBulletinLink");
+    // "돌아가기" 버튼으로 온 경우
+    const shouldScroll = sessionStorage.getItem("returnFromBulletinLink");
+    if (shouldScroll) {
+      console.log("주보: returnFromBulletinLink flag로 스크롤");
+      sessionStorage.removeItem("returnFromBulletinLink");
+      scrollToWorship();
+      return;
+    }
 
-    // 현재 경로 저장
-    sessionStorage.setItem("previousPath", "/bulletin");
-
-    let userInteracted = false;
-
-    const handleUserInteraction = () => {
-      userInteracted = true;
-    };
-
-    // 사용자 상호작용 감지
-    window.addEventListener("scroll", handleUserInteraction, { once: true });
-    window.addEventListener("touchstart", handleUserInteraction, { once: true });
-    window.addEventListener("wheel", handleUserInteraction, { once: true });
-
-    // 페이지 로드 후 300ms 후 스크롤
-    const timer = setTimeout(() => {
-      if (!userInteracted) {
-        const element = document.getElementById("worship-order");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("scroll", handleUserInteraction);
-      window.removeEventListener("touchstart", handleUserInteraction);
-      window.removeEventListener("wheel", handleUserInteraction);
-    };
+    // 스크롤 안 함
+    console.log("주보: 첫 진입이 아니지만 flag가 없어 스크롤 안 함");
   }, []);
 
   const handleLinkClick = () => {
