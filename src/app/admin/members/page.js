@@ -51,7 +51,21 @@ export default function AdminMembersPage() {
       )
       .order("created_at", { ascending: false });
 
-    if (!error) setMembers(data);
+    if (error) {
+      console.error("회원 조회 실패:", error.message);
+      // phone_number 필드가 없을 수 있으니 재시도
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("profiles")
+        .select(
+          "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at"
+        )
+        .order("created_at", { ascending: false });
+      if (!fallbackError) {
+        setMembers(fallbackData ?? []);
+      }
+    } else {
+      setMembers(data ?? []);
+    }
 
     const { data: subs } = await supabase.from("push_subscriptions").select("user_id");
     setNotifyingIds(new Set((subs ?? []).map((s) => s.user_id)));
