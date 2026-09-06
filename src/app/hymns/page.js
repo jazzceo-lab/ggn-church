@@ -191,7 +191,10 @@ export default function HymnsPage() {
   function closeHymn() {
     if (document.fullscreenElement) document.exitFullscreen();
     if (cameFromBulletin) {
-      sessionStorage.setItem("returnFromBulletinLink", "true");
+      setTimeout(() => {
+        const element = document.getElementById("worship-order");
+        if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
       router.push("/bulletin");
       return;
     }

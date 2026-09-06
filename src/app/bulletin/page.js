@@ -277,11 +277,20 @@ export default function BulletinPage() {
       });
   }, [user]);
 
+  // 예배순서로 스크롤하는 함수
+  const scrollToWorship = () => {
+    setTimeout(() => {
+      const element = document.getElementById("worship-order");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 300);
+  };
 
   // 핸드폰 뒤로 가기 버튼 감지
   useEffect(() => {
     const handlePopState = () => {
-      sessionStorage.setItem("returnFromBulletinLink", "true");
+      scrollToWorship();
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -327,6 +336,7 @@ export default function BulletinPage() {
   }, [bulletins.length]);
 
   const handleLinkClick = () => {
+    // 다른 페이지로 가므로, 돌아올 때 스크롤하도록 flag 설정
     sessionStorage.setItem("returnFromBulletinLink", "true");
   };
 
