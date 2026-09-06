@@ -49,25 +49,13 @@ export default function AdminMembersPage() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at, phone"
+        "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at"
       )
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("회원 조회 실패 (phone 포함):", error.message);
-      // phone 필드가 없을 수 있으니 재시도
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from("profiles")
-        .select(
-          "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at"
-        )
-        .order("created_at", { ascending: false });
-      if (fallbackError) {
-        console.error("회원 조회 실패 (재시도):", fallbackError.message);
-        setError(fallbackError.message);
-      } else {
-        setMembers(fallbackData ?? []);
-      }
+      console.error("회원 조회 실패:", error.message);
+      setError(error.message);
     } else {
       setMembers(data ?? []);
     }
@@ -401,9 +389,6 @@ export default function AdminMembersPage() {
                 )}
               </p>
               <p className="mt-1 text-xs text-foreground/50">{m.email}</p>
-              {m.phone && (
-                <p className="mt-0.5 text-xs text-foreground/50">📞 {m.phone}</p>
-              )}
               <p className="mt-0.5 text-xs text-foreground/40">
                 가입일 {new Date(m.created_at).toLocaleString("ko-KR")}
               </p>
