@@ -70,7 +70,7 @@ function PrayerPathBackground() {
 function BulletinContent({ bulletin, members }) {
   return (
     <>
-      <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15">
+      <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15" id="news-section">
         <h2 className="font-serif font-semibold text-foreground">교회소식</h2>
         <ol className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
           {bulletin.news.map((n, i) => (
@@ -81,7 +81,7 @@ function BulletinContent({ bulletin, members }) {
         </ol>
       </section>
 
-      <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15">
+      <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15" id="worship-order">
         <div className="flex items-baseline justify-between">
           <h2 className="font-serif font-semibold text-foreground">예배순서</h2>
           <p className="text-sm text-foreground/50">오전 11:30 · 인도 임원일 목사</p>
@@ -167,7 +167,7 @@ function BulletinContent({ bulletin, members }) {
         </ul>
       </section>
 
-      <section className="mt-6 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10">
+      <section className="mt-6 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10" id="theme-section">
         <p className="text-sm font-medium text-brand-dark">{bulletin.theme.year}</p>
         <p className="mt-1 font-serif text-lg font-semibold text-foreground">
           &ldquo;{bulletin.theme.verse}&rdquo;
@@ -181,7 +181,7 @@ function BulletinContent({ bulletin, members }) {
         </ol>
       </section>
 
-      <section className="relative mt-6 overflow-hidden rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+      <section className="relative mt-6 overflow-hidden rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5" id="prayer-section">
         <PrayerPathBackground />
         <div className="relative">
           <h2 className="font-serif font-semibold text-foreground">기도제목</h2>
@@ -193,7 +193,7 @@ function BulletinContent({ bulletin, members }) {
         </div>
       </section>
 
-      <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+      <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5" id="staff-section">
         <h2 className="font-serif font-semibold text-foreground">섬김이</h2>
         <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
           {bulletin.staff.map(([role, names]) => (
@@ -257,6 +257,38 @@ export default function BulletinPage() {
         setMembers(data ?? []);
       });
   }, [user]);
+
+  // 페이지 로드 후 예배순서 섹션으로 자동 스크롤
+  // 사용자가 이미 스크롤/터치했으면 무시
+  useEffect(() => {
+    let userInteracted = false;
+
+    const handleUserInteraction = () => {
+      userInteracted = true;
+    };
+
+    // 사용자 상호작용 감지
+    window.addEventListener("scroll", handleUserInteraction, { once: true });
+    window.addEventListener("touchstart", handleUserInteraction, { once: true });
+    window.addEventListener("wheel", handleUserInteraction, { once: true });
+
+    // 페이지 로드 후 100ms 후 스크롤
+    const timer = setTimeout(() => {
+      if (!userInteracted) {
+        const element = document.getElementById("worship-order");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("scroll", handleUserInteraction);
+      window.removeEventListener("touchstart", handleUserInteraction);
+      window.removeEventListener("wheel", handleUserInteraction);
+    };
+  }, [bulletins.length]);
 
   if (bulletinsLoading) {
     return (
