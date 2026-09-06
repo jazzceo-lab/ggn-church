@@ -279,13 +279,16 @@ export default function BulletinPage() {
 
   const pathname = usePathname();
 
-  // 주보에서 다른 페이지로 이동할 때 flag 설정
+  // 주보와 다른 페이지 사이 이동 감지
   useEffect(() => {
     const previousPathname = sessionStorage.getItem("previousPathname");
 
-    // /bulletin에서 다른 경로로 이동했을 때
-    if (previousPathname === "/bulletin" && pathname !== "/bulletin") {
-      sessionStorage.setItem("returnFromBulletinLink", "true");
+    // /bulletin에서 다른 경로로 이동했을 때 또는 다른 페이지에서 /bulletin으로 돌아왔을 때
+    if (previousPathname !== null) {
+      if ((previousPathname === "/bulletin" && pathname !== "/bulletin") ||
+          (previousPathname !== "/bulletin" && pathname === "/bulletin")) {
+        sessionStorage.setItem("returnFromBulletinLink", "true");
+      }
     }
 
     // 현재 경로 저장
