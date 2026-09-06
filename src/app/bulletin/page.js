@@ -221,7 +221,7 @@ export default function BulletinPage() {
     const style = document.createElement("style");
     style.textContent = `
       #worship-order {
-        scroll-margin-top: 120px;
+        scroll-margin-top: 200px;
       }
     `;
     document.head.appendChild(style);
