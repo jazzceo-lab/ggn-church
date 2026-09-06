@@ -350,7 +350,7 @@ export default function BulletinPage() {
       window.removeEventListener("touchstart", handleUserInteraction);
       window.removeEventListener("wheel", handleUserInteraction);
     };
-  }, [bulletins.length]);
+  }, []);
 
   const handleLinkClick = () => {
     // 다른 페이지로 가므로, 돌아올 때 스크롤하도록 flag 설정
