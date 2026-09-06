@@ -47,7 +47,7 @@ export default function AdminMembersPage() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at"
+        "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at, phone_number"
       )
       .order("created_at", { ascending: false });
 
@@ -377,6 +377,9 @@ export default function AdminMembersPage() {
                 )}
               </p>
               <p className="mt-1 text-xs text-foreground/50">{m.email}</p>
+              {m.phone_number && (
+                <p className="mt-0.5 text-xs text-foreground/50">📞 {m.phone_number}</p>
+              )}
               <p className="mt-0.5 text-xs text-foreground/40">
                 가입일 {new Date(m.created_at).toLocaleString("ko-KR")}
               </p>
