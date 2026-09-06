@@ -9,12 +9,20 @@ import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 
 const DISTRICT_OPTIONS = [...DISTRICT_NAMES, ...DEPARTMENT_GROUPS];
 
+// "010-" 뒤에 이어지는 8자리만 입력받아 1234-5678 형태로 다듬는다.
+function formatPhoneRest(raw) {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 4) return digits;
+  return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+}
+
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [groupTab, setGroupTab] = useState(null);
   const [district, setDistrict] = useState("");
+  const [phoneRest, setPhoneRest] = useState("");
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,10 +47,12 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
 
+    const fullPhone = phoneRest ? `010-${phoneRest}` : null;
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { display_name: displayName, district: district || null } },
+      options: { data: { display_name: displayName, district: district || null, phone: fullPhone } },
     });
 
     setLoading(false);
@@ -166,6 +176,21 @@ export default function SignupPage() {
             className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
           />
           <PasswordStrengthMeter password={password} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground/80">전화번호</label>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-sm text-foreground/60">010-</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength="9"
+              value={phoneRest}
+              onChange={(e) => setPhoneRest(formatPhoneRest(e.target.value))}
+              placeholder="0000-0000"
+              className="flex-1 rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
+            />
+          </div>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
