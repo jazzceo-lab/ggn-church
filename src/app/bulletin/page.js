@@ -287,20 +287,19 @@ export default function BulletinPage() {
     }, 300);
   };
 
-  // 핸드폰 뒤로 가기 버튼 감지 (popstate, pageshow, visibilitychange)
+  // 핸드폰 뒤로 가기 버튼 감지
   useEffect(() => {
     console.log("주보: 뒤로 가기 리스너 등록");
 
     const handlePopState = () => {
-      console.log("주보: popstate 이벤트 감지");
-      if (sessionStorage.getItem("returnFromBulletinLink")) {
-        scrollToWorship();
-      }
+      console.log("주보: popstate 이벤트 감지, 자동 스크롤 실행");
+      scrollToWorship();
     };
 
     const handlePageShow = (event) => {
       console.log("주보: pageshow 이벤트 감지, persisted:", event.persisted);
-      if (event.persisted && sessionStorage.getItem("returnFromBulletinLink")) {
+      if (event.persisted) {
+        console.log("주보: 페이지 복원됨, 자동 스크롤 실행");
         scrollToWorship();
       }
     };
