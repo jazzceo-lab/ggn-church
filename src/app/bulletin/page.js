@@ -225,7 +225,7 @@ function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
 }
 
 export default function BulletinPage() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [bulletins, setBulletins] = useState([]);
   const [bulletinsLoading, setBulletinsLoading] = useState(true);
   const [bulletinsError, setBulletinsError] = useState(false);
@@ -245,8 +245,12 @@ export default function BulletinPage() {
   }, []);
 
   useEffect(() => {
+    // 로그인 전에는 잠깐이라도 교회소식이 포함된 원본을 받았다 지우는 일이 없도록,
+    // 로그인 여부가 확정되기 전에는 조회하지 않는다. 로그인 상태면 교회소식까지 다
+    // 내려주는 원본 테이블을, 비로그인이면 교회소식이 빠진 공개용 뷰를 사용한다.
+    if (authLoading) return;
     supabase
-      .from("bulletins")
+      .from(user ? "bulletins" : "bulletins_public")
       .select("id, issue, bulletin_date, content")
       .order("bulletin_date", { ascending: false })
       .order("id", { ascending: false })
@@ -266,7 +270,8 @@ export default function BulletinPage() {
         );
         setBulletinsLoading(false);
       });
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
 
   const [current, ...past] = bulletins;
 
