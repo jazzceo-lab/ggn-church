@@ -34,6 +34,8 @@ export default function AdminMembersPage() {
   const [search, setSearch] = useState("");
   const [openDistricts, setOpenDistricts] = useState(new Set());
   const [activityById, setActivityById] = useState({});
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameInput, setRenameInput] = useState("");
 
   function toggleDistrict(name) {
     setOpenDistricts((prev) => {
@@ -157,6 +159,34 @@ export default function AdminMembersPage() {
       .eq("id", member.id);
     if (error) {
       window.alert("변경에 실패했어요: " + error.message);
+      return;
+    }
+    loadMembers();
+  }
+
+  // 동명이인을 구분하려고 이름 뒤에 "A"/"B" 등을 붙이는 용도. 자유롭게 직접 수정도 가능.
+  function startRename(member) {
+    setRenamingId(member.id);
+    setRenameInput(member.display_name ?? "");
+  }
+
+  async function saveRename(memberId) {
+    const newName = renameInput.trim();
+    if (!newName) return;
+    const { error } = await supabase.from("profiles").update({ display_name: newName }).eq("id", memberId);
+    if (error) {
+      window.alert("이름 변경에 실패했어요: " + error.message);
+      return;
+    }
+    setRenamingId(null);
+    loadMembers();
+  }
+
+  async function appendSuffix(member, suffix) {
+    const newName = `${member.display_name ?? ""}${suffix}`;
+    const { error } = await supabase.from("profiles").update({ display_name: newName }).eq("id", member.id);
+    if (error) {
+      window.alert("이름 변경에 실패했어요: " + error.message);
       return;
     }
     loadMembers();
@@ -334,25 +364,67 @@ export default function AdminMembersPage() {
                 className="rounded-lg border border-amber-300/50 bg-white/60 p-3 dark:border-amber-400/20 dark:bg-black/10"
               >
                 <p className="text-sm font-semibold text-foreground">{group[0].display_name}</p>
-                <ul className="mt-1.5 space-y-1.5">
+                <ul className="mt-1.5 space-y-2">
                   {group.map((m) => (
-                    <li
-                      key={m.id}
-                      className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground/70"
-                    >
-                      <span>
-                        {m.email} · {m.district || "미배정"} · 가입{" "}
-                        {new Date(m.created_at).toLocaleDateString("ko-KR")} · 마지막 로그인{" "}
-                        {activityById[m.id]?.lastSignInAt
-                          ? new Date(activityById[m.id].lastSignInAt).toLocaleDateString("ko-KR")
-                          : "기록 없음"}
-                      </span>
-                      <button
-                        onClick={() => handleDelete(m)}
-                        className="shrink-0 rounded-full border border-black/10 px-2 py-0.5 text-foreground/60 hover:bg-red-50 hover:text-red-600 dark:border-white/10"
-                      >
-                        삭제
-                      </button>
+                    <li key={m.id} className="text-xs text-foreground/70">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span>
+                          {m.email} · {m.district || "미배정"} · 가입{" "}
+                          {new Date(m.created_at).toLocaleDateString("ko-KR")} · 마지막 로그인{" "}
+                          {activityById[m.id]?.lastSignInAt
+                            ? new Date(activityById[m.id].lastSignInAt).toLocaleDateString("ko-KR")
+                            : "기록 없음"}
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1.5">
+                          <button
+                            onClick={() => appendSuffix(m, "A")}
+                            className="rounded-full border border-black/10 px-2 py-0.5 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                          >
+                            +A
+                          </button>
+                          <button
+                            onClick={() => appendSuffix(m, "B")}
+                            className="rounded-full border border-black/10 px-2 py-0.5 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                          >
+                            +B
+                          </button>
+                          <button
+                            onClick={() => startRename(m)}
+                            className="rounded-full border border-black/10 px-2 py-0.5 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                          >
+                            이름 수정
+                          </button>
+                          <button
+                            onClick={() => handleDelete(m)}
+                            className="rounded-full border border-black/10 px-2 py-0.5 text-foreground/60 hover:bg-red-50 hover:text-red-600 dark:border-white/10"
+                          >
+                            삭제
+                          </button>
+                        </span>
+                      </div>
+                      {renamingId === m.id && (
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={renameInput}
+                            onChange={(e) => setRenameInput(e.target.value)}
+                            className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
+                          />
+                          <button
+                            onClick={() => saveRename(m.id)}
+                            className="rounded-full bg-brand px-2 py-1 text-xs text-white hover:bg-brand-dark"
+                          >
+                            저장
+                          </button>
+                          <button
+                            onClick={() => setRenamingId(null)}
+                            className="text-foreground/40 hover:text-red-600"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>
