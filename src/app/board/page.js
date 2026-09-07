@@ -15,11 +15,14 @@ import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
 import AvatarLightbox from "@/components/AvatarLightbox";
 
-const CATEGORIES = [
+// 기본 카테고리 (DB에서 로드 전 폴백)
+const DEFAULT_CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
   { key: "suggestion", label: "교회제안" },
+  { key: "help", label: "앱사용문의" },
+  { key: "resources", label: "자료실" },
 ];
 
 const DEFAULT_CATEGORY = "help";
@@ -45,6 +48,7 @@ export default function BoardPage() {
     hasRoleScope,
     markBoardSeen,
   } = useAuth();
+  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const canReplyToSuggestion = category !== "suggestion" || isAdmin || hasRole("pastor_reply");
   const [districtView, setDistrictView] = useState(null);
@@ -533,7 +537,7 @@ export default function BoardPage() {
       </div>
 
       <div className="mt-2 flex items-center gap-2 border-b border-black/10 dark:border-white/10">
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button
             key={c.key}
             onClick={() => setCategory(c.key)}
