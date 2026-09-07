@@ -569,7 +569,8 @@ export default function BoardPage() {
           type="button"
           onClick={() => setShowCompose(true)}
           aria-label="새 글 쓰기"
-          className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-3xl leading-none text-white shadow-lg transition-colors hover:bg-brand-dark"
+          className="fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand text-3xl leading-none text-white shadow-lg transition-colors hover:bg-brand-dark"
+          style={{ bottom: "calc(5.25rem + env(safe-area-inset-bottom))" }}
         >
           +
         </button>
