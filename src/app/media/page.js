@@ -8,8 +8,8 @@ import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { compressAudioFile } from "@/lib/compressAudio";
 
+// "설교 음성" 탭은 관리자 요청으로 숨김 처리함 (관련 코드/데이터는 그대로 두고 탭만 뺌).
 const TABS = [
-  { key: "audio", label: "설교 음성" },
   { key: "video", label: "찬양팀" },
   { key: "youtube", label: "유튜브 영상" },
 ];
@@ -27,7 +27,7 @@ const PENDING_APPROVAL_NOTICE = "교인전용 콘텐츠로 교회승인대기중
 export default function MediaPage() {
   const { user, loading: authLoading, isAdmin, hasRole } = useAuth();
   const canManageVideo = isAdmin || hasRole("media_manager");
-  const [tab, setTab] = useState("audio");
+  const [tab, setTab] = useState("video");
   const [items, setItems] = useState([]);
   const [urls, setUrls] = useState({});
   const [loading, setLoading] = useState(true);
