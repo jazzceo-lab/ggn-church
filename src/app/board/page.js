@@ -55,6 +55,11 @@ export default function BoardPage() {
   const canUseDistrictBoard =
     category !== "district" || isAdmin || BOARD_DISTRICTS.includes(myDistrict);
   const isDistrictLeader = category === "district" && hasRoleScope("district_leader", activeDistrict);
+  const [districtAccount, setDistrictAccount] = useState(null);
+  const [editingAccount, setEditingAccount] = useState(false);
+  const [accountForm, setAccountForm] = useState({ bank_name: "카카오뱅크", account_number: "", account_holder: "" });
+  const [savingAccount, setSavingAccount] = useState(false);
+  const [copiedAccount, setCopiedAccount] = useState(false);
   const [posts, setPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [showCompose, setShowCompose] = useState(false);
@@ -284,6 +289,59 @@ export default function BoardPage() {
     loadPosts(category, activeDistrict);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, activeDistrict]);
+
+  // 구역별 회비 계좌(카카오뱅크 등) 정보를 불러온다. 없으면 null.
+  useEffect(() => {
+    setEditingAccount(false);
+    setCopiedAccount(false);
+    if (category !== "district" || !user || !activeDistrict) {
+      setDistrictAccount(null);
+      return;
+    }
+    supabase
+      .from("district_accounts")
+      .select("bank_name, account_number, account_holder")
+      .eq("district", activeDistrict)
+      .maybeSingle()
+      .then(({ data }) => {
+        setDistrictAccount(data ?? null);
+        setAccountForm(
+          data ?? { bank_name: "카카오뱅크", account_number: "", account_holder: "" }
+        );
+      });
+  }, [category, activeDistrict, user]);
+
+  async function handleSaveDistrictAccount() {
+    if (!accountForm.account_number.trim()) {
+      window.alert("계좌번호를 입력해주세요.");
+      return;
+    }
+    setSavingAccount(true);
+    const { error } = await supabase.from("district_accounts").upsert({
+      district: activeDistrict,
+      bank_name: accountForm.bank_name.trim() || "카카오뱅크",
+      account_number: accountForm.account_number.trim(),
+      account_holder: accountForm.account_holder.trim() || null,
+    });
+    setSavingAccount(false);
+    if (error) {
+      window.alert("저장에 실패했어요: " + error.message);
+      return;
+    }
+    setDistrictAccount({ ...accountForm });
+    setEditingAccount(false);
+  }
+
+  async function handleCopyAccount() {
+    if (!districtAccount) return;
+    try {
+      await navigator.clipboard.writeText(districtAccount.account_number);
+      setCopiedAccount(true);
+      setTimeout(() => setCopiedAccount(false), 1500);
+    } catch {
+      window.alert("복사에 실패했어요. 직접 선택해서 복사해주세요.");
+    }
+  }
 
   useEffect(() => {
     markBoardSeen();
@@ -518,6 +576,85 @@ export default function BoardPage() {
           <br />
           (구역장은 게시글 고정(📌 공지) 버튼 사용가능)
         </p>
+      )}
+
+      {category === "district" && user && canUseDistrictBoard && (
+        <div className="mt-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
+          {editingAccount ? (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground/80">{activeDistrict} 회비 계좌 등록</p>
+              <input
+                type="text"
+                value={accountForm.bank_name}
+                onChange={(e) => setAccountForm((f) => ({ ...f, bank_name: e.target.value }))}
+                placeholder="은행명 (예: 카카오뱅크)"
+                className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+              />
+              <input
+                type="text"
+                value={accountForm.account_number}
+                onChange={(e) => setAccountForm((f) => ({ ...f, account_number: e.target.value }))}
+                placeholder="계좌번호"
+                className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+              />
+              <input
+                type="text"
+                value={accountForm.account_holder}
+                onChange={(e) => setAccountForm((f) => ({ ...f, account_holder: e.target.value }))}
+                placeholder="예금주 (선택)"
+                className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveDistrictAccount}
+                  disabled={savingAccount}
+                  className="rounded-full bg-brand px-4 py-2 text-xs text-white hover:bg-brand-dark disabled:opacity-50"
+                >
+                  {savingAccount ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  onClick={() => setEditingAccount(false)}
+                  className="rounded-full border border-black/10 px-4 py-2 text-xs text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : districtAccount ? (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-medium text-brand-dark">🏦 {activeDistrict} 회비 계좌</p>
+                <p className="mt-0.5 text-sm text-foreground">
+                  {districtAccount.bank_name} {districtAccount.account_number}
+                  {districtAccount.account_holder && ` (${districtAccount.account_holder})`}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  onClick={handleCopyAccount}
+                  className="rounded-full bg-brand px-3 py-1.5 text-xs text-white hover:bg-brand-dark"
+                >
+                  {copiedAccount ? "복사됨 ✓" : "계좌번호 복사"}
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => setEditingAccount(true)}
+                    className="rounded-full border border-black/10 px-3 py-1.5 text-xs text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                  >
+                    수정
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : isAdmin ? (
+            <button
+              onClick={() => setEditingAccount(true)}
+              className="text-xs text-brand-dark underline"
+            >
+              + {activeDistrict} 회비 계좌 등록하기
+            </button>
+          ) : null}
+        </div>
       )}
 
       {category === "district" && user && !isAdmin && !canUseDistrictBoard && (
