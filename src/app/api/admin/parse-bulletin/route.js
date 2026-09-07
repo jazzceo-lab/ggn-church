@@ -16,6 +16,15 @@ const BulletinExtractSchema = z.object({
     .array(z.object({ label: z.string(), detail: z.string() }))
     .describe("예배순서. 각 항목은 {label, detail} 쌍"),
   news: z.array(z.string()).describe("교회소식 각 항목의 전체 텍스트(번호 제외)"),
+  events: z
+    .array(
+      z.object({
+        title: z.string().describe("행사명"),
+        date: z.string().describe("행사 날짜, YYYY-MM-DD 형식"),
+        end_date: z.string().nullable().describe("행사 종료 날짜 (여러 날이면), YYYY-MM-DD 형식. 없으면 null"),
+      })
+    )
+    .describe("교회소식에서 추출한 일정 목록"),
 });
 
 const SYSTEM_PROMPT = `너는 한국 교회 주보 사진을 읽어서 구조화된 JSON으로 정리하는 도우미야. 매주 두 장의 사진이 들어온다: 표지(호수·날짜만 있음)와 예배순서·교회소식이 나온 상세 페이지. 아래 규칙을 정확히 지켜.
@@ -28,6 +37,7 @@ const SYSTEM_PROMPT = `너는 한국 교회 주보 사진을 읽어서 구조화
 - "성경봉독"의 detail은 반드시 "성경구절 · 이름" 형식으로 만든다 (가운데 점 · 로 구분). 예: "사무엘기상 16:6~13 · 양혜림 집사".
 - "< 설교 제목 >" 다음에 이어지는 기도/찬송/헌금기도/축도 등은 별도 섹션이 아니라 그냥 order 배열에 계속 이어서 추가한다.
 - 교회소식(news)은 번호(1. 2. 3. ...)를 떼고, 줄바꿈으로 나뉘어 있어도 한 항목이면 하나의 문자열로 합친다.
+- events: 교회소식 각 항목에서 날짜와 행사명이 명시된 것들을 추출한다. "2026.9.15 중보기도" 같이 명확한 날짜가 있으면 추출한다. "1박2일 캠프 (9.20~21)" 같이 여러 날에 걸치면 start_date와 end_date를 모두 채운다. 불확실한 날짜는 추출하지 않는다.
 - 사진에 없는 내용을 지어내지 않는다. 안 보이면 null 또는 빈 배열로 남긴다.`;
 
 export async function POST(request) {

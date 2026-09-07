@@ -69,6 +69,9 @@ function BulletinManager() {
   const [parseFiles, setParseFiles] = useState([]);
   const [parsing, setParsing] = useState(false);
   const [parseError, setParseError] = useState("");
+  const [extractedEvents, setExtractedEvents] = useState([]);
+  const [selectedEventIndices, setSelectedEventIndices] = useState(new Set());
+  const [addingEvents, setAddingEvents] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -158,6 +161,10 @@ function BulletinManager() {
         order: r.order?.length ? arrayToPairs(r.order.map((o) => [o.label, o.detail])) : f.order,
         news: r.news?.length ? arrayToLines(r.news) : f.news,
       }));
+      if (r.events?.length > 0) {
+        setExtractedEvents(r.events);
+        setSelectedEventIndices(new Set(Array.from({ length: r.events.length }, (_, i) => i)));
+      }
       setParseFiles([]);
     } catch (err) {
       setParseError("AI 처리에 실패했어요: " + err.message);
@@ -199,6 +206,40 @@ function BulletinManager() {
       return;
     }
     load();
+  }
+
+  async function handleAddEvents() {
+    if (selectedEventIndices.size === 0) {
+      window.alert("추가할 일정을 선택해주세요.");
+      return;
+    }
+    setAddingEvents(true);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const selectedEvents = Array.from(selectedEventIndices)
+      .map((i) => extractedEvents[i])
+      .filter(Boolean);
+
+    try {
+      const { error } = await supabase.from("calendar_events").insert(
+        selectedEvents.map((e) => ({
+          event_date: e.date,
+          event_end_date: e.end_date,
+          title: e.title,
+          created_by: sessionData.session?.user?.id,
+        }))
+      );
+      setAddingEvents(false);
+      if (error) {
+        window.alert("일정 추가에 실패했어요: " + error.message);
+        return;
+      }
+      window.alert(`${selectedEvents.length}개 일정이 교회일정에 추가되었어요.`);
+      setExtractedEvents([]);
+      setSelectedEventIndices(new Set());
+    } catch (err) {
+      setAddingEvents(false);
+      window.alert("일정 추가에 실패했어요: " + err.message);
+    }
   }
 
   return (
@@ -256,6 +297,43 @@ function BulletinManager() {
             >
               {parsing ? "AI가 읽는 중..." : "자동 채우기"}
             </button>
+
+            {extractedEvents.length > 0 && (
+              <div className="mt-3 space-y-2 rounded-lg border border-brand/30 bg-brand/5 p-3">
+                <p className="text-sm font-medium text-brand-dark">📅 추출된 일정 ({extractedEvents.length}개)</p>
+                <ul className="space-y-1.5">
+                  {extractedEvents.map((e, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedEventIndices.has(idx)}
+                        onChange={(ev) => {
+                          const next = new Set(selectedEventIndices);
+                          if (ev.target.checked) {
+                            next.add(idx);
+                          } else {
+                            next.delete(idx);
+                          }
+                          setSelectedEventIndices(next);
+                        }}
+                        className="mt-1"
+                      />
+                      <span className="text-sm text-foreground/80">
+                        {e.title} · {formatKoreanDate(e.date)}
+                        {e.end_date && e.end_date !== e.date && ` ~ ${formatKoreanDate(e.end_date)}`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={handleAddEvents}
+                  disabled={addingEvents || selectedEventIndices.size === 0}
+                  className="mt-2 rounded-full bg-brand px-3 py-1.5 text-xs text-white hover:bg-brand-dark disabled:opacity-50"
+                >
+                  {addingEvents ? "추가 중..." : `선택한 ${selectedEventIndices.size}개 일정 추가`}
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
