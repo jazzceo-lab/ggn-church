@@ -34,6 +34,7 @@ export default function AdminMembersPage() {
   const [search, setSearch] = useState("");
   const [openDistricts, setOpenDistricts] = useState(new Set());
   const [activityById, setActivityById] = useState({});
+  const [recentActivityById, setRecentActivityById] = useState({});
   const [renamingId, setRenamingId] = useState(null);
   const [renameInput, setRenameInput] = useState("");
 
@@ -78,6 +79,7 @@ export default function AdminMembersPage() {
 
     setLoading(false);
     loadActivity();
+    loadRecentActivity();
   }
 
   // 마지막 로그인 시각은 auth.users에 있어서 서비스 키로만 조회 가능 - 서버 API를 거친다.
@@ -90,6 +92,22 @@ export default function AdminMembersPage() {
     if (!res.ok) return;
     const data = await res.json();
     setActivityById(data.activity ?? {});
+  }
+
+  // "마지막 로그인"은 로그인 세션이 유지되는 동안은 안 갱신돼서, 실제로 계속 쓰고 있어도
+  // 예전 날짜로 보일 수 있다. page_views(로그인 후 페이지 이동마다 기록됨)에서 회원별
+  // 가장 최근 기록을 뽑아서 "실제 마지막 접속"에 가까운 값을 같이 보여준다.
+  async function loadRecentActivity() {
+    const { data } = await supabase
+      .from("page_views")
+      .select("user_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(3000);
+    const recent = {};
+    for (const row of data ?? []) {
+      if (!(row.user_id in recent)) recent[row.user_id] = row.created_at;
+    }
+    setRecentActivityById(recent);
   }
 
   async function addRole(memberId) {
@@ -354,8 +372,10 @@ export default function AdminMembersPage() {
             ⚠️ 이름이 같은 회원 {duplicateNameGroups.length}쌍
           </p>
           <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-            동명이인일 수도 있고, 본인이 예전 계정을 잊고 새로 가입했을 수도 있어요. 구역 미배정 +
-            마지막 로그인이 오래됐거나 없으면 잊어버린 예전 계정일 가능성이 높아요.
+            동명이인일 수도 있고, 본인이 예전 계정을 잊고 새로 가입했을 수도 있어요. "마지막 로그인"은
+            로그인 세션이 유지되는 동안은 갱신이 안 되니, 실제로 계속 쓰는지는 "최근 활동"(페이지 방문
+            기준) 쪽을 더 참고해주세요. 구역 미배정 + 최근 활동이 오래됐거나 없으면 잊어버린 예전
+            계정일 가능성이 높아요.
           </p>
           <div className="mt-3 space-y-3">
             {duplicateNameGroups.map((group) => (
@@ -373,6 +393,10 @@ export default function AdminMembersPage() {
                           {new Date(m.created_at).toLocaleDateString("ko-KR")} · 마지막 로그인{" "}
                           {activityById[m.id]?.lastSignInAt
                             ? new Date(activityById[m.id].lastSignInAt).toLocaleDateString("ko-KR")
+                            : "기록 없음"}{" "}
+                          · 최근 활동{" "}
+                          {recentActivityById[m.id]
+                            ? new Date(recentActivityById[m.id]).toLocaleDateString("ko-KR")
                             : "기록 없음"}
                         </span>
                         <span className="flex shrink-0 items-center gap-1.5">
@@ -576,6 +600,15 @@ export default function AdminMembersPage() {
                     {m.id in activityById ? "로그인 기록 없음" : "확인 중..."}
                   </span>
                 )}
+              </p>
+              <p className="mt-0.5 text-xs text-foreground/40">
+                최근 활동{" "}
+                {recentActivityById[m.id] ? (
+                  new Date(recentActivityById[m.id]).toLocaleString("ko-KR")
+                ) : (
+                  <span className="text-foreground/40">기록 없음</span>
+                )}
+                <span className="ml-1 text-foreground/30">(페이지 방문 기준, 로그인 세션 유지 중이어도 반영됨)</span>
               </p>
               <label className="mt-2 flex items-center gap-2 text-xs text-foreground/60">
                 구역
