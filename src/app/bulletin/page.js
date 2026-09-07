@@ -68,18 +68,27 @@ function PrayerPathBackground() {
   );
 }
 
-function BulletinContent({ bulletin, members, onLinkClick }) {
+function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
   return (
     <>
       <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15" id="news-section">
         <h2 className="font-serif font-semibold text-foreground">교회소식</h2>
-        <ol className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
-          {bulletin.news.map((n, i) => (
-            <li key={i}>
-              {i + 1}. {n}
-            </li>
-          ))}
-        </ol>
+        {isLoggedIn ? (
+          <ol className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
+            {bulletin.news.map((n, i) => (
+              <li key={i}>
+                {i + 1}. {n}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-3 text-sm text-foreground/60">
+            교인 개인정보가 포함되어 있어 로그인한 회원만 볼 수 있어요.{" "}
+            <Link href="/login" onClick={onLinkClick} className="text-brand-dark underline">
+              로그인하러 가기
+            </Link>
+          </p>
+        )}
       </section>
 
       <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15" id="worship-order">
@@ -401,7 +410,7 @@ export default function BulletinPage() {
         </Link>
       )}
 
-      <BulletinContent bulletin={current} members={members} onLinkClick={handleLinkClick} />
+      <BulletinContent bulletin={current} members={members} onLinkClick={handleLinkClick} isLoggedIn={!!user} />
 
       {past.length > 0 && (
         <section className="mt-10 border-t border-black/10 pt-6 dark:border-white/10">
@@ -420,7 +429,7 @@ export default function BulletinPage() {
                 </button>
                 {openIssue === b.issue && (
                   <div className="px-4 pb-6">
-                    <BulletinContent bulletin={b} members={members} onLinkClick={handleLinkClick} />
+                    <BulletinContent bulletin={b} members={members} onLinkClick={handleLinkClick} isLoggedIn={!!user} />
                   </div>
                 )}
               </li>
