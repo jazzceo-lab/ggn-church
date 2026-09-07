@@ -15,14 +15,16 @@ import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
 import AvatarLightbox from "@/components/AvatarLightbox";
 
-const CATEGORIES = [
+// DB(boards 테이블) 조회 전/실패 시 보여줄 기본값. 관리자가 게시판 관리 화면에서
+// 추가·수정한 내용은 boards 테이블에서 불러온 값이 우선한다.
+const FALLBACK_CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
   { key: "suggestion", label: "교회제안" },
 ];
 
-const DEFAULT_CATEGORY = "help";
+const DEFAULT_CATEGORY = "district";
 
 // 구역게시판에서 다루는 소속 목록. 정식 "구역"(teamRoster.districts)에
 // 청년부를 게시판 전용으로 추가한 목록 — 제직명단 구역 편성표에는 영향 없음.
@@ -45,6 +47,7 @@ export default function BoardPage() {
     hasRoleScope,
     markBoardSeen,
   } = useAuth();
+  const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const canReplyToSuggestion = category !== "suggestion" || isAdmin || hasRole("pastor_reply");
   const [districtView, setDistrictView] = useState(null);
@@ -283,6 +286,19 @@ export default function BoardPage() {
       setCategory(requestedCategory);
       window.history.replaceState(null, "", "/board");
     }
+  }, []);
+
+  // 게시판 탭 목록은 관리자가 /admin/boards에서 관리한 내용을 따른다.
+  useEffect(() => {
+    supabase
+      .from("boards")
+      .select("board_key, board_name")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true })
+      .then(({ data, error }) => {
+        if (error || !data || data.length === 0) return;
+        setCategories(data.map((b) => ({ key: b.board_key, label: b.board_name })));
+      });
   }, []);
 
   useEffect(() => {
@@ -533,7 +549,7 @@ export default function BoardPage() {
       </div>
 
       <div className="mt-2 flex items-center gap-2 border-b border-black/10 dark:border-white/10">
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button
             key={c.key}
             onClick={() => setCategory(c.key)}

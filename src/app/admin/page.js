@@ -38,8 +38,7 @@ export default function AdminDashboard() {
       icon: "💬",
       title: "게시판 관리",
       description: "게시판 카테고리 추가/삭제/활성화",
-      href: "#",
-      badge: "준비중",
+      href: "/admin/boards",
     },
     {
       icon: "⚙️",
