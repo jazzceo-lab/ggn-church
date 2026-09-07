@@ -530,6 +530,36 @@ export default function AdminMembersPage() {
                   </span>
                 )}
               </p>
+              {renamingId === m.id ? (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={renameInput}
+                    onChange={(e) => setRenameInput(e.target.value)}
+                    className="rounded-md border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
+                  />
+                  <button
+                    onClick={() => saveRename(m.id)}
+                    className="rounded-full bg-brand px-2 py-1 text-xs text-white hover:bg-brand-dark"
+                  >
+                    저장
+                  </button>
+                  <button
+                    onClick={() => setRenamingId(null)}
+                    className="text-xs text-foreground/40 hover:text-red-600"
+                  >
+                    취소
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => startRename(m)}
+                  className="mt-1 text-xs text-brand-dark underline"
+                >
+                  이름 수정
+                </button>
+              )}
               <p className="mt-1 text-xs text-foreground/50">{m.email}</p>
               {m.phone && (
                 <p className="mt-0.5 text-xs text-foreground/50">📞 {m.phone}</p>
