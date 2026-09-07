@@ -15,14 +15,11 @@ import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
 import AvatarLightbox from "@/components/AvatarLightbox";
 
-// 기본 카테고리 (DB에서 로드 전 폴백)
-const DEFAULT_CATEGORIES = [
+const CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
   { key: "suggestion", label: "교회제안" },
-  { key: "help", label: "앱사용문의" },
-  { key: "resources", label: "자료실" },
 ];
 
 const DEFAULT_CATEGORY = "help";
@@ -47,10 +44,7 @@ export default function BoardPage() {
     hasRole,
     hasRoleScope,
     markBoardSeen,
-    userChurchId,
   } = useAuth();
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
-  const [boardKeyToId, setBoardKeyToId] = useState({}); // board_key → board_id 매핑
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const canReplyToSuggestion = category !== "suggestion" || isAdmin || hasRole("pastor_reply");
   const [districtView, setDistrictView] = useState(null);
@@ -93,29 +87,6 @@ export default function BoardPage() {
   const [editBody, setEditBody] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
 
-  // DB에서 게시판 목록 로드
-  useEffect(() => {
-    if (!userChurchId) return;
-    const loadCategories = async () => {
-      const { data, error } = await supabase
-        .from("boards")
-        .select("id, board_key, board_name, is_active")
-        .eq("church_id", userChurchId)
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
-
-      if (!error && data) {
-        setCategories(data.map((b) => ({ key: b.board_key, label: b.board_name })));
-        const mapping = {};
-        data.forEach((b) => {
-          mapping[b.board_key] = b.id;
-        });
-        setBoardKeyToId(mapping);
-      }
-    };
-    loadCategories();
-  }, [userChurchId]);
-
   async function loadPosts(cat, districtFilter) {
     if (cat === "district" && !districtFilter) {
       setPosts([]);
@@ -126,21 +97,12 @@ export default function BoardPage() {
     }
 
     setLoadingPosts(true);
-    const boardId = boardKeyToId[cat];
-    if (!boardId) {
-      setPosts([]);
-      setComments({});
-      setLikes({});
-      setLoadingPosts(false);
-      return;
-    }
-
     let query = supabase
       .from("posts")
       .select(
         "id, title, body, author_name, author_title, created_at, attachment_url, attachment_name, user_id, is_pinned"
       )
-      .eq("board_id", boardId)
+      .eq("category", cat)
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
     if (cat === "district") {
@@ -453,13 +415,6 @@ export default function BoardPage() {
     }
 
     const authorName = displayName || user.email;
-    const boardId = boardKeyToId[category];
-    if (!boardId) {
-      setSubmitting(false);
-      setError("게시판을 찾을 수 없어요.");
-      return;
-    }
-
     const { data: newPost, error } = await supabase
       .from("posts")
       .insert({
@@ -468,7 +423,7 @@ export default function BoardPage() {
         user_id: user.id,
         author_name: authorName,
         author_title: memberTitle || null,
-        board_id: boardId,
+        category,
         district: activeDistrict,
       })
       .select("id")
@@ -578,7 +533,7 @@ export default function BoardPage() {
       </div>
 
       <div className="mt-2 flex items-center gap-2 border-b border-black/10 dark:border-white/10">
-        {categories.map((c) => (
+        {CATEGORIES.map((c) => (
           <button
             key={c.key}
             onClick={() => setCategory(c.key)}
