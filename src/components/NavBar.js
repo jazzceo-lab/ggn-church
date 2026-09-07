@@ -193,9 +193,13 @@ export default function NavBar() {
                 <span className="hidden text-xs text-foreground/50 sm:inline">{user.email}</span>
                 <PushSubscribeButton />
                 {isAdmin && (
-                  <span className="rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
+                  <Link
+                    href="/admin"
+                    className="rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark transition-colors hover:bg-brand-dark/20"
+                    title="관리자 대시보드"
+                  >
                     관리자
-                  </span>
+                  </Link>
                 )}
                 <Link
                   href="/account"
