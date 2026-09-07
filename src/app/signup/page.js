@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { DISTRICT_NAMES, DEPARTMENT_GROUPS } from "@/lib/teamRoster";
@@ -27,6 +27,28 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [nameMatches, setNameMatches] = useState([]);
+
+  // 같은 이름의 기존 회원이 있으면 알려준다 (실수로 중복 가입하는 걸 줄이기 위함).
+  // 입력할 때마다 매번 요청하지 않도록 타이핑이 잠깐 멈췄을 때만 확인한다.
+  useEffect(() => {
+    const name = displayName.trim();
+    if (!name) {
+      setNameMatches([]);
+      return;
+    }
+    const timer = setTimeout(() => {
+      fetch("/api/check-name", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ display_name: name }),
+      })
+        .then((res) => res.json())
+        .then((data) => setNameMatches(data.matches ?? []))
+        .catch(() => setNameMatches([]));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [displayName]);
 
   function selectPastor() {
     setGroupTab("pastor");
@@ -96,6 +118,20 @@ export default function SignupPage() {
             placeholder="홍길동"
             className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
           />
+          {nameMatches.length > 0 && (
+            <p className="mt-1.5 rounded-md bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+              이미 같은 이름의 회원이 있어요 ({nameMatches.join(", ")}). 혹시 본인이시라면 새로 가입하지
+              마시고{" "}
+              <Link href="/login" className="underline">
+                로그인
+              </Link>
+              하거나{" "}
+              <Link href="/forgot-password" className="underline">
+                비밀번호 찾기
+              </Link>
+              를 이용해주세요. 동명이인이시라면 그대로 가입하셔도 괜찮아요.
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground/80">소속 구분</label>
