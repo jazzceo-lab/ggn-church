@@ -17,6 +17,7 @@ import MessageActionSheet from "@/components/MessageActionSheet";
 import ForwardPicker from "@/components/ForwardPicker";
 import DeleteMessageDialog from "@/components/DeleteMessageDialog";
 import { loadHiddenMessageIds, hideMessageLocally } from "@/lib/hiddenMessages";
+import ChatComposerInput from "@/components/ChatComposerInput";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -197,7 +198,7 @@ export default function GroupConversationPage() {
   }
 
   async function handleSend(e) {
-    e.preventDefault();
+    e?.preventDefault();
     if (!body.trim() && !file) return;
     setSending(true);
     setError("");
@@ -606,12 +607,12 @@ export default function GroupConversationPage() {
           📎
           <input type="file" onChange={handleFileChange} className="hidden" />
         </label>
-        <input
-          type="text"
+        <ChatComposerInput
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onChange={setBody}
+          onEnterSend={() => handleSend()}
           placeholder="메시지를 입력하세요"
-          className="flex-1 rounded-full border border-black/10 px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5"
+          className="flex-1 rounded-2xl border border-black/10 px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5"
         />
         <button
           type="submit"
