@@ -33,6 +33,7 @@ export default function AdminMembersPage() {
   const [newScopeByMember, setNewScopeByMember] = useState({});
   const [search, setSearch] = useState("");
   const [openDistricts, setOpenDistricts] = useState(new Set());
+  const [activityById, setActivityById] = useState({});
 
   function toggleDistrict(name) {
     setOpenDistricts((prev) => {
@@ -74,6 +75,19 @@ export default function AdminMembersPage() {
     setRolesByMember(grouped);
 
     setLoading(false);
+    loadActivity();
+  }
+
+  // 마지막 로그인 시각은 auth.users에 있어서 서비스 키로만 조회 가능 - 서버 API를 거친다.
+  async function loadActivity() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/member-activity", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${sessionData.session?.access_token}` },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    setActivityById(data.activity ?? {});
   }
 
   async function addRole(memberId) {
@@ -395,6 +409,16 @@ export default function AdminMembersPage() {
               )}
               <p className="mt-0.5 text-xs text-foreground/40">
                 가입일 {new Date(m.created_at).toLocaleString("ko-KR")}
+              </p>
+              <p className="mt-0.5 text-xs text-foreground/40">
+                마지막 로그인{" "}
+                {activityById[m.id]?.lastSignInAt ? (
+                  new Date(activityById[m.id].lastSignInAt).toLocaleString("ko-KR")
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400">
+                    {m.id in activityById ? "로그인 기록 없음" : "확인 중..."}
+                  </span>
+                )}
               </p>
               <label className="mt-2 flex items-center gap-2 text-xs text-foreground/60">
                 구역
