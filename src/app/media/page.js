@@ -220,9 +220,9 @@ export default function MediaPage() {
   if (!authLoading && !user) {
     return (
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
-        <h1 className="font-serif text-2xl font-bold text-foreground">설교·찬양</h1>
+        <h1 className="font-serif text-2xl font-bold text-foreground">찬양·영상</h1>
         <p className="mt-3 text-sm text-foreground/60">
-          설교 음성과 찬양팀 영상은 로그인한 교인만 볼 수 있어요.
+          찬양팀 영상은 로그인한 교인만 볼 수 있어요.
         </p>
         <Link
           href="/login"
@@ -236,7 +236,7 @@ export default function MediaPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
-      <h1 className="font-serif text-2xl font-bold text-foreground">설교·찬양</h1>
+      <h1 className="font-serif text-2xl font-bold text-foreground">찬양·영상</h1>
 
       <div className="mt-4 flex gap-2 border-b border-black/10 dark:border-white/10">
         {TABS.map((t) => (

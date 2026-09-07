@@ -10,7 +10,7 @@ export function pathLabel(path) {
   if (path.startsWith("/scripture")) return "성경";
   if (path.startsWith("/donate")) return "헌금안내";
   if (path.startsWith("/teams")) return "제직명단";
-  if (path.startsWith("/media")) return "설교·찬양";
+  if (path.startsWith("/media")) return "찬양·영상";
   if (path.startsWith("/hymns")) return "찬송가";
   if (path.startsWith("/account")) return "회원정보";
   if (path.startsWith("/admin")) return "관리자 화면";

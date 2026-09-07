@@ -70,7 +70,7 @@ function PersonIcon({ className }) {
 
 const memberLinks = [
   { href: "/teams", label: "제직명단" },
-  { href: "/media", label: "설교·찬양" },
+  { href: "/media", label: "찬양·영상" },
   { href: "/hymns", label: "찬송가" },
   { href: "/board", label: "공지/게시판", countKey: "board" },
   { href: "/messages", label: "GGN톡", countKey: "messages", icon: "💬" },
