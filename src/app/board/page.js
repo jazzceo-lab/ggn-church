@@ -332,6 +332,18 @@ export default function BoardPage() {
     setEditingAccount(false);
   }
 
+  async function handleDeleteDistrictAccount() {
+    if (!window.confirm(`${activeDistrict} 회비 계좌 정보를 삭제할까요?`)) return;
+    const { error } = await supabase.from("district_accounts").delete().eq("district", activeDistrict);
+    if (error) {
+      window.alert("삭제에 실패했어요: " + error.message);
+      return;
+    }
+    setDistrictAccount(null);
+    setAccountForm({ bank_name: "카카오뱅크", account_number: "", account_holder: "" });
+    setEditingAccount(false);
+  }
+
   async function handleCopyAccount() {
     if (!districtAccount) return;
     try {
@@ -642,6 +654,14 @@ export default function BoardPage() {
                     className="rounded-full border border-black/10 px-3 py-1.5 text-xs text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
                   >
                     수정
+                  </button>
+                )}
+                {isAdmin && (
+                  <button
+                    onClick={handleDeleteDistrictAccount}
+                    className="rounded-full border border-black/10 px-3 py-1.5 text-xs text-foreground/60 hover:bg-red-50 hover:text-red-600 dark:border-white/10"
+                  >
+                    삭제
                   </button>
                 )}
               </div>
