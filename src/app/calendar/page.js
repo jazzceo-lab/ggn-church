@@ -75,6 +75,7 @@ export default function CalendarPage() {
   const [editingId, setEditingId] = useState(null);
 
   const [formDate, setFormDate] = useState(selected);
+  const [formEndDate, setFormEndDate] = useState("");
   const [formTitle, setFormTitle] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formTime, setFormTime] = useState("");
@@ -111,7 +112,7 @@ export default function CalendarPage() {
     const end = toDateKey(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
     const { data, error } = await supabase
       .from("calendar_events")
-      .select("id, event_date, title, description, time_label, link_url, image_url")
+      .select("id, event_date, event_end_date, title, description, time_label, link_url, image_url")
       .gte("event_date", start)
       .lt("event_date", end)
       .order("event_date", { ascending: true });
@@ -128,7 +129,13 @@ export default function CalendarPage() {
   const eventsByDate = useMemo(() => {
     const map = {};
     for (const e of events) {
-      (map[e.event_date] ??= []).push(e);
+      const startDate = new Date(e.event_date);
+      const endDate = e.event_end_date ? new Date(e.event_end_date) : startDate;
+
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const key = toDateKey(d.getFullYear(), d.getMonth(), d.getDate());
+        (map[key] ??= []).push(e);
+      }
     }
     return map;
   }, [events]);
@@ -165,6 +172,7 @@ export default function CalendarPage() {
 
   function resetForm() {
     setEditingId(null);
+    setFormEndDate("");
     setFormTitle("");
     setFormDescription("");
     setFormTime("");
@@ -186,6 +194,7 @@ export default function CalendarPage() {
   function startEdit(ev) {
     setEditingId(ev.id);
     setFormDate(ev.event_date);
+    setFormEndDate(ev.event_end_date ?? "");
     setFormTitle(ev.title);
     setFormDescription(ev.description ?? "");
     setFormTime(ev.time_label ?? "");
@@ -228,6 +237,7 @@ export default function CalendarPage() {
 
     const payload = {
       event_date: formDate,
+      event_end_date: formEndDate || null,
       title: formTitle,
       description: formDescription || null,
       time_label: formTime || null,
@@ -486,15 +496,26 @@ export default function CalendarPage() {
             <p className="text-sm font-semibold text-foreground/80">
               {editingId ? "일정 수정" : "새 일정"}
             </p>
-            <div>
-              <label className="block text-xs font-medium text-foreground/60">날짜</label>
-              <input
-                type="date"
-                required
-                value={formDate}
-                onChange={(e) => setFormDate(e.target.value)}
-                className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-              />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block text-xs font-medium text-foreground/60">시작 날짜</label>
+                <input
+                  type="date"
+                  required
+                  value={formDate}
+                  onChange={(e) => setFormDate(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-foreground/60">종료 날짜 (선택)</label>
+                <input
+                  type="date"
+                  value={formEndDate}
+                  onChange={(e) => setFormEndDate(e.target.value)}
+                  className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+                />
+              </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-foreground/60">제목</label>
