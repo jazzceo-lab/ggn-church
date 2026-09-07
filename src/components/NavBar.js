@@ -293,36 +293,6 @@ export default function NavBar() {
                 )}
               </NavLink>
             ))}
-            {isAdmin && (
-              <NavLink href="/admin/members" className="text-foreground/70 hover:text-brand-dark">
-                {(pressed) => <ScaleLabel pressed={pressed}>회원 관리</ScaleLabel>}
-              </NavLink>
-            )}
-            {isAdmin && (
-              <NavLink href="/admin/notices" className="text-foreground/70 hover:text-brand-dark">
-                {(pressed) => <ScaleLabel pressed={pressed}>공지 관리</ScaleLabel>}
-              </NavLink>
-            )}
-            {isAdmin && (
-              <NavLink href="/admin/receipts" className="text-foreground/70 hover:text-brand-dark">
-                {(pressed) => <ScaleLabel pressed={pressed}>영수증 관리</ScaleLabel>}
-              </NavLink>
-            )}
-            {isAdmin && (
-              <NavLink href="/admin/donation-goals" className="text-foreground/70 hover:text-brand-dark">
-                {(pressed) => <ScaleLabel pressed={pressed}>헌금목표</ScaleLabel>}
-              </NavLink>
-            )}
-            {isAdmin && (
-              <NavLink href="/admin/stats" className="text-foreground/70 hover:text-brand-dark">
-                {(pressed) => <ScaleLabel pressed={pressed}>방문 통계</ScaleLabel>}
-              </NavLink>
-            )}
-            {isAdmin && (
-              <NavLink href="/admin/content" className="text-foreground/70 hover:text-brand-dark">
-                {(pressed) => <ScaleLabel pressed={pressed}>콘텐츠 관리</ScaleLabel>}
-              </NavLink>
-            )}
           </nav>
           )}
         </div>
