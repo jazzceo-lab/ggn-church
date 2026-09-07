@@ -30,8 +30,8 @@ export default function AdminDashboard() {
     },
     {
       icon: "👥",
-      title: "제직명단",
-      description: "교회 직원 및 제직 정보 관리",
+      title: "회원 관리",
+      description: "교회 회원 정보 및 제직 관리",
       href: "/admin/members",
     },
     {
@@ -66,9 +66,15 @@ export default function AdminDashboard() {
       href: "/admin/notices",
     },
     {
-      icon: "🎁",
-      title: "헌금 관리",
-      description: "헌금목표, 영수증 관리",
+      icon: "🎯",
+      title: "헌금목표 관리",
+      description: "헌금목표 설정 및 현황",
+      href: "/admin/donation-goals",
+    },
+    {
+      icon: "📋",
+      title: "기부금 영수증",
+      description: "기부금 영수증 신청 현황",
       href: "/admin/receipts",
     },
   ];
