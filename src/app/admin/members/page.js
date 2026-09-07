@@ -274,6 +274,17 @@ export default function AdminMembersPage() {
   const unassignedCount = members.filter((m) => !m.district).length;
   const onlineCount = members.filter((m) => onlineUserIds.has(m.id)).length;
 
+  // 이름이 같은 회원끼리 묶어서 보여준다. 동명이인일 수도 있지만, 본인이 예전 계정을
+  // 잊고 새로 가입한 경우일 수도 있어서 관리자가 비교해서 판단할 수 있게 함.
+  const duplicateNameGroups = Object.values(
+    members.reduce((acc, m) => {
+      const key = (m.display_name ?? "").trim();
+      if (!key) return acc;
+      (acc[key] ??= []).push(m);
+      return acc;
+    }, {})
+  ).filter((g) => g.length > 1);
+
   const groups = [...SIGNUP_GROUP_OPTIONS, UNASSIGNED]
     .map((name) => ({
       name,
@@ -306,6 +317,50 @@ export default function AdminMembersPage() {
           <strong className="font-semibold text-foreground">{onlineCount}</strong>명
         </span>
       </div>
+
+      {duplicateNameGroups.length > 0 && (
+        <div className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 p-4 dark:border-amber-400/30 dark:bg-amber-900/15">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            ⚠️ 이름이 같은 회원 {duplicateNameGroups.length}쌍
+          </p>
+          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+            동명이인일 수도 있고, 본인이 예전 계정을 잊고 새로 가입했을 수도 있어요. 구역 미배정 +
+            마지막 로그인이 오래됐거나 없으면 잊어버린 예전 계정일 가능성이 높아요.
+          </p>
+          <div className="mt-3 space-y-3">
+            {duplicateNameGroups.map((group) => (
+              <div
+                key={group[0].display_name}
+                className="rounded-lg border border-amber-300/50 bg-white/60 p-3 dark:border-amber-400/20 dark:bg-black/10"
+              >
+                <p className="text-sm font-semibold text-foreground">{group[0].display_name}</p>
+                <ul className="mt-1.5 space-y-1.5">
+                  {group.map((m) => (
+                    <li
+                      key={m.id}
+                      className="flex flex-wrap items-center justify-between gap-2 text-xs text-foreground/70"
+                    >
+                      <span>
+                        {m.email} · {m.district || "미배정"} · 가입{" "}
+                        {new Date(m.created_at).toLocaleDateString("ko-KR")} · 마지막 로그인{" "}
+                        {activityById[m.id]?.lastSignInAt
+                          ? new Date(activityById[m.id].lastSignInAt).toLocaleDateString("ko-KR")
+                          : "기록 없음"}
+                      </span>
+                      <button
+                        onClick={() => handleDelete(m)}
+                        className="shrink-0 rounded-full border border-black/10 px-2 py-0.5 text-foreground/60 hover:bg-red-50 hover:text-red-600 dark:border-white/10"
+                      >
+                        삭제
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 flex items-center gap-2">
         <input

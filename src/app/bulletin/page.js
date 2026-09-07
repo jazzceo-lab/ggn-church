@@ -20,10 +20,14 @@ function gyodokmunNumberFrom(text) {
 
 // "조태형 집사"처럼 "이름 + 직함" 형식이므로 첫 단어를 이름으로 보고
 // 가입된 회원 중 같은 이름이 있으면 매칭한다.
+// 예배순서 텍스트에는 이름만 있고 구역 같은 구분 정보가 없어서, 동명이인이 있으면
+// 어느 쪽인지 알 방법이 없다. 그래서 한 명으로 딱 정해질 때만 링크를 걸고,
+// 이름이 겹치면(동명이인) 엉뚱한 사람에게 연결되지 않도록 링크를 걸지 않는다.
 function findMemberIdByName(detail, members) {
   const name = detail?.trim().split(/\s+/)[0];
   if (!name) return null;
-  return members.find((m) => m.display_name === name)?.id ?? null;
+  const matches = members.filter((m) => m.display_name === name);
+  return matches.length === 1 ? matches[0].id : null;
 }
 
 // "사무엘기상 16:6~13 · 양혜림 집사" 처럼 성경 구절과 봉독자 이름을
