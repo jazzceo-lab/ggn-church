@@ -12,6 +12,8 @@ export function pathLabel(path) {
   if (path.startsWith("/teams")) return "제직명단";
   if (path.startsWith("/media")) return "찬양·영상";
   if (path.startsWith("/hymns")) return "찬송가";
+  if (path.startsWith("/gyodokmun")) return "교독문";
+  if (path.startsWith("/confession")) return "사도신경";
   if (path.startsWith("/account")) return "회원정보";
   if (path.startsWith("/admin")) return "관리자 화면";
   if (path.startsWith("/login") || path.startsWith("/signup")) return "로그인/가입";
