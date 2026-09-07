@@ -7,6 +7,7 @@ import OnboardingBanners from "@/components/OnboardingBanners";
 import KakaoInAppEscape from "@/components/KakaoInAppEscape";
 import ScrollFadeBottom from "@/components/ScrollFadeBottom";
 import MessageFab from "@/components/MessageFab";
+import PwaUpdater from "@/components/PwaUpdater";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-sans-kr",
@@ -43,6 +44,7 @@ export default function RootLayout({ children }) {
       className={`${notoSans.variable} ${notoSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <PwaUpdater />
         <KakaoInAppEscape />
         <AuthProvider>
           <OnboardingBanners />
