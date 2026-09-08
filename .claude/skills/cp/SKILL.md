@@ -1,5 +1,5 @@
 ---
-name: wrap-up
+name: cp
 description: Safely commit and push all pending changes in the church-app repository before ending a session or switching to a different device/session (phone, another chat window, etc.). Use this whenever the user says things like "커밋하고 푸시해줘", "지금까지 변경사항 커밋하고 푸시해줘", "세션 정리해줘", "다른 데서 이어서 할게" (I'll continue elsewhere), "여기서 끝낼게" (wrapping up here), or otherwise signals they're about to switch away from this session and want the working tree left clean. Also trigger proactively near the end of a work session on this repo, even if the user doesn't explicitly name "git" or "commit" — the goal is a clean handoff so the next session (on any device) starts from accurate, pushed state.
 ---
 
