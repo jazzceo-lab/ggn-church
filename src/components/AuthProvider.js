@@ -13,6 +13,7 @@ const AuthContext = createContext({
   district: null,
   memberTitle: null,
   displayName: null,
+  churchId: null,
   roles: new Set(),
   hasRole: () => false,
   hasRoleScope: () => false,
@@ -35,6 +36,7 @@ export function AuthProvider({ children }) {
   const [district, setDistrict] = useState(null);
   const [memberTitle, setMemberTitle] = useState(null);
   const [displayName, setDisplayName] = useState(null);
+  const [churchId, setChurchId] = useState(null);
   const [roles, setRoles] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -56,12 +58,13 @@ export function AuthProvider({ children }) {
       setDistrict(null);
       setMemberTitle(null);
       setDisplayName(null);
+      setChurchId(null);
       setRoles(new Set());
       return;
     }
     const { data } = await supabase
       .from("profiles")
-      .select("is_admin, is_board_admin, is_suspended, district, board_last_seen_at, title, display_name")
+      .select("is_admin, is_board_admin, is_suspended, district, board_last_seen_at, title, display_name, church_id")
       .eq("id", currentUser.id)
       .single();
 
@@ -72,6 +75,7 @@ export function AuthProvider({ children }) {
       setDistrict(null);
       setMemberTitle(null);
       setDisplayName(null);
+      setChurchId(null);
       setRoles(new Set());
       setUser(null);
       window.alert("이용이 정지된 계정입니다. 문의사항은 교회 사무실로 연락해주세요.");
@@ -83,6 +87,7 @@ export function AuthProvider({ children }) {
     setDistrict(data?.district ?? null);
     setMemberTitle(data?.title ?? null);
     setDisplayName(data?.display_name ?? null);
+    setChurchId(data?.church_id ?? null);
     setBoardLastSeenAt(data?.board_last_seen_at ?? null);
 
     const { data: roleRows } = await supabase
@@ -404,6 +409,7 @@ export function AuthProvider({ children }) {
         district,
         memberTitle,
         displayName,
+        churchId,
         roles,
         hasRole: (key) => roles.has(`${key}:`),
         hasRoleScope: (key, scope) => roles.has(`${key}:${scope ?? ""}`),
