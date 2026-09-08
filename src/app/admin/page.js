@@ -25,8 +25,7 @@ export default function AdminDashboard() {
       icon: "🏘️",
       title: "교회 기본정보",
       description: "로고, 사진, 주소, 전화번호 관리",
-      href: "#",
-      badge: "준비중",
+      href: "/admin/church-info",
     },
     {
       icon: "👥",
@@ -44,8 +43,7 @@ export default function AdminDashboard() {
       icon: "⚙️",
       title: "앱 설정",
       description: "예배시간표, 부서명 등 설정",
-      href: "#",
-      badge: "준비중",
+      href: "/admin/settings",
     },
     {
       icon: "📰",
