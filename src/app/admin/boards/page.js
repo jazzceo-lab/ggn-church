@@ -25,6 +25,8 @@ export default function AdminBoardsPage() {
   const [renamingId, setRenamingId] = useState(null);
   const [renameInput, setRenameInput] = useState("");
 
+  const [draggingId, setDraggingId] = useState(null);
+
   async function loadBoards() {
     setLoading(true);
     const { data, error: loadError } = await supabase
@@ -143,6 +145,46 @@ export default function AdminBoardsPage() {
     loadBoards();
   }
 
+  function handleDragStart(e, board) {
+    setDraggingId(board.id);
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }
+
+  async function handleDrop(e, targetBoard) {
+    e.preventDefault();
+    if (draggingId === targetBoard.id) {
+      setDraggingId(null);
+      return;
+    }
+
+    const fromIdx = boards.findIndex((b) => b.id === draggingId);
+    const toIdx = boards.findIndex((b) => b.id === targetBoard.id);
+
+    if (fromIdx === -1 || toIdx === -1) return;
+
+    const newBoards = [...boards];
+    const [movedBoard] = newBoards.splice(fromIdx, 1);
+    newBoards.splice(toIdx, 0, movedBoard);
+
+    setBoards(newBoards);
+    setDraggingId(null);
+
+    const [{ error: err1 }, { error: err2 }] = await Promise.all([
+      supabase.from("boards").update({ display_order: boards[toIdx].display_order }).eq("id", draggingId),
+      supabase.from("boards").update({ display_order: boards[fromIdx].display_order }).eq("id", targetBoard.id),
+    ]);
+
+    if (err1 || err2) {
+      window.alert("순서 변경에 실패했어요.");
+      loadBoards();
+    }
+  }
+
   if (!authLoading && !isAdmin) {
     return (
       <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-12 text-center">
@@ -231,7 +273,16 @@ export default function AdminBoardsPage() {
       ) : (
         <ul className="mt-4 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
           {boards.map((board, idx) => (
-            <li key={board.id} className="flex items-center justify-between gap-3 px-4 py-3">
+            <li
+              key={board.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, board)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, board)}
+              className={`flex cursor-move select-none items-center justify-between gap-3 px-4 py-3 transition-all ${
+                draggingId === board.id ? "opacity-50" : "opacity-100"
+              }`}
+            >
               <div className="min-w-0 flex-1">
                 {renamingId === board.id ? (
                   <div className="flex items-center gap-1.5">
@@ -274,25 +325,6 @@ export default function AdminBoardsPage() {
                     비활성
                   </span>
                 )}
-
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => handleChangeOrder(board, "up")}
-                    disabled={idx === 0}
-                    className="rounded-full border border-black/10 px-2 py-1 text-xs text-foreground/60 hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10"
-                    title="위로"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    onClick={() => handleChangeOrder(board, "down")}
-                    disabled={idx === boards.length - 1}
-                    className="rounded-full border border-black/10 px-2 py-1 text-xs text-foreground/60 hover:bg-black/5 disabled:opacity-30 dark:border-white/10 dark:hover:bg-white/10"
-                    title="아래로"
-                  >
-                    ↓
-                  </button>
-                </div>
 
                 <button
                   onClick={() => startRename(board)}
