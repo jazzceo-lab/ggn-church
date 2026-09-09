@@ -85,36 +85,40 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!churchId) return;
     loadMenuOrder();
-  }, [churchId]);
+  }, []);
 
   async function loadMenuOrder() {
-    const { data } = await supabase
-      .from("admin_menu_order")
-      .select("menu_order")
-      .eq("church_id", churchId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("admin_menu_order")
+        .select("menu_order")
+        .eq("id", 1)
+        .maybeSingle();
 
-    if (data?.menu_order) {
-      const ordered = data.menu_order
-        .map((id) => DEFAULT_MENU_ITEMS.find((item) => item.id === id))
-        .filter(Boolean);
-      setMenuItems(ordered);
+      if (error) {
+        console.error("메뉴 순서 로드 실패:", error);
+        return;
+      }
+
+      if (data?.menu_order) {
+        const ordered = data.menu_order
+          .map((id) => DEFAULT_MENU_ITEMS.find((item) => item.id === id))
+          .filter(Boolean);
+        setMenuItems(ordered);
+      }
+    } catch (err) {
+      console.error("메뉴 순서 로드 중 오류:", err);
     }
   }
 
   async function saveMenuOrder(newOrder) {
-    if (!churchId) {
-      window.alert("교회 정보를 불러올 수 없어요. 잠시 후 다시 시도해주세요.");
-      return;
-    }
     setSaving(true);
     const orderIds = newOrder.map((item) => item.id);
-    const { error } = await supabase.from("admin_menu_order").upsert({
-      church_id: churchId,
+    const { error } = await supabase.from("admin_menu_order").update({
       menu_order: orderIds,
-    });
+      updated_at: new Date().toISOString(),
+    }).eq("id", 1);
     setSaving(false);
     if (error) {
       window.alert("저장에 실패했어요: " + error.message);
