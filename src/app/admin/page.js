@@ -122,10 +122,11 @@ export default function AdminDashboard() {
     setSaving(true);
     const orderIds = newOrder.map((item) => item.id);
     console.log("메뉴 저장 시도:", orderIds);
-    const { error, data } = await supabase.from("admin_menu_order").update({
+    const { error, data } = await supabase.from("admin_menu_order").upsert({
+      id: 1,
       menu_order: orderIds,
       updated_at: new Date().toISOString(),
-    }).eq("id", 1);
+    }, { onConflict: "id" });
     console.log("저장 결과:", { error, data });
     setSaving(false);
     if (error) {
