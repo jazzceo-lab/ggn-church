@@ -92,7 +92,7 @@ export default function AdminDashboard() {
     try {
       const { data, error } = await supabase
         .from("admin_menu_order")
-        .select("menu_order")
+        .select("*")
         .eq("id", 1)
         .maybeSingle();
 
