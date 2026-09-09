@@ -84,6 +84,26 @@ export default function TeamsPage() {
         (교인이름을 누르면 GGN톡 실행)
       </p>
 
+      <Card title="👔 교역자">
+        <dl className="mt-3 space-y-2">
+          {[
+            { name: "임원일", title: "담임목사" },
+            { name: "정상우", title: "목사" },
+            { name: "송혜영", title: "목사" },
+            { name: "김태민", title: "목사" },
+          ].map(({ name, title }) => (
+            <div key={name} className="flex items-center justify-between">
+              <dd className="text-foreground/80">
+                <Names text={name} directory={directory} />
+              </dd>
+              <span className="rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
+                {title}
+              </span>
+            </div>
+          ))}
+        </dl>
+      </Card>
+
       <Card title="성가대">
         <dl className="mt-3 space-y-1 text-sm">
           {choir.map(([role, names]) => (

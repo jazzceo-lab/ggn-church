@@ -458,25 +458,6 @@ export default function AdminMembersPage() {
         </div>
       )}
 
-      <div className="mt-4 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
-        <h2 className="font-semibold text-foreground">👔 교역자</h2>
-        <div className="mt-3 space-y-2">
-          {[
-            { name: "임원일", title: "담임목사" },
-            { name: "정상우", title: "목사" },
-            { name: "송혜영", title: "목사" },
-            { name: "김태민", title: "목사" },
-          ].map((clergy, idx) => (
-            <div key={idx} className="flex items-center justify-between rounded-lg border border-black/5 bg-black/2 px-3 py-2 text-sm dark:border-white/5 dark:bg-white/2">
-              <span className="font-medium text-foreground">{clergy.name}</span>
-              <span className="rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
-                {clergy.title}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       <div className="mt-4 flex items-center gap-2">
         <input
           type="text"
