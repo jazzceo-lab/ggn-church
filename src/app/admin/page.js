@@ -115,13 +115,18 @@ export default function AdminDashboard() {
   async function saveMenuOrder(newOrder) {
     setSaving(true);
     const orderIds = newOrder.map((item) => item.id);
-    const { error } = await supabase.from("admin_menu_order").update({
+    console.log("메뉴 저장 시도:", orderIds);
+    const { error, data } = await supabase.from("admin_menu_order").update({
       menu_order: orderIds,
       updated_at: new Date().toISOString(),
     }).eq("id", 1);
+    console.log("저장 결과:", { error, data });
     setSaving(false);
     if (error) {
+      console.error("저장 오류:", error);
       window.alert("저장에 실패했어요: " + error.message);
+    } else {
+      console.log("✅ 메뉴 순서 저장 완료");
     }
   }
 
