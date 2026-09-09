@@ -69,6 +69,13 @@ const DEFAULT_MENU_ITEMS = [
     description: "기부금 영수증 신청 현황",
     href: "/admin/receipts",
   },
+  {
+    id: "trash",
+    icon: "🗑️",
+    title: "휴지통",
+    description: "삭제된 게시물 복구 또는 영구 삭제",
+    href: "/admin/trash",
+  },
 ];
 
 export default function AdminDashboard() {

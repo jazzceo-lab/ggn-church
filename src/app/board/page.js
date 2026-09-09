@@ -18,13 +18,14 @@ import AvatarLightbox from "@/components/AvatarLightbox";
 // DB(boards 테이블) 조회 전/실패 시 보여줄 기본값. 관리자가 게시판 관리 화면에서
 // 추가·수정한 내용은 boards 테이블에서 불러온 값이 우선한다.
 const FALLBACK_CATEGORIES = [
+  { key: "help", label: "앱사용문의" },
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
   { key: "library", label: "자료실" },
 ];
 
-const DEFAULT_CATEGORY = "district";
+const DEFAULT_CATEGORY = "help";
 
 // 구역게시판에서 다루는 소속 목록. 정식 "구역"(teamRoster.districts)에
 // 청년부를 게시판 전용으로 추가한 목록 — 제직명단 구역 편성표에는 영향 없음.
@@ -106,6 +107,7 @@ export default function BoardPage() {
         "id, title, body, author_name, author_title, created_at, attachment_url, attachment_name, user_id, is_pinned"
       )
       .eq("category", cat)
+      .eq("is_deleted", false)
       .order("is_pinned", { ascending: false })
       .order("created_at", { ascending: false });
     if (cat === "district") {
@@ -298,6 +300,8 @@ export default function BoardPage() {
       .then(({ data, error }) => {
         if (error || !data || data.length === 0) return;
         setCategories(data.map((b) => ({ key: b.board_key, label: b.board_name })));
+        // 게시판 순서가 바뀌어도 항상 "help"(앱사용문의)를 기본 게시판으로 설정
+        setCategory("help");
       });
   }, []);
 
@@ -483,8 +487,15 @@ export default function BoardPage() {
   }
 
   async function handleDelete(postId) {
-    if (!window.confirm("이 글을 삭제할까요?")) return;
-    const { error } = await supabase.from("posts").delete().eq("id", postId);
+    if (!window.confirm("이 글을 삭제할까요? (관리자는 휴지통에서 복구할 수 있어요)")) return;
+    const { error } = await supabase
+      .from("posts")
+      .update({
+        is_deleted: true,
+        deleted_at: new Date().toISOString(),
+        deleted_by: user.id,
+      })
+      .eq("id", postId);
     if (error) {
       window.alert("삭제에 실패했어요: " + error.message);
       return;
