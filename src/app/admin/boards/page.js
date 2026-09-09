@@ -6,9 +6,9 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 
 // 이 키를 가진 게시판은 코드 곳곳에 특별한 기능이 연결되어 있어서(구역게시판의 구역
-// 선택/회비 계좌, 교회제안의 비공개·목회자 답변 권한 등) 삭제하면 그 기능이 깨진다.
+// 선택/회비 계좌, 자료실의 파일 공유 기능 등) 삭제하면 그 기능이 깨진다.
 // 이름 표시는 바꿔도 되지만 삭제는 막는다.
-const PROTECTED_KEYS = new Set(["district", "suggestion"]);
+const PROTECTED_KEYS = new Set(["district", "library"]);
 
 export default function AdminBoardsPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
@@ -161,7 +161,7 @@ export default function AdminBoardsPage() {
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">게시판 관리</h1>
       <p className="mt-2 text-sm text-foreground/50">
-        교인들이 보는 게시판 탭의 이름·순서·표시 여부를 관리해요. "구역게시판"과 "교회제안"은
+        교인들이 보는 게시판 탭의 이름·순서·표시 여부를 관리해요. "구역게시판"과 "자료실"은
         다른 기능과 연결되어 있어서 삭제할 수 없고 비활성화만 가능해요.
       </p>
 

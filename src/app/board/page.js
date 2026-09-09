@@ -21,7 +21,7 @@ const FALLBACK_CATEGORIES = [
   { key: "district", label: "구역게시판" },
   { key: "prayer", label: "기도게시판" },
   { key: "share", label: "나눔게시판" },
-  { key: "suggestion", label: "교회제안" },
+  { key: "library", label: "자료실" },
 ];
 
 const DEFAULT_CATEGORY = "district";
@@ -49,7 +49,7 @@ export default function BoardPage() {
   } = useAuth();
   const [categories, setCategories] = useState(FALLBACK_CATEGORIES);
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
-  const canReplyToSuggestion = category !== "suggestion" || isAdmin || hasRole("pastor_reply");
+  const canReplyToLibrary = category !== "library" || user;
   const [districtView, setDistrictView] = useState(null);
   const resolvedDistrictView =
     districtView ?? (BOARD_DISTRICTS.includes(myDistrict) ? myDistrict : BOARD_DISTRICTS[0]);
@@ -564,7 +564,7 @@ export default function BoardPage() {
         ))}
       </div>
 
-      {user && canUseDistrictBoard && (
+      {user && (category !== "district" || canUseDistrictBoard) && (
         <button
           type="button"
           onClick={() => setShowCompose(true)}
@@ -576,9 +576,9 @@ export default function BoardPage() {
         </button>
       )}
 
-      {category === "suggestion" && user && (
+      {category === "library" && user && (
         <p className="mt-4 rounded-xl border border-black/10 bg-black/5 px-4 py-3 text-sm text-foreground/60 dark:border-white/10 dark:bg-white/10">
-          🔒 등록내용은 목회자등급 이상 조회가능하며, 비공개및 개별답변 드립니다.
+          📁 교인들과 자료를 공유하는 게시판입니다. 문서, 이미지, 영상 등을 자유롭게 업로드해주세요.
         </p>
       )}
 
@@ -700,7 +700,7 @@ export default function BoardPage() {
         </p>
       )}
 
-      {showCompose && user && canUseDistrictBoard && (
+      {showCompose && user && (category !== "district" || canUseDistrictBoard) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <form
             key={category}
@@ -720,6 +720,9 @@ export default function BoardPage() {
             </div>
             {category === "district" && (
               <p className="text-xs text-foreground/50">{activeDistrict} 구역원에게만 보이는 글이에요.</p>
+            )}
+            {category === "library" && (
+              <p className="text-xs text-foreground/50">📁 자료를 공유해주세요. 문서, 이미지, 영상 등을 자유롭게 업로드할 수 있어요.</p>
             )}
             <input
               type="text"
@@ -1016,10 +1019,7 @@ export default function BoardPage() {
                   <p className="text-xs text-foreground/40">아직 댓글이 없어요.</p>
                 )}
 
-                {user && !canReplyToSuggestion && (
-                  <p className="mt-2 text-xs text-foreground/40">답변은 목회자만 남길 수 있어요.</p>
-                )}
-                {user && canReplyToSuggestion && (
+                {user && canReplyToLibrary && (
                   <form
                     onSubmit={(e) => handleAddComment(e, post.id)}
                     className="mt-2 flex items-center gap-2"
