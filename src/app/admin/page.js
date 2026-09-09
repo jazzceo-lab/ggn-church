@@ -96,16 +96,22 @@ export default function AdminDashboard() {
         .eq("id", 1)
         .maybeSingle();
 
+      console.log("메뉴 로드 결과:", { data, error });
+
       if (error) {
         console.error("메뉴 순서 로드 실패:", error);
         return;
       }
 
       if (data?.menu_order) {
+        console.log("로드된 menu_order:", data.menu_order);
         const ordered = data.menu_order
           .map((id) => DEFAULT_MENU_ITEMS.find((item) => item.id === id))
           .filter(Boolean);
+        console.log("정렬된 메뉴:", ordered.map(m => m.id));
         setMenuItems(ordered);
+      } else {
+        console.log("menu_order 데이터가 없음");
       }
     } catch (err) {
       console.error("메뉴 순서 로드 중 오류:", err);
