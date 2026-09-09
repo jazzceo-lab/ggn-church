@@ -98,6 +98,10 @@ export default function AdminDashboard() {
   }
 
   async function saveMenuOrder(newOrder) {
+    if (!churchId) {
+      window.alert("교회 정보를 불러올 수 없어요. 잠시 후 다시 시도해주세요.");
+      return;
+    }
     setSaving(true);
     const orderIds = newOrder.map((item) => item.id);
     const { error } = await supabase.from("admin_menu_order").upsert({
