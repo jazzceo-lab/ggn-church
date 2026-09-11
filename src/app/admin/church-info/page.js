@@ -8,6 +8,8 @@ import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { resizeImageFile } from "@/lib/resizeImage";
 
+const generateTempId = () => `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
 export default function ChurchInfoPage() {
   const { loading: authLoading, isAdmin, churchId } = useAuth();
   const [formData, setFormData] = useState({
@@ -22,6 +24,7 @@ export default function ChurchInfoPage() {
   const [message, setMessage] = useState("");
   const [draggedId, setDraggedId] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [photoLoading, setPhotoLoading] = useState(true);
 
   useEffect(() => {
     if (!churchId) return;
@@ -48,6 +51,7 @@ export default function ChurchInfoPage() {
   }
 
   async function loadMainPhotos() {
+    setPhotoLoading(true);
     const { data, error } = await supabase
       .from("church_main_photos")
       .select("*")
@@ -57,9 +61,23 @@ export default function ChurchInfoPage() {
     if (!error) {
       setMainPhotos(data || []);
     }
+    setPhotoLoading(false);
   }
 
-  async function handleAddPhoto(e) {
+  function handleAddCard() {
+    const newCard = {
+      id: generateTempId(),
+      church_id: churchId,
+      photo_url: "",
+      title: "새 카드",
+      description: "",
+      order_index: mainPhotos.length,
+      isNew: true,
+    };
+    setMainPhotos([...mainPhotos, newCard]);
+  }
+
+  async function handleAddPhoto(e, cardId) {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -72,23 +90,13 @@ export default function ChurchInfoPage() {
       if (uploadError) throw uploadError;
 
       const { data: publicData } = supabase.storage.from("attachments").getPublicUrl(path);
-      const newPhoto = {
-        church_id: churchId,
-        photo_url: publicData.publicUrl,
-        title: "",
-        description: "",
-        order_index: mainPhotos.length,
-      };
 
-      const { data: insertedData, error: insertError } = await supabase
-        .from("church_main_photos")
-        .insert([newPhoto])
-        .select();
-
-      if (insertError) throw insertError;
-
-      setMainPhotos([...mainPhotos, insertedData[0]]);
-      setMessage("사진이 추가되었습니다.");
+      setMainPhotos(
+        mainPhotos.map((p) =>
+          p.id === cardId ? { ...p, photo_url: publicData.publicUrl } : p
+        )
+      );
+      setMessage("사진이 업로드되었습니다.");
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
       setMessage(`사진 업로드 실패: ${error.message}`);
@@ -98,19 +106,20 @@ export default function ChurchInfoPage() {
     }
   }
 
-  async function handleRemovePhoto(id) {
-    if (!window.confirm("이 사진을 삭제할까요?")) return;
+  async function handleRemoveCard(id) {
+    if (!window.confirm("이 카드를 삭제할까요?")) return;
 
     try {
-      const { error } = await supabase
-        .from("church_main_photos")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
+      if (!id.startsWith("temp_")) {
+        const { error } = await supabase
+          .from("church_main_photos")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+      }
 
       setMainPhotos(mainPhotos.filter((p) => p.id !== id));
-      setMessage("사진이 삭제되었습니다.");
+      setMessage("카드가 삭제되었습니다.");
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
       setMessage(`삭제 실패: ${error.message}`);
@@ -146,13 +155,44 @@ export default function ChurchInfoPage() {
     setDraggedId(null);
   }
 
+  async function handleSavePhotos() {
+    try {
+      // 새 카드 저장
+      const newCards = mainPhotos.filter((p) => p.isNew || p.id.startsWith("temp_"));
+      if (newCards.length > 0) {
+        const dataToInsert = newCards.map(({ isNew, ...p }) => ({
+          ...p,
+          id: undefined,
+        }));
+        const { error: insertError } = await supabase
+          .from("church_main_photos")
+          .insert(dataToInsert);
+        if (insertError) throw insertError;
+      }
+
+      // 기존 카드 업데이트 (순서, 제목 등)
+      const existingCards = mainPhotos.filter((p) => !p.id.startsWith("temp_") && !p.isNew);
+      for (const photo of existingCards) {
+        await supabase
+          .from("church_main_photos")
+          .update({ order_index: photo.order_index, title: photo.title, description: photo.description })
+          .eq("id", photo.id);
+      }
+
+      setMessage("메인사진이 저장되었습니다.");
+      setTimeout(() => setMessage(""), 3000);
+      loadMainPhotos();
+    } catch (error) {
+      setMessage(`저장 실패: ${error.message}`);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
-      // 기본정보 저장
       const { error: infoError } = await supabase
         .from("church_info")
         .upsert({
@@ -166,16 +206,7 @@ export default function ChurchInfoPage() {
         });
 
       if (infoError) throw infoError;
-
-      // 메인사진 순서 업데이트
-      for (const photo of mainPhotos) {
-        await supabase
-          .from("church_main_photos")
-          .update({ order_index: photo.order_index, title: photo.title })
-          .eq("id", photo.id);
-      }
-
-      setMessage("저장되었습니다.");
+      setMessage("교회 기본정보가 저장되었습니다.");
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
       setMessage(`오류: ${error.message}`);
@@ -189,8 +220,12 @@ export default function ChurchInfoPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePhotoTitleChange = (id, title) => {
+  const handleCardTitleChange = (id, title) => {
     setMainPhotos(mainPhotos.map((p) => (p.id === id ? { ...p, title } : p)));
+  };
+
+  const handleCardDescChange = (id, description) => {
+    setMainPhotos(mainPhotos.map((p) => (p.id === id ? { ...p, description } : p)));
   };
 
   if (!authLoading && !isAdmin) {
@@ -206,152 +241,218 @@ export default function ChurchInfoPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-3 pb-12">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-3 pb-12">
       <div className="mb-8">
         <h1 className="font-serif text-2xl font-bold text-foreground">교회 기본정보</h1>
         <p className="mt-2 text-sm text-foreground/50">교회의 로고, 사진, 주소, 전화번호 등을 관리하세요.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 기본정보 섹션 */}
-        <div className="rounded-xl border border-black/10 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground">교회명</label>
-              <input
-                type="text"
-                name="churchName"
-                value={formData.churchName}
-                onChange={handleChange}
-                placeholder="교회 이름을 입력하세요"
-                className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground">주소</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="교회 주소를 입력하세요"
-                className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground">전화번호</label>
-              <input
-                type="tel"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                placeholder="예: 02-1234-5678"
-                className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground">이메일</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="교회 이메일을 입력하세요"
-                className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground">설명</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="교회에 대한 간단한 설명을 입력하세요"
-                rows={4}
-                className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 메인사진 섹션 */}
-        <div className="rounded-xl border border-black/10 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-medium text-foreground">📸 메인사진</h2>
-            <label className="cursor-pointer rounded-lg bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-dark disabled:opacity-50">
-              {uploading ? "업로드 중..." : "+ 사진 추가"}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAddPhoto}
-                disabled={uploading}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          {mainPhotos.length === 0 ? (
-            <p className="text-sm text-foreground/50">메인사진이 없습니다. 추가해주세요.</p>
-          ) : (
-            <div className="space-y-2">
-              {mainPhotos.map((photo, idx) => (
-                <div
-                  key={photo.id}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, photo.id)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, photo.id)}
-                  className={`flex items-center gap-3 rounded-lg border border-black/10 p-3 transition-all dark:border-white/10 ${
-                    draggedId === photo.id ? "opacity-50" : ""
-                  }`}
-                >
-                  <div className="text-foreground/40">☰</div>
-                  <img src={photo.photo_url} alt="메인사진" className="h-12 w-12 rounded object-cover" />
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={photo.title}
-                      onChange={(e) => handlePhotoTitleChange(photo.id, e.target.value)}
-                      placeholder={`사진 제목 (${idx + 1})`}
-                      className="w-full rounded border border-black/10 bg-white/50 px-2 py-1 text-sm dark:border-white/10 dark:bg-white/5"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePhoto(photo.id)}
-                    className="rounded px-2 py-1 text-sm text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20"
-                  >
-                    삭제
-                  </button>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* 왼쪽: 편집 영역 */}
+        <div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* 기본정보 섹션 */}
+            <div className="rounded-xl border border-black/10 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-foreground">교회명</label>
+                  <input
+                    type="text"
+                    name="churchName"
+                    value={formData.churchName}
+                    onChange={handleChange}
+                    placeholder="교회 이름을 입력하세요"
+                    className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
+                  />
                 </div>
-              ))}
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">주소</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="교회 주소를 입력하세요"
+                    className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">전화번호</label>
+                  <input
+                    type="tel"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    placeholder="예: 02-1234-5678"
+                    className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">이메일</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="교회 이메일을 입력하세요"
+                    className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground">설명</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="교회에 대한 간단한 설명을 입력하세요"
+                    rows={4}
+                    className="mt-1 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm text-foreground placeholder-foreground/40 dark:border-white/10 dark:bg-white/5"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-6 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+              >
+                {loading ? "저장 중..." : "기본정보 저장"}
+              </button>
             </div>
+
+            {/* 메인사진 카드 편집 */}
+            <div className="rounded-xl border border-black/10 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-medium text-foreground">📸 메인사진 카드</h2>
+                <button
+                  type="button"
+                  onClick={handleAddCard}
+                  className="rounded-lg bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-dark"
+                >
+                  + 새 카드
+                </button>
+              </div>
+
+              {photoLoading ? (
+                <p className="text-sm text-foreground/50">로드 중...</p>
+              ) : mainPhotos.length === 0 ? (
+                <p className="text-sm text-foreground/50">카드가 없습니다. 새 카드를 추가해주세요.</p>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {mainPhotos.map((photo, idx) => (
+                    <div
+                      key={photo.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, photo.id)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, photo.id)}
+                      className={`rounded-lg border border-black/10 p-4 transition-all dark:border-white/10 ${
+                        draggedId === photo.id ? "opacity-50 bg-black/5" : ""
+                      }`}
+                    >
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="text-foreground/40">☰</span>
+                        <span className="text-xs text-foreground/50">카드 {idx + 1}</span>
+                      </div>
+
+                      {photo.photo_url && (
+                        <img src={photo.photo_url} alt="카드" className="mb-2 h-20 w-20 rounded object-cover" />
+                      )}
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-xs text-foreground/60">사진</label>
+                          <label className="mt-1 block cursor-pointer rounded border border-black/10 px-2 py-1.5 text-center text-xs text-brand hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                            {photo.photo_url ? "사진 변경" : "사진 선택"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleAddPhoto(e, photo.id)}
+                              disabled={uploading}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-foreground/60">제목</label>
+                          <input
+                            type="text"
+                            value={photo.title}
+                            onChange={(e) => handleCardTitleChange(photo.id, e.target.value)}
+                            placeholder="카드 제목"
+                            className="mt-1 w-full rounded border border-black/10 bg-white/50 px-2 py-1 text-sm dark:border-white/10 dark:bg-white/5"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs text-foreground/60">설명</label>
+                          <textarea
+                            value={photo.description}
+                            onChange={(e) => handleCardDescChange(photo.id, e.target.value)}
+                            placeholder="카드 설명"
+                            rows={2}
+                            className="mt-1 w-full rounded border border-black/10 bg-white/50 px-2 py-1 text-sm dark:border-white/10 dark:bg-white/5"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCard(photo.id)}
+                        className="mt-2 w-full rounded px-2 py-1 text-xs text-red-600 hover:bg-red-100 dark:hover:bg-red-900/20"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleSavePhotos}
+                className="mt-4 w-full rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+              >
+                💾 메인사진 저장
+              </button>
+            </div>
+          </form>
+
+          {message && (
+            <p className={`text-sm ${message.includes("실패") || message.includes("오류") ? "text-red-600" : "text-green-600"}`}>
+              {message}
+            </p>
           )}
         </div>
 
-        {message && (
-          <p className={`text-sm ${message.startsWith("오류") || message.startsWith("삭제 실패") ? "text-red-600" : "text-green-600"}`}>
-            {message}
-          </p>
-        )}
+        {/* 오른쪽: 프리뷰 영역 */}
+        <div className="rounded-xl border border-black/10 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5 sticky top-4 h-fit">
+          <h2 className="mb-4 font-medium text-foreground">📱 미리보기</h2>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
-          >
-            {loading ? "저장 중..." : "저장하기"}
-          </button>
-          <Link href="/admin" className="rounded-lg border border-black/10 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5">
-            돌아가기
-          </Link>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {mainPhotos.length === 0 ? (
+              <p className="text-sm text-foreground/50 text-center py-8">카드를 추가하면 여기에 표시됩니다.</p>
+            ) : (
+              mainPhotos.map((photo) => (
+                <div key={photo.id} className="rounded-lg border border-black/10 bg-white/50 p-3 dark:border-white/10 dark:bg-white/5">
+                  {photo.photo_url && (
+                    <img src={photo.photo_url} alt={photo.title} className="mb-2 w-full rounded-lg object-cover aspect-video" />
+                  )}
+                  <h3 className="font-medium text-foreground text-sm">{photo.title || "제목 없음"}</h3>
+                  {photo.description && (
+                    <p className="mt-1 text-xs text-foreground/60 line-clamp-2">{photo.description}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
-      </form>
+      </div>
     </main>
   );
 }
