@@ -18,6 +18,14 @@ function formatKoreanDate(iso) {
   return `${y}. ${m}. ${d}`;
 }
 
+// 추후 프리미엄 기능별 권한 체크 함수
+// 현재는 모두 true (나중에 회원 등급 시스템 추가 시 여기서 권한 판단)
+function canUsePremiumFeature(churchId, featureKey) {
+  // featureKey: "template_custom", "template_library", "ai_advanced" 등
+  // 추후 회원 등급 DB 조회해서 권한 판단
+  return true;
+}
+
 const emptyBulletinForm = {
   issue: "",
   bulletin_date: "",
@@ -28,6 +36,8 @@ const emptyBulletinForm = {
   order: "",
   news: "",
   staff: "",
+  template_id: null,
+  template_data: {},
 };
 
 function bulletinRowToForm(row) {
@@ -42,6 +52,8 @@ function bulletinRowToForm(row) {
     order: arrayToPairs(c.order),
     news: arrayToLines(c.news),
     staff: arrayToPairs(c.staff),
+    template_id: row.template_id ?? null,
+    template_data: row.template_data ?? {},
   };
 }
 
@@ -60,9 +72,11 @@ function formToContent(form) {
 }
 
 function BulletinManager() {
+  const { churchId } = useAuth();
   const [bulletins, setBulletins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState(null); // null = 새 항목 작성 중이 아님, "new" = 새 항목
+  const [templates, setTemplates] = useState([]);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyBulletinForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -77,7 +91,7 @@ function BulletinManager() {
     setLoading(true);
     const { data, error: loadError } = await supabase
       .from("bulletins")
-      .select("id, issue, bulletin_date, content")
+      .select("id, issue, bulletin_date, content, template_id, template_data")
       .order("bulletin_date", { ascending: false })
       .order("id", { ascending: false });
     if (loadError) {
@@ -89,14 +103,28 @@ function BulletinManager() {
     setLoading(false);
   }
 
+  async function loadTemplates() {
+    if (!churchId) return;
+    const { data, error } = await supabase
+      .from("bulletin_templates")
+      .select("id, name, fields")
+      .eq("church_id", churchId)
+      .order("created_at", { ascending: false });
+
+    if (!error) {
+      setTemplates(data ?? []);
+    }
+  }
+
   useEffect(() => {
     load();
-  }, []);
+    loadTemplates();
+  }, [churchId]);
 
   function startNew(copyFromLatest) {
     if (copyFromLatest && bulletins[0]) {
       const base = bulletinRowToForm(bulletins[0]);
-      setForm({ ...base, issue: "", bulletin_date: "" });
+      setForm({ ...base, issue: "", bulletin_date: "", template_id: null, template_data: {} });
     } else {
       setForm(emptyBulletinForm);
     }
@@ -130,8 +158,6 @@ function BulletinManager() {
     });
   }
 
-  // 사진 속 텍스트가 있는 항목만 결과에 채워서 돌아오니, 값이 있는 필드만 폼에 반영하고
-  // 나머지(예: 표어·기도제목처럼 이 사진에는 안 나온 항목)는 이미 입력된 값을 그대로 둔다.
   async function handleAutoFill() {
     if (parseFiles.length === 0) return;
     setParsing(true);
@@ -183,6 +209,8 @@ function BulletinManager() {
       issue: form.issue.trim(),
       bulletin_date: form.bulletin_date,
       content: formToContent(form),
+      template_id: form.template_id,
+      template_data: form.template_data,
     };
     const query =
       editingId === "new"
@@ -242,6 +270,27 @@ function BulletinManager() {
     }
   }
 
+  function handleTemplateChange(templateId) {
+    const selectedTemplate = templates.find((t) => t.id === templateId);
+    setForm((f) => ({
+      ...f,
+      template_id: templateId,
+      template_data: selectedTemplate ? {} : {},
+    }));
+  }
+
+  function updateTemplateData(fieldId, value) {
+    setForm((f) => ({
+      ...f,
+      template_data: {
+        ...f.template_data,
+        [fieldId]: value,
+      },
+    }));
+  }
+
+  const selectedTemplate = templates.find((t) => t.id === form.template_id);
+
   return (
     <div>
       <p className="text-sm text-foreground/50">
@@ -251,13 +300,21 @@ function BulletinManager() {
       </p>
 
       {!editingId && (
-        <div className="mt-4">
+        <div className="mt-4 flex gap-2">
           <button
             onClick={() => startNew(bulletins.length > 0)}
             className="rounded-full bg-brand px-4 py-2 text-sm text-white hover:bg-brand-dark"
           >
             새 주보 만들기
           </button>
+          {canUsePremiumFeature(churchId, "template_custom") && templates.length > 0 && (
+            <Link
+              href="/admin/bulletin-templates"
+              className="rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+            >
+              📋 템플릿 관리
+            </Link>
+          )}
         </div>
       )}
 
@@ -266,6 +323,30 @@ function BulletinManager() {
           <p className="font-serif font-semibold text-foreground">
             {editingId === "new" ? "새 주보" : "주보 수정"}
           </p>
+
+          {/* 템플릿 선택 */}
+          {canUsePremiumFeature(churchId, "template_custom") && templates.length > 0 && (
+            <div className="rounded-lg border border-brand/20 bg-brand-tint/20 p-4">
+              <label className="block text-sm font-medium text-foreground">
+                📋 주보 템플릿 <span className="text-xs text-yellow-600">🔒 프리미엄</span>
+              </label>
+              <select
+                value={form.template_id || ""}
+                onChange={(e) => handleTemplateChange(e.target.value || null)}
+                className="mt-2 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
+              >
+                <option value="">-- 템플릿 선택 --</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-foreground/50">
+                선택한 템플릿의 필드를 아래에서 입력할 수 있어요.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2 rounded-lg border border-brand-dark/20 bg-brand-tint/40 p-4 dark:border-brand/20">
             <p className="text-sm font-medium text-brand-dark">📷 사진으로 자동 채우기 (AI)</p>
@@ -438,6 +519,37 @@ function BulletinManager() {
             />
           </div>
 
+          {/* 템플릿 동적 필드 */}
+          {selectedTemplate && selectedTemplate.fields?.length > 0 && (
+            <div className="rounded-lg border border-brand/20 bg-brand-tint/10 p-4">
+              <p className="mb-3 text-sm font-medium text-foreground">📝 {selectedTemplate.name} 추가 정보</p>
+              <div className="space-y-3">
+                {selectedTemplate.fields.map((field) => (
+                  <div key={field.id}>
+                    <label className="block text-xs text-foreground/60">
+                      {field.name} {field.required && <span className="text-red-600">*</span>}
+                    </label>
+                    {field.type === "long_text" ? (
+                      <textarea
+                        value={form.template_data[field.id] || ""}
+                        onChange={(e) => updateTemplateData(field.id, e.target.value)}
+                        rows={3}
+                        className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+                      />
+                    ) : (
+                      <input
+                        type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
+                        value={form.template_data[field.id] || ""}
+                        onChange={(e) => updateTemplateData(field.id, e.target.value)}
+                        className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="flex gap-2">
@@ -471,6 +583,9 @@ function BulletinManager() {
                 <li key={b.id} className="flex items-center justify-between gap-2 px-4 py-3 text-sm">
                   <span className="text-foreground">
                     {b.issue} · {formatKoreanDate(b.bulletin_date)}
+                    {b.template_id && (
+                      <span className="ml-2 inline-block text-xs text-yellow-600">🔒 템플릿</span>
+                    )}
                   </span>
                   <span className="flex shrink-0 gap-3">
                     <button onClick={() => startEdit(b)} className="text-brand-dark hover:underline">
@@ -661,7 +776,7 @@ function GyodokmunManager() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState(null); // { number, title, lines(text) } | "new" 상태는 number=""
+  const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
