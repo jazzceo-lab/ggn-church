@@ -18,6 +18,7 @@ export default function ChurchInfoPage() {
     phoneNumber: "",
     email: "",
     description: "",
+    logoUrl: "",
   });
   const [mainPhotos, setMainPhotos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -46,6 +47,7 @@ export default function ChurchInfoPage() {
         phoneNumber: data.phone_number || "",
         email: data.email || "",
         description: data.description || "",
+        logoUrl: data.logo_url || "",
       });
     }
   }
@@ -62,6 +64,37 @@ export default function ChurchInfoPage() {
       setMainPhotos(data || []);
     }
     setPhotoLoading(false);
+  }
+
+  async function handleAddLogo(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const resized = await resizeImageFile(file);
+      const path = safeStoragePath(`${churchId}/logo`, resized.name);
+      const { error: uploadError } = await uploadFileWithRetry("attachments", path, resized);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage.from("attachments").getPublicUrl(path);
+      setFormData((prev) => ({ ...prev, logoUrl: publicData.publicUrl }));
+      setMessage("로고가 업로드되었습니다.");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error) {
+      setMessage(`로고 업로드 실패: ${error.message}`);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  function handleRemoveLogo() {
+    if (!window.confirm("로고를 삭제할까요?")) return;
+    setFormData((prev) => ({ ...prev, logoUrl: "" }));
+    setMessage("로고가 삭제되었습니다.");
+    setTimeout(() => setMessage(""), 3000);
   }
 
   function handleAddCard() {
@@ -202,6 +235,7 @@ export default function ChurchInfoPage() {
           phone_number: formData.phoneNumber,
           email: formData.email,
           description: formData.description,
+          logo_url: formData.logoUrl,
           updated_at: new Date().toISOString(),
         });
 
@@ -251,6 +285,39 @@ export default function ChurchInfoPage() {
         {/* 왼쪽: 편집 영역 */}
         <div>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* 교회 로고 */}
+            <div className="rounded-xl border border-black/10 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
+              <h2 className="mb-4 font-medium text-foreground">🏘️ 교회 로고</h2>
+
+              <div className="flex flex-col items-center gap-4">
+                {formData.logoUrl && (
+                  <img src={formData.logoUrl} alt="교회 로고" className="h-24 w-24 rounded-lg object-cover" />
+                )}
+
+                <label className="w-full cursor-pointer rounded-lg border-2 border-dashed border-brand px-4 py-6 text-center transition-colors hover:bg-brand/5">
+                  <div className="text-sm font-medium text-brand">{uploading ? "업로드 중..." : "📷 로고 선택"}</div>
+                  <p className="mt-1 text-xs text-foreground/50">클릭해서 이미지를 선택하세요</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAddLogo}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
+
+                {formData.logoUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    className="w-full rounded-lg border border-red-300 px-4 py-2 text-sm text-red-600 hover:bg-red-100 dark:border-red-900/40 dark:hover:bg-red-900/20"
+                  >
+                    로고 삭제
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* 기본정보 섹션 */}
             <div className="rounded-xl border border-black/10 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5">
               <div className="space-y-4">
@@ -434,7 +501,15 @@ export default function ChurchInfoPage() {
         <div className="rounded-xl border border-black/10 bg-white/60 p-6 dark:border-white/10 dark:bg-white/5 sticky top-4 h-fit">
           <h2 className="mb-4 font-medium text-foreground">📱 미리보기</h2>
 
-          <div className="space-y-3 max-h-96 overflow-y-auto">
+          <div className="space-y-4 max-h-96 overflow-y-auto">
+            {/* 로고 미리보기 */}
+            {formData.logoUrl && (
+              <div className="flex justify-center py-4 border-b border-black/10 dark:border-white/10">
+                <img src={formData.logoUrl} alt="교회 로고" className="h-20 w-20 rounded-lg object-cover" />
+              </div>
+            )}
+
+            {/* 메인사진 카드 미리보기 */}
             {mainPhotos.length === 0 ? (
               <p className="text-sm text-foreground/50 text-center py-8">카드를 추가하면 여기에 표시됩니다.</p>
             ) : (
