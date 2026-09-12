@@ -991,6 +991,10 @@ function TemplateManager() {
   const [error, setError] = useState("");
 
   async function load() {
+    if (!churchId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const { data, error: loadError } = await supabase
       .from("bulletin_templates")
@@ -1061,6 +1065,10 @@ function TemplateManager() {
   }
 
   async function handleSave() {
+    if (!churchId) {
+      setError("교회 정보를 불러올 수 없어요.");
+      return;
+    }
     if (!form.name.trim()) {
       setError("템플릿 이름은 꼭 입력해주세요.");
       return;
