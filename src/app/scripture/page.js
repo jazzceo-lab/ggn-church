@@ -27,8 +27,15 @@ export default async function ScripturePage({ searchParams }) {
   // searchParams에서 ref를 받으면 그것을 초기 값으로 사용, 아니면 오늘의 말씀 사용
   const refParam = params?.ref;
   let initialVerse = pickVerseForDay(verses);
+  let appUrl = "https://play.google.com/store/apps/details?id=com.sirma.mobile.bible.android&hl=ko";
+
   if (refParam) {
     initialVerse = { ref: refParam, text: "(성경 앱에서 확인해주세요)" };
+    // ref가 있으면 bible.com 링크를 앱에서 열 수 있도록 제공
+    const bibleLink = buildBibleLink(refParam);
+    if (bibleLink) {
+      appUrl = bibleLink;
+    }
   }
 
   return (

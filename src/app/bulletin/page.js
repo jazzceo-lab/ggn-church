@@ -108,7 +108,7 @@ function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
             const { refPart, namePart } = isBibleReading
               ? splitBibleReading(detail)
               : { refPart: "", namePart: "" };
-            const bibleLink = isBibleReading ? buildBibleLink(refPart) : null;
+            const bibleLink = isBibleReading ? `/scripture?ref=${encodeURIComponent(refPart)}` : null;
             const readerMemberId = isBibleReading ? findMemberIdByName(namePart, members) : null;
             const isConfession = label === "신앙고백" && detail === "사도신경";
             const prayerMemberId =
