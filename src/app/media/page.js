@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { compressAudioFile } from "@/lib/compressAudio";
+import KakaoShareButton from "@/components/KakaoShareButton";
 
 // "설교 음성" 탭은 관리자 요청으로 숨김 처리함 (관련 코드/데이터는 그대로 두고 탭만 뺌).
 const TABS = [
@@ -491,14 +492,22 @@ export default function MediaPage() {
             {!urls[item.id] ? (
               <p className="mt-2 text-xs text-foreground/40">재생 링크를 불러오는 중...</p>
             ) : item.external_url ? (
-              <a
-                href={urls[item.id]}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
-              >
-                ▶ 재생하기 (새 창에서 열림)
-              </a>
+              <div className="mt-3 flex items-center gap-2">
+                <a
+                  href={urls[item.id]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
+                >
+                  ▶ 재생하기 (새 창에서 열림)
+                </a>
+                <KakaoShareButton
+                  title={item.title}
+                  description={`${item.title} · ${new Date(item.created_at).toLocaleDateString("ko-KR")}`}
+                  url={urls[item.id]}
+                  size="small"
+                />
+              </div>
             ) : (
               <video controls className="mt-3 w-full rounded-lg" src={urls[item.id]} />
             )}
