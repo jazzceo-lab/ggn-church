@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
@@ -25,6 +26,7 @@ const MAX_KEPT_VIDEO_FILES = 2;
 
 
 export default function MediaPage() {
+  const searchParams = useSearchParams();
   const { user, loading: authLoading, isAdmin, hasRole } = useAuth();
   const canManageVideo = isAdmin || hasRole("media_manager");
   const [tab, setTab] = useState("video");
@@ -103,6 +105,13 @@ export default function MediaPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, tab]);
+
+  useEffect(() => {
+    const mediaId = searchParams.get("mediaId");
+    if (mediaId && !expandedItems.includes(mediaId)) {
+      setExpandedItems([mediaId]);
+    }
+  }, [searchParams]);
 
   async function pruneOldAudio() {
     const { data } = await supabase
@@ -497,7 +506,7 @@ export default function MediaPage() {
                 <KakaoShareButton
                   title={item.title}
                   description={`${item.title} · ${new Date(item.created_at).toLocaleDateString("ko-KR")}`}
-                  url={urls[item.id]}
+                  url={`${typeof window !== "undefined" ? window.location.origin : ""}/media?mediaId=${item.id}`}
                   size="small"
                 />
               </div>
