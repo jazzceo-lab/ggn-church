@@ -7,6 +7,7 @@ export default function manifest() {
     scope: "/",
     display: "standalone",
     capture_links: "existing-client-navigate",
+    launch_handler: { client_mode: "navigate-existing" },
     background_color: "#faf6f2",
     theme_color: "#c19c89",
     icons: [
