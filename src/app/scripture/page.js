@@ -49,7 +49,7 @@ export default async function ScripturePage({ searchParams }) {
         {apps.map((app) => (
           <a
             key={app.key}
-            href={app.url}
+            href={app.key === "bible" ? appUrl : app.url}
             className="flex items-center gap-4 rounded-xl border border-black/10 bg-white/60 p-5 transition-colors hover:bg-black/5 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
           >
             <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-tint text-3xl dark:bg-white/10">
