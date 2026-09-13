@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
@@ -26,6 +26,14 @@ const MAX_KEPT_VIDEO_FILES = 2;
 
 
 export default function MediaPage() {
+  return (
+    <Suspense fallback={null}>
+      <MediaPageInner />
+    </Suspense>
+  );
+}
+
+function MediaPageInner() {
   const searchParams = useSearchParams();
   const { user, loading: authLoading, isAdmin, hasRole } = useAuth();
   const canManageVideo = isAdmin || hasRole("media_manager");
