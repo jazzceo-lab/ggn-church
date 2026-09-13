@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import { pickVerseForDay } from "@/lib/dailyVerses";
+import { buildBibleLink } from "@/lib/bibleBooks";
 import DailyVerseCard from "@/components/DailyVerseCard";
 
 export const dynamic = "force-dynamic";
