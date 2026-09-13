@@ -30,21 +30,8 @@ const BIBLE_VERSION_ID = 142;
 const BIBLE_VERSION_CODE = "RNKSV";
 
 // "이사야 51:1~3", "시편 23편", "요한복음 3:16" 같은 문자열을 파싱해서
-// bible.com 딥링크 URL을 만듭니다. 못 알아보면 null을 반환합니다.
+// /scripture 페이지로 이동하는 URL을 만듭니다. 못 알아보면 /scripture로 이동합니다.
 export function buildBibleLink(text) {
-  if (!text) return null;
-  const match = text.match(/^([가-힣0-9]+)\s+(\d{1,3})\s*[장편]?(?:\s*[:편]\s*(\d{1,3})(?:\s*[~\-]\s*(\d{1,3}))?)?/);
-  if (!match) return null;
-
-  const [, bookName, chapter, verseStart, verseEnd] = match;
-  const bookCode = BOOK_CODES[bookName];
-  if (!bookCode) return null;
-
-  let ref = `${bookCode}.${chapter}`;
-  if (verseStart) {
-    ref += `.${verseStart}`;
-    if (verseEnd) ref += `-${verseEnd}`;
-  }
-
-  return `https://www.bible.com/ko/bible/${BIBLE_VERSION_ID}/${ref}.${BIBLE_VERSION_CODE}`;
+  if (!text) return "/scripture";
+  return `/scripture?ref=${encodeURIComponent(text)}`;
 }

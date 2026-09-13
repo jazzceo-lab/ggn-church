@@ -16,19 +16,26 @@ const apps = [
   },
 ];
 
-export default async function ScripturePage() {
+export default async function ScripturePage({ searchParams }) {
+  const params = await searchParams;
   const { data } = await supabase
     .from("daily_verses")
     .select("ref, verse_text")
     .order("id", { ascending: true });
   const verses = (data ?? []).map((v) => ({ ref: v.ref, text: v.verse_text }));
-  const verse = pickVerseForDay(verses);
+
+  // searchParams에서 ref를 받으면 그것을 초기 값으로 사용, 아니면 오늘의 말씀 사용
+  const refParam = params?.ref;
+  let initialVerse = pickVerseForDay(verses);
+  if (refParam) {
+    initialVerse = { ref: refParam, text: "(성경 앱에서 확인해주세요)" };
+  }
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">성경</h1>
 
-      <DailyVerseCard initialVerse={verse} verses={verses} />
+      <DailyVerseCard initialVerse={initialVerse} verses={verses} />
 
       <div className="mt-4 grid gap-4">
         {apps.map((app) => (
