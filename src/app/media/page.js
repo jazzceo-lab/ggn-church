@@ -108,10 +108,10 @@ export default function MediaPage() {
 
   useEffect(() => {
     const mediaId = searchParams.get("mediaId");
-    if (mediaId && !expandedItems.includes(mediaId)) {
+    if (mediaId && items.length > 0 && !expandedItems.includes(mediaId)) {
       setExpandedItems([mediaId]);
     }
-  }, [searchParams]);
+  }, [searchParams, items]);
 
   async function pruneOldAudio() {
     const { data } = await supabase
