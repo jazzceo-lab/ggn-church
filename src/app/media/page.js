@@ -23,7 +23,6 @@ const MAX_KEPT_AUDIO = 2;
 // 클라우드 링크로 등록한 영상(external_url)은 저장공간을 안 쓰므로 대상에서 제외.
 const MAX_KEPT_VIDEO_FILES = 2;
 
-const PENDING_APPROVAL_NOTICE = "교인전용 콘텐츠로 교회승인대기중입니다";
 
 export default function MediaPage() {
   const { user, loading: authLoading, isAdmin, hasRole } = useAuth();
@@ -254,12 +253,6 @@ export default function MediaPage() {
           </button>
         ))}
       </div>
-
-      {(tab === "audio" || tab === "video") && (
-        <p className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-400/30 dark:bg-amber-900/15 dark:text-amber-200">
-          {PENDING_APPROVAL_NOTICE}
-        </p>
-      )}
 
       {((tab === "audio" && isAdmin) || (tab === "video" && canManageVideo)) && (
         <form
