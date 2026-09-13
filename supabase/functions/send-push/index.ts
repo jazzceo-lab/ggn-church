@@ -128,22 +128,6 @@ Deno.serve(async (req) => {
       url: "/board",
     };
     recipientIds = [post.user_id];
-  } else if (table === "posts" && record.category === "suggestion") {
-    // 교회건의는 비공개 게시판이라 토글 없이 관리자/목회자(pastor_reply 역할)에게만 무조건 발송.
-    const { data: admins } = await supabase.from("profiles").select("id").eq("is_admin", true);
-    const { data: pastors } = await supabase
-      .from("member_roles")
-      .select("user_id")
-      .eq("role_key", "pastor_reply");
-    recipientIds = [
-      ...new Set([...(admins ?? []).map((a) => a.id), ...(pastors ?? []).map((p) => p.user_id)]),
-    ];
-    notification = {
-      title: "길가는교회",
-      body: `📌 교회제안에 새 글이 올라왔어요: ${record.title}`,
-      url: "/board?category=suggestion",
-    };
-    excludeUserId = record.user_id;
   } else if (table === "posts") {
     // 구역/기도/나눔 게시판만 알림 발송하며, 서브게시판별로 각자 끌 수 있음.
     // 자료실(resources)·앱사용문의(help)는 알림 발송 대상이 아님.

@@ -25,7 +25,6 @@ export const BOARD_CATEGORY_LABELS = {
   district: "구역게시판",
   prayer: "기도게시판",
   share: "나눔게시판",
-  suggestion: "교회제안",
   help: "앱사용문의",
   resources: "자료실",
 };
