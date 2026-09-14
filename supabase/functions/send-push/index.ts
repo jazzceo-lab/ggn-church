@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
       messages: "notify_messages",
       conversation_messages: "notify_messages",
       bulletins: "notify_bulletin",
+      popup_notices: "notify_notice",
     }[table] ?? null;
 
   if (table === "messages") {
@@ -83,9 +84,9 @@ Deno.serve(async (req) => {
       url: "/bulletin",
     };
   } else if (table === "popup_notices") {
-    // 공지는 팝업으로 바로 노출되는 성격상 긴급성이 있어, 알림 설정 토글 없이
-    // 구독한 회원 전체에게 발송한다(관리자가 비활성 처리한 이전 공지는 제외).
-    if (record.is_active === false) {
+    // 공지는 앱 접속시 팝업으로는 항상 뜨지만, 푸시까지 보낼지는 관리자가 등록 시점에
+    // 중요도를 보고 고른다(send_push). 회원도 notify_notice로 끌 수 있다.
+    if (record.is_active === false || record.send_push !== true) {
       return new Response(JSON.stringify({ skipped: true }), {
         headers: { "Content-Type": "application/json" },
       });

@@ -18,6 +18,7 @@ export default function AdminNoticesPage() {
 
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
+  const [sendPush, setSendPush] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,7 +26,7 @@ export default function AdminNoticesPage() {
     setLoading(true);
     const { data } = await supabase
       .from("popup_notices")
-      .select("id, title, image_path, is_active, created_at")
+      .select("id, title, image_path, is_active, send_push, created_at")
       .order("created_at", { ascending: false });
     setNotices(data ?? []);
     setLoading(false);
@@ -53,7 +54,7 @@ export default function AdminNoticesPage() {
 
     const { error: insertError } = await supabase
       .from("popup_notices")
-      .insert({ title: title || null, image_path: path, is_active: true });
+      .insert({ title: title || null, image_path: path, is_active: true, send_push: sendPush });
 
     if (insertError) {
       setUploading(false);
@@ -64,6 +65,7 @@ export default function AdminNoticesPage() {
     setUploading(false);
     setTitle("");
     setFile(null);
+    setSendPush(false);
     loadNotices();
   }
 
@@ -138,6 +140,15 @@ export default function AdminNoticesPage() {
           />
           {file && <span className="text-foreground/70">{file.name}</span>}
         </label>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/70">
+          <input
+            type="checkbox"
+            checked={sendPush}
+            onChange={(e) => setSendPush(e.target.checked)}
+            className="h-5 w-5 accent-brand"
+          />
+          🔔 전체회원 푸시 알림으로도 발송 (긴급/중요 공지만 체크. 평소엔 앱 접속시 팝업으로만 노출돼요)
+        </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
@@ -169,6 +180,11 @@ export default function AdminNoticesPage() {
                 {notice.is_active && (
                   <span className="ml-2 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
                     활성
+                  </span>
+                )}
+                {notice.send_push && (
+                  <span className="ml-2 rounded-full bg-black/10 px-2 py-0.5 text-xs font-medium text-foreground/70 dark:bg-white/10">
+                    🔔 푸시발송
                   </span>
                 )}
               </p>
