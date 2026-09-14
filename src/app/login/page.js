@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -25,7 +34,10 @@ export default function LoginPage() {
       setError("로그인에 실패했어요: " + error.message);
       return;
     }
-    router.push("/");
+    // 카톡 공유 링크 등으로 특정 페이지에 왔다가 로그인이 필요해서 여기로 온 경우,
+    // 로그인 후 그 페이지로 돌려보낸다. next가 없으면 홈으로.
+    const next = searchParams.get("next");
+    router.push(next && next.startsWith("/") ? next : "/");
     router.refresh();
   }
 

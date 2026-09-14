@@ -242,7 +242,7 @@ function MediaPageInner() {
           찬양팀 영상은 로그인한 교인만 볼 수 있어요.
         </p>
         <Link
-          href="/login"
+          href={`/login?next=${encodeURIComponent("/media" + (searchParams.get("mediaId") ? `?mediaId=${searchParams.get("mediaId")}` : ""))}`}
           className="mt-6 inline-block rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
         >
           로그인하러 가기
