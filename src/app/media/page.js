@@ -9,6 +9,7 @@ import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
 import { compressAudioFile } from "@/lib/compressAudio";
 import KakaoShareButton from "@/components/KakaoShareButton";
+import { REACTIONS } from "@/lib/reactions";
 
 // "설교 음성" 탭은 관리자 요청으로 숨김 처리함 (관련 코드/데이터는 그대로 두고 탭만 뺌).
 const TABS = [
@@ -19,10 +20,6 @@ const TABS = [
 // 설교 음성은 파일 용량이 커서 무료 저장공간을 아끼기 위해
 // 새로 업로드하면 최신 2개(이번 주 + 지난주)만 남기고 이전 파일은 자동 삭제
 const MAX_KEPT_AUDIO = 2;
-
-// 직접 업로드한 영상 파일도 음성과 같은 이유(용량)로 최신 2개만 남긴다.
-// 클라우드 링크로 등록한 영상(external_url)은 저장공간을 안 쓰므로 대상에서 제외.
-const MAX_KEPT_VIDEO_FILES = 2;
 
 
 export default function MediaPage() {
@@ -41,6 +38,7 @@ function MediaPageInner() {
   const [items, setItems] = useState([]);
   const [urls, setUrls] = useState({});
   const [loading, setLoading] = useState(true);
+  const [reactions, setReactions] = useState({});
 
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
@@ -102,6 +100,45 @@ function MediaPageInner() {
     );
     setUrls(Object.fromEntries(entries));
     setLoading(false);
+    loadReactions((data ?? []).map((item) => item.id));
+  }
+
+  async function loadReactions(mediaIds) {
+    if (mediaIds.length === 0) return;
+    const { data, error } = await supabase
+      .from("media_reactions")
+      .select("media_id, user_id, reaction_type")
+      .in("media_id", mediaIds);
+    if (error) return;
+
+    const grouped = {};
+    for (const r of data) {
+      if (!grouped[r.media_id]) grouped[r.media_id] = { counts: {}, myReaction: null };
+      const entry = grouped[r.media_id];
+      entry.counts[r.reaction_type] = (entry.counts[r.reaction_type] ?? 0) + 1;
+      if (r.user_id === user?.id) entry.myReaction = r.reaction_type;
+    }
+    setReactions(grouped);
+  }
+
+  async function handleToggleReaction(mediaId, reactionType) {
+    if (!user) return;
+    const myReaction = reactions[mediaId]?.myReaction;
+
+    const { error } =
+      myReaction === reactionType
+        ? await supabase.from("media_reactions").delete().eq("media_id", mediaId).eq("user_id", user.id)
+        : await supabase
+            .from("media_reactions")
+            .upsert(
+              { media_id: mediaId, user_id: user.id, reaction_type: reactionType },
+              { onConflict: "media_id,user_id" }
+            );
+    if (error) {
+      window.alert("처리에 실패했어요: " + error.message);
+      return;
+    }
+    loadReactions(items.map((i) => i.id));
   }
 
   useEffect(() => {
@@ -138,24 +175,6 @@ function MediaPageInner() {
       .in("id", toDelete.map((d) => d.id));
   }
 
-  async function pruneOldVideoFiles() {
-    const { data } = await supabase
-      .from("media_items")
-      .select("id, file_path")
-      .eq("media_type", "video")
-      .not("file_path", "is", null)
-      .order("created_at", { ascending: false });
-
-    if (!data || data.length <= MAX_KEPT_VIDEO_FILES) return;
-
-    const toDelete = data.slice(MAX_KEPT_VIDEO_FILES);
-    await supabase.storage.from("media").remove(toDelete.map((d) => d.file_path));
-    await supabase
-      .from("media_items")
-      .delete()
-      .in("id", toDelete.map((d) => d.id));
-  }
-
   async function handleUpload(e) {
     e.preventDefault();
     if (!file) return;
@@ -163,7 +182,7 @@ function MediaPageInner() {
     setError("");
 
     let uploadFile = file;
-    if (tab === "audio" && file.type.startsWith("audio/")) {
+    if (file.type.startsWith("audio/")) {
       setCompressProgress(0);
       uploadFile = await compressAudioFile(file, setCompressProgress);
       setCompressProgress(null);
@@ -187,11 +206,7 @@ function MediaPageInner() {
       return;
     }
 
-    if (tab === "audio") {
-      await pruneOldAudio();
-    } else if (tab === "video") {
-      await pruneOldVideoFiles();
-    }
+    await pruneOldAudio();
 
     setUploading(false);
     setTitle("");
@@ -271,7 +286,7 @@ function MediaPageInner() {
         ))}
       </div>
 
-      {((tab === "audio" && isAdmin) || (tab === "video" && canManageVideo)) && (
+      {tab === "audio" && isAdmin && (
         <form
           key={tab}
           onSubmit={handleUpload}
@@ -291,11 +306,11 @@ function MediaPageInner() {
           <div>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
               <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
-                📎 {tab === "audio" ? "음성" : "영상"} 파일 선택
+                📎 음성 파일 선택
               </span>
               <input
                 type="file"
-                accept={tab === "audio" ? "audio/*" : "video/*"}
+                accept="audio/*"
                 required
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                 className="hidden"
@@ -521,6 +536,28 @@ function MediaPageInner() {
             ) : (
               <video controls className="mt-3 w-full rounded-lg" src={urls[item.id]} />
             )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {REACTIONS.filter((r) => r.key !== "comfort").map((r) => {
+                const count = reactions[item.id]?.counts?.[r.key] ?? 0;
+                const mine = reactions[item.id]?.myReaction === r.key;
+                return (
+                  <button
+                    key={r.key}
+                    type="button"
+                    onClick={() => handleToggleReaction(item.id, r.key)}
+                    disabled={!user}
+                    title={r.label}
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors disabled:opacity-50 ${
+                      mine
+                        ? "border-brand bg-brand-tint text-brand-dark"
+                        : "border-black/10 text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                    }`}
+                  >
+                    {r.emoji} {count > 0 ? count : ""}
+                  </button>
+                );
+              })}
+            </div>
           </li>
         ))}
       </ul>
