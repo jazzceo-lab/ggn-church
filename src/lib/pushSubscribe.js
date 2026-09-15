@@ -12,6 +12,11 @@ export async function isPushSubscribed(user) {
     .eq("user_id", user.id)
     .eq("endpoint", sub.endpoint)
     .maybeSingle();
+  if (data) {
+    // 앱을 켤 때마다(정상 구독 확인될 때) "아직 쓰는 기기"라는 표시로 갱신 —
+    // 90일간 이게 안 찍히면 오래된 구독으로 보고 자동 삭제된다.
+    supabase.from("push_subscriptions").update({ last_seen_at: new Date().toISOString() }).eq("id", data.id).then(() => {});
+  }
   return !!data;
 }
 
@@ -37,6 +42,7 @@ export async function subscribeToPush(user) {
         endpoint: json.endpoint,
         p256dh: json.keys.p256dh,
         auth: json.keys.auth,
+        last_seen_at: new Date().toISOString(),
       },
       { onConflict: "user_id,endpoint" }
     );
