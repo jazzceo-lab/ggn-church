@@ -42,15 +42,17 @@ export default function AdminStatsPage() {
   const [loading, setLoading] = useState(true);
   const [pageRows, setPageRows] = useState([]);
   const [boardRows, setBoardRows] = useState([]);
+  const [activeMembers, setActiveMembers] = useState(0);
+  const [chatMessageCount, setChatMessageCount] = useState(0);
 
   async function load() {
     setLoading(true);
 
-    let query = supabase.from("page_views").select("path, detail, created_at");
-    if (period !== "all") {
-      const cutoff = new Date(Date.now() - Number(period) * 24 * 60 * 60 * 1000).toISOString();
-      query = query.gte("created_at", cutoff);
-    }
+    const cutoff =
+      period !== "all" ? new Date(Date.now() - Number(period) * 24 * 60 * 60 * 1000).toISOString() : null;
+
+    let query = supabase.from("page_views").select("user_id, path, detail, created_at");
+    if (cutoff) query = query.gte("created_at", cutoff);
     const { data } = await query;
     const rows = data ?? [];
 
@@ -73,6 +75,11 @@ export default function AdminStatsPage() {
 
     setPageRows(toSortedList(pageCounts));
     setBoardRows(toSortedList(boardCounts));
+    setActiveMembers(new Set(rows.map((r) => r.user_id)).size);
+
+    const { data: chatCount } = await supabase.rpc("admin_chat_message_count", { period_start: cutoff });
+    setChatMessageCount(chatCount ?? 0);
+
     setLoading(false);
   }
 
@@ -125,7 +132,18 @@ export default function AdminStatsPage() {
         <p className="mt-6 text-sm text-foreground/50">불러오는 중...</p>
       ) : (
         <>
-          <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
+              <p className="text-sm text-foreground/50">활성 회원수</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{activeMembers}명</p>
+            </div>
+            <div className="rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
+              <p className="text-sm text-foreground/50">채팅 메시지</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{chatMessageCount}건</p>
+            </div>
+          </div>
+
+          <section className="mt-4 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
             <h2 className="font-serif font-semibold text-foreground">게시판 카테고리별 방문</h2>
             <BarList rows={boardRows} total={boardTotal} />
           </section>
