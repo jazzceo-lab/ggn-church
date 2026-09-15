@@ -7,7 +7,6 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { safeStoragePath } from "@/lib/storagePath";
 import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
-import { compressAudioFile } from "@/lib/compressAudio";
 import KakaoShareButton from "@/components/KakaoShareButton";
 import { REACTIONS } from "@/lib/reactions";
 
@@ -43,7 +42,6 @@ function MediaPageInner() {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [compressProgress, setCompressProgress] = useState(null);
   const [error, setError] = useState("");
 
   const [externalTitle, setExternalTitle] = useState("");
@@ -181,15 +179,8 @@ function MediaPageInner() {
     setUploading(true);
     setError("");
 
-    let uploadFile = file;
-    if (file.type.startsWith("audio/")) {
-      setCompressProgress(0);
-      uploadFile = await compressAudioFile(file, setCompressProgress);
-      setCompressProgress(null);
-    }
-
-    const path = safeStoragePath(tab, uploadFile.name);
-    const { error: uploadError } = await uploadFileWithRetry("media", path, uploadFile);
+    const path = safeStoragePath(tab, file.name);
+    const { error: uploadError } = await uploadFileWithRetry("media", path, file);
     if (uploadError) {
       setUploading(false);
       setError("업로드에 실패했어요: " + uploadError.message);
@@ -324,17 +315,8 @@ function MediaPageInner() {
             disabled={uploading}
             className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
           >
-            {compressProgress !== null
-              ? `음성 압축 중... ${Math.round(compressProgress * 100)}%`
-              : uploading
-                ? "업로드 중..."
-                : "등록"}
+            {uploading ? "업로드 중..." : "등록"}
           </button>
-          {compressProgress !== null && (
-            <p className="text-xs text-foreground/40">
-              용량을 줄이는 중이에요. 파일이 클수록 시간이 걸릴 수 있어요.
-            </p>
-          )}
         </form>
       )}
 
