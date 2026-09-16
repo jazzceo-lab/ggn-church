@@ -17,25 +17,6 @@ function toDateKey(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-function isSundayKey(dateKey) {
-  const [y, m, d] = dateKey.split("-").map(Number);
-  return new Date(y, m - 1, d).getDay() === 0;
-}
-
-// 매주 일요일에 자동으로 뜨는 주일예배 일정 (DB에 저장하지 않는 가상 일정).
-function sundayWorshipEvent(dateKey) {
-  return {
-    id: `sunday-worship-${dateKey}`,
-    event_date: dateKey,
-    title: "주일예배",
-    description: null,
-    time_label: "오전 11:30",
-    link_url: null,
-    image_url: null,
-    synthetic: true,
-  };
-}
-
 function buildMonthCells(year, month) {
   const startWeekday = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -143,8 +124,7 @@ export default function CalendarPage() {
   const todayKey = toDateKey(today.getFullYear(), today.getMonth(), today.getDate());
 
   function getEventsForDate(key) {
-    const base = eventsByDate[key] ?? [];
-    return isSundayKey(key) ? [sundayWorshipEvent(key), ...base] : base;
+    return eventsByDate[key] ?? [];
   }
 
   const selectedEvents = getEventsForDate(selected);
@@ -168,6 +148,13 @@ export default function CalendarPage() {
     setFormDate(key);
     const [y, m] = key.split("-").map(Number);
     setCursor(new Date(y, m - 1, 1));
+    // 그 날에 일정이 있으면(달력만 보고는 폰 화면에서 잘 안 보여서) 주보 페이지처럼
+    // 상세 목록으로 자동 스크롤해준다. 일정이 없으면 그대로 둔다(달력 위치 유지).
+    if (getEventsForDate(key).length > 0) {
+      setTimeout(() => {
+        document.getElementById("event-detail")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
   }
 
   function resetForm() {
@@ -285,7 +272,7 @@ export default function CalendarPage() {
       <button
         key={i}
         onClick={() => selectDate(key)}
-        className={`flex min-h-[56px] flex-col items-center gap-0.5 rounded-lg border border-black/15 pt-1 text-sm transition-colors sm:min-h-[68px] dark:border-white/15 ${
+        className={`flex min-h-[42px] flex-col items-center gap-0.5 rounded-lg border border-black/15 pt-1 text-sm transition-colors sm:min-h-[50px] dark:border-white/15 ${
           isSelected
             ? "bg-brand text-white"
             : isToday
@@ -308,7 +295,7 @@ export default function CalendarPage() {
         <span>{date.getDate()}</span>
         {churchEventName ? (
           <span
-            className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
+            className={`block w-full truncate px-0.5 text-center text-[10px] leading-tight sm:text-[11px] ${
               isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"
             }`}
           >
@@ -316,7 +303,7 @@ export default function CalendarPage() {
             {dayEvents.length > 0 && ` +${dayEvents.length}`}
           </span>
         ) : dayEvents.length > 0 ? (
-          <span className="w-full px-0.5 text-center text-[9px] leading-tight sm:text-[10px]">
+          <span className="w-full px-0.5 text-center text-[10px] leading-tight sm:text-[11px]">
             <span className="block truncate">{dayEvents[0].title}</span>
             {dayEvents.length > 1 && (
               <span className={isSelected ? "text-white/80" : "text-foreground/50"}>
@@ -326,7 +313,7 @@ export default function CalendarPage() {
           </span>
         ) : holidayName ? (
           <span
-            className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
+            className={`block w-full truncate px-0.5 text-center text-[10px] leading-tight sm:text-[11px] ${
               isSelected ? "text-white/90" : "text-red-500 dark:text-red-400"
             }`}
           >
@@ -465,7 +452,7 @@ export default function CalendarPage() {
         )}
       </div>
 
-      <div className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+      <div id="event-detail" className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
         <div className="flex items-center justify-between">
           <h2 className="flex flex-wrap items-center gap-2 font-serif font-semibold text-foreground">
             {selected} 일정
