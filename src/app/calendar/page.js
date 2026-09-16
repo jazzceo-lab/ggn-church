@@ -258,7 +258,7 @@ export default function CalendarPage() {
 
   // 월간/주간 보기 공통으로 쓰는 날짜 칸 렌더링. date가 null이면 빈 칸(월간 보기 앞뒤 여백).
   function renderDayCell(date, i) {
-    if (date === null) return <div key={i} />;
+    if (date === null) return <div key={i} className="min-h-[42px] sm:min-h-[50px]" />;
     const key = toDateKey(date.getFullYear(), date.getMonth(), date.getDate());
     const dayEvents = getEventsForDate(key);
     const isToday = key === todayKey;
@@ -272,7 +272,7 @@ export default function CalendarPage() {
       <button
         key={i}
         onClick={() => selectDate(key)}
-        className={`flex min-h-[42px] flex-col items-center gap-0.5 rounded-lg border border-black/15 pt-1 text-sm transition-colors sm:min-h-[50px] dark:border-white/15 ${
+        className={`flex min-h-[42px] w-full flex-col items-center gap-0.5 pt-1 text-sm transition-colors sm:min-h-[50px] ${
           isSelected
             ? "bg-brand text-white"
             : isToday
@@ -441,7 +441,7 @@ export default function CalendarPage() {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-1">
+            <div className="grid grid-cols-7 divide-x divide-y divide-black/10 rounded-lg border border-black/10 dark:divide-white/10 dark:border-white/10">
               {cells.map((day, i) => renderDayCell(day === null ? null : new Date(year, month, day), i))}
             </div>
           </>
