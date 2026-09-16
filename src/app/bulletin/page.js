@@ -218,7 +218,7 @@ function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
       </section>
 
       <section className="mt-6 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10" id="theme-section">
-        <CollapsibleHeader title={`${bulletin.theme.year} 표어`} open={openTheme} onToggle={() => setOpenTheme((v) => !v)} />
+        <CollapsibleHeader title={bulletin.theme.year} open={openTheme} onToggle={() => setOpenTheme((v) => !v)} />
         {openTheme && (
           <>
             <p className="mt-3 font-serif text-lg font-semibold text-foreground">
