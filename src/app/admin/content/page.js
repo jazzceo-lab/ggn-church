@@ -617,6 +617,146 @@ function BulletinManager() {
   );
 }
 
+const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
+
+function DailyVersePushSettings() {
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function load() {
+    const { data } = await supabase.from("daily_verse_settings").select("*").eq("id", 1).single();
+    setSettings(
+      data ?? {
+        send_time: "08:00",
+        frequency: "daily",
+        weekly_day: 0,
+        once_date: "",
+        override_ref: "",
+        override_text: "",
+      }
+    );
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function update(patch) {
+    setSettings((prev) => ({ ...prev, ...patch }));
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setMessage("");
+    const { error } = await supabase
+      .from("daily_verse_settings")
+      .update({
+        send_time: settings.send_time,
+        frequency: settings.frequency,
+        weekly_day: settings.frequency === "weekly" ? settings.weekly_day : null,
+        once_date: settings.frequency === "once" ? settings.once_date || null : null,
+        override_ref: settings.override_ref?.trim() || null,
+        override_text: settings.override_text?.trim() || null,
+      })
+      .eq("id", 1);
+    setSaving(false);
+    if (error) {
+      setMessage("저장에 실패했어요: " + error.message);
+      return;
+    }
+    setMessage("저장했어요.");
+    setTimeout(() => setMessage(""), 3000);
+  }
+
+  if (loading || !settings) return null;
+
+  return (
+    <div className="mb-6 space-y-3 rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5">
+      <p className="text-sm font-medium text-foreground/80">📖 오늘의 성경 알림 발송 설정</p>
+      <p className="text-xs text-foreground/50">
+        회원정보에서 &ldquo;오늘의 성경 알림&rdquo;을 켠 회원에게 이미지카드 푸시를 보내요.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="text-sm text-foreground/70">발송시간</label>
+        <input
+          type="time"
+          value={settings.send_time}
+          onChange={(e) => update({ send_time: e.target.value })}
+          className="rounded-md border border-black/10 px-2 py-1.5 text-sm dark:border-white/10 dark:bg-white/10"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="text-sm text-foreground/70">발송주기</label>
+        <select
+          value={settings.frequency}
+          onChange={(e) => update({ frequency: e.target.value })}
+          className="rounded-md border border-black/10 px-2 py-1.5 text-sm dark:border-white/10 dark:bg-white/10"
+        >
+          <option value="daily">매일</option>
+          <option value="weekly">주 1회</option>
+          <option value="once">특정 날짜 (1회성)</option>
+        </select>
+        {settings.frequency === "weekly" && (
+          <select
+            value={settings.weekly_day ?? 0}
+            onChange={(e) => update({ weekly_day: Number(e.target.value) })}
+            className="rounded-md border border-black/10 px-2 py-1.5 text-sm dark:border-white/10 dark:bg-white/10"
+          >
+            {WEEKDAY_LABELS.map((label, i) => (
+              <option key={i} value={i}>
+                매주 {label}요일
+              </option>
+            ))}
+          </select>
+        )}
+        {settings.frequency === "once" && (
+          <input
+            type="date"
+            value={settings.once_date ?? ""}
+            onChange={(e) => update({ once_date: e.target.value })}
+            className="rounded-md border border-black/10 px-2 py-1.5 text-sm dark:border-white/10 dark:bg-white/10"
+          />
+        )}
+      </div>
+
+      <div className="space-y-2 border-t border-black/10 pt-3 dark:border-white/10">
+        <p className="text-xs text-foreground/50">
+          비워두면 아래 목록에서 날짜순으로 자동으로 골라요. 채워두면{" "}
+          <strong>다음 발송 1번만</strong> 이 성구를 대신 보내고, 보내고 나면 자동으로 비워져요.
+        </p>
+        <input
+          type="text"
+          value={settings.override_ref ?? ""}
+          onChange={(e) => update({ override_ref: e.target.value })}
+          placeholder="특정 성구 표시 (예: 시편 23:1) — 선택"
+          className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+        />
+        <textarea
+          rows={2}
+          value={settings.override_text ?? ""}
+          onChange={(e) => update({ override_text: e.target.value })}
+          placeholder="특정 성구 본문 — 선택"
+          className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+        />
+      </div>
+
+      {message && <p className="text-sm text-brand-dark">{message}</p>}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="rounded-full bg-brand px-4 py-2 text-sm text-white hover:bg-brand-dark disabled:opacity-50"
+      >
+        {saving ? "저장 중..." : "발송 설정 저장"}
+      </button>
+    </div>
+  );
+}
+
 function VerseManager() {
   const [verses, setVerses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -698,6 +838,8 @@ function VerseManager() {
 
   return (
     <div>
+      <DailyVersePushSettings />
+
       <p className="text-sm text-foreground/50">
         여기 등록된 성구들이 성경 페이지의 &ldquo;오늘의 말씀&rdquo;에 날짜순으로 돌아가며 표시돼요.
       </p>

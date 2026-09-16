@@ -51,6 +51,7 @@ export default function AccountPage() {
   const [notifyMessages, setNotifyMessages] = useState(true);
   const [notifyBulletin, setNotifyBulletin] = useState(true);
   const [notifyNotice, setNotifyNotice] = useState(true);
+  const [notifyDailyVerse, setNotifyDailyVerse] = useState(true);
   const [notifyBoardDistrict, setNotifyBoardDistrict] = useState(true);
   const [notifyBoardPrayer, setNotifyBoardPrayer] = useState(true);
   const [notifyBoardShare, setNotifyBoardShare] = useState(true);
@@ -64,7 +65,7 @@ export default function AccountPage() {
     supabase
       .from("profiles")
       .select(
-        "avatar_path, phone, notify_messages, notify_bulletin, notify_notice, notify_board_district, notify_board_prayer, notify_board_share"
+        "avatar_path, phone, notify_messages, notify_bulletin, notify_notice, notify_daily_verse, notify_board_district, notify_board_prayer, notify_board_share"
       )
       .eq("id", user.id)
       .single()
@@ -79,6 +80,7 @@ export default function AccountPage() {
         setNotifyMessages(data?.notify_messages ?? true);
         setNotifyBulletin(data?.notify_bulletin ?? true);
         setNotifyNotice(data?.notify_notice ?? true);
+        setNotifyDailyVerse(data?.notify_daily_verse ?? true);
         setNotifyBoardDistrict(data?.notify_board_district ?? true);
         setNotifyBoardPrayer(data?.notify_board_prayer ?? true);
         setNotifyBoardShare(data?.notify_board_share ?? true);
@@ -360,6 +362,16 @@ export default function AccountPage() {
               checked={notifyNotice}
               disabled={notifySaving}
               onChange={(e) => handleNotifyToggle("notify_notice", e.target.checked, setNotifyNotice)}
+              className="h-5 w-5 accent-brand"
+            />
+          </label>
+          <label className="flex items-center justify-between gap-3 text-sm text-foreground/80">
+            오늘의 성경 알림
+            <input
+              type="checkbox"
+              checked={notifyDailyVerse}
+              disabled={notifySaving}
+              onChange={(e) => handleNotifyToggle("notify_daily_verse", e.target.checked, setNotifyDailyVerse)}
               className="h-5 w-5 accent-brand"
             />
           </label>

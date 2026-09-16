@@ -20,6 +20,7 @@ self.addEventListener("push", (event) => {
       body: data.body || "",
       icon: "/images/logo-mark.jpg",
       badge: "/images/logo-mark.jpg",
+      image: data.image || undefined,
       data: { url: data.url || "/messages" },
     })
   );
