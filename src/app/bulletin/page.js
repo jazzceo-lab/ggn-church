@@ -72,7 +72,37 @@ function PrayerPathBackground() {
   );
 }
 
+// 표어/기도제목/섬김이 카드에 공용으로 쓰는 접기 헤더. 기본은 접힌 상태로 시작해서
+// 주보를 열자마자 예배순서부터 보이게 하고, 필요할 때만 펼쳐보게 한다.
+function CollapsibleHeader({ title, open, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-center justify-between gap-2 text-left"
+    >
+      <h2 className="font-serif font-semibold text-foreground">{title}</h2>
+      <span className="flex items-center gap-1 text-xs text-foreground/50">
+        {open ? "접기" : "펼치기"}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </span>
+    </button>
+  );
+}
+
 function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
+  const [openTheme, setOpenTheme] = useState(false);
+  const [openPrayer, setOpenPrayer] = useState(false);
+  const [openStaff, setOpenStaff] = useState(false);
+
   return (
     <>
       <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15" id="news-section">
@@ -188,41 +218,49 @@ function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
       </section>
 
       <section className="mt-6 rounded-xl border border-black/10 bg-brand-tint/60 p-5 dark:border-white/10" id="theme-section">
-        <p className="text-sm font-medium text-brand-dark">{bulletin.theme.year}</p>
-        <p className="mt-1 font-serif text-lg font-semibold text-foreground">
-          &ldquo;{bulletin.theme.verse}&rdquo;
-        </p>
-        <ol className="mt-4 space-y-1 text-sm text-foreground/70">
-          {bulletin.theme.goals.map((goal, i) => (
-            <li key={i}>
-              {i + 1}. {goal}
-            </li>
-          ))}
-        </ol>
+        <CollapsibleHeader title={`${bulletin.theme.year} 표어`} open={openTheme} onToggle={() => setOpenTheme((v) => !v)} />
+        {openTheme && (
+          <>
+            <p className="mt-3 font-serif text-lg font-semibold text-foreground">
+              &ldquo;{bulletin.theme.verse}&rdquo;
+            </p>
+            <ol className="mt-4 space-y-1 text-sm text-foreground/70">
+              {bulletin.theme.goals.map((goal, i) => (
+                <li key={i}>
+                  {i + 1}. {goal}
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
       </section>
 
       <section className="relative mt-6 overflow-hidden rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5" id="prayer-section">
         <PrayerPathBackground />
         <div className="relative">
-          <h2 className="font-serif font-semibold text-foreground">기도제목</h2>
-          <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
-            {bulletin.prayers.map((p, i) => (
-              <li key={i}>· {p}</li>
-            ))}
-          </ul>
+          <CollapsibleHeader title="기도제목" open={openPrayer} onToggle={() => setOpenPrayer((v) => !v)} />
+          {openPrayer && (
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground/70">
+              {bulletin.prayers.map((p, i) => (
+                <li key={i}>· {p}</li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
       <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5" id="staff-section">
-        <h2 className="font-serif font-semibold text-foreground">섬김이</h2>
-        <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-          {bulletin.staff.map(([role, names]) => (
-            <div key={role} className="flex gap-2">
-              <dt className="w-24 shrink-0 text-foreground/50">{role}</dt>
-              <dd className="text-foreground/80">{names}</dd>
-            </div>
-          ))}
-        </dl>
+        <CollapsibleHeader title="섬김이" open={openStaff} onToggle={() => setOpenStaff((v) => !v)} />
+        {openStaff && (
+          <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+            {bulletin.staff.map(([role, names]) => (
+              <div key={role} className="flex gap-2">
+                <dt className="w-24 shrink-0 text-foreground/50">{role}</dt>
+                <dd className="text-foreground/80">{names}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </section>
     </>
   );
@@ -234,6 +272,7 @@ export default function BulletinPage() {
   const [bulletinsLoading, setBulletinsLoading] = useState(true);
   const [bulletinsError, setBulletinsError] = useState(false);
   const [openIssue, setOpenIssue] = useState(null);
+  const [openPast, setOpenPast] = useState(false);
   const [members, setMembers] = useState([]);
 
   // 예배순서 섹션에 scroll-margin-top CSS 추가
@@ -423,7 +462,8 @@ export default function BulletinPage() {
 
       {past.length > 0 && (
         <section className="mt-10 border-t border-black/10 pt-6 dark:border-white/10">
-          <h2 className="font-serif text-lg font-semibold text-foreground">지난 주보</h2>
+          <CollapsibleHeader title="지난 주보" open={openPast} onToggle={() => setOpenPast((v) => !v)} />
+          {openPast && (
           <ul className="mt-3 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
             {past.map((b) => (
               <li key={b.issue}>
@@ -444,6 +484,7 @@ export default function BulletinPage() {
               </li>
             ))}
           </ul>
+          )}
         </section>
       )}
     </main>
