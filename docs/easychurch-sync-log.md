@@ -38,6 +38,7 @@ easychurch-app은 2026-09-13 저녁, church-app 커밋 `5a1cebb`(2026-09-13,
 | `bdcf73f` | 교회력 절기가 일반 일정에 가려 안 보이던 문제 수정 (캘린더) |
 | `1645915` | 주보 헤더에 교회력 절기 배지 자동 표시 |
 | `749a4b5` | 교회일정: 자동 주일예배 일정 제거, 일정있는 날 클릭시 자동스크롤, 날짜칸 크기 조정 |
+| `2fccd4a` | 교회일정 달력 그리드를 셀당 테두리 대신 구분선 방식으로 변경 (제목 표시폭 확대) |
 
 ## 🕓 church-app에도 아직 커밋 안 된 작업중 (당연히 easychurch 미반영)
 
@@ -48,5 +49,5 @@ easychurch-app은 2026-09-13 저녁, church-app 커밋 `5a1cebb`(2026-09-13,
   - `supabase/functions/send-push/index.ts` (승인요청 알림 문구)
 
 ---
-_마지막 갱신: 2026-09-17, church-app HEAD `749a4b5` 기준. church-app에 새 커밋이 쌓이면
+_마지막 갱신: 2026-09-17, church-app HEAD `2fccd4a` 기준. church-app에 새 커밋이 쌓이면
 이 표의 "아직 반영 안 됨" 목록에 이어서 추가할 것._
