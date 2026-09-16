@@ -39,8 +39,8 @@ Deno.serve(async (_req) => {
     .eq("id", 1)
     .single();
 
-  if (!settings) {
-    return new Response(JSON.stringify({ skipped: "no_settings" }), {
+  if (!settings || settings.enabled === false) {
+    return new Response(JSON.stringify({ skipped: "disabled" }), {
       headers: { "Content-Type": "application/json" },
     });
   }
