@@ -7,6 +7,10 @@ easychurch-app은 2026-09-13 저녁, church-app 커밋 `5a1cebb`(2026-09-13,
 
 **기준점(fork point): `5a1cebb`** — 이 커밋 이전 내용은 이미 easychurch-app에 다 있음.
 
+**포팅 주기: 매주 1회 일괄 반영.** 매번 즉시 옮기지 않고, "아직 반영 안 됨" 표에 쌓아뒀다가
+주 1회 몰아서 easychurch-app에 반영하는 방식. 그래서 이 표는 항상 빠짐없이 최신 상태로
+유지해야 함 — church-app 커밋이 생길 때마다 바로바로 이 문서에 기록.
+
 ## ✅ 이미 easychurch-app에 반영됨 (다른 세션에서 직접 포팅)
 
 | church-app 커밋 | easychurch-app 커밋 | 내용 |
