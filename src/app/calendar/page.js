@@ -306,7 +306,16 @@ export default function CalendarPage() {
         }`}
       >
         <span>{date.getDate()}</span>
-        {dayEvents.length > 0 ? (
+        {churchEventName ? (
+          <span
+            className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
+              isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"
+            }`}
+          >
+            {churchEventName}
+            {dayEvents.length > 0 && ` +${dayEvents.length}`}
+          </span>
+        ) : dayEvents.length > 0 ? (
           <span className="w-full px-0.5 text-center text-[9px] leading-tight sm:text-[10px]">
             <span className="block truncate">{dayEvents[0].title}</span>
             {dayEvents.length > 1 && (
@@ -322,14 +331,6 @@ export default function CalendarPage() {
             }`}
           >
             {holidayName}
-          </span>
-        ) : churchEventName ? (
-          <span
-            className={`block w-full truncate px-0.5 text-center text-[9px] leading-tight sm:text-[10px] ${
-              isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"
-            }`}
-          >
-            {churchEventName}
           </span>
         ) : null}
       </button>
@@ -377,6 +378,11 @@ export default function CalendarPage() {
           <span className="text-base font-semibold">{date.getDate()}</span>
         </span>
         <span className="min-w-0 flex-1 space-y-0.5 pt-0.5">
+          {churchEventName && (
+            <span className={`block font-medium ${isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"}`}>
+              {churchEventName}
+            </span>
+          )}
           {dayEvents.length > 0 ? (
             dayEvents.map((ev) => (
               <span key={ev.id} className="block break-keep">
@@ -387,13 +393,9 @@ export default function CalendarPage() {
             <span className={isSelected ? "text-white/90" : "text-red-500 dark:text-red-400"}>
               {holidayName}
             </span>
-          ) : churchEventName ? (
-            <span className={isSelected ? "text-white/90" : "text-purple-500 dark:text-purple-400"}>
-              {churchEventName}
-            </span>
-          ) : (
+          ) : !churchEventName ? (
             <span className={isSelected ? "text-white/60" : "text-foreground/30"}>일정 없음</span>
-          )}
+          ) : null}
         </span>
       </button>
     );
