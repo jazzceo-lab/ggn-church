@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { buildBibleLink } from "@/lib/bibleBooks";
 import KakaoShareButton from "@/components/KakaoShareButton";
+import { getChurchEventName } from "@/lib/churchCalendar";
 
 function hymnNumberFrom(text) {
   const match = text?.match(/(\d{1,3})\s*장/);
@@ -308,6 +309,7 @@ export default function BulletinPage() {
           (data ?? []).map((row) => ({
             issue: row.issue,
             date: formatKoreanDate(row.bulletin_date),
+            dateKey: row.bulletin_date,
             ...row.content,
           }))
         );
@@ -441,8 +443,13 @@ export default function BulletinPage() {
       <div className="flex items-baseline justify-between gap-3">
         <h1 className="font-serif text-2xl font-bold text-foreground">주보</h1>
         <div className="flex items-center gap-3">
-          <p className="text-sm text-foreground/50">
+          <p className="flex flex-wrap items-center gap-1.5 text-sm text-foreground/50">
             {current.issue} · {current.date}
+            {getChurchEventName(current.dateKey) && (
+              <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-600 dark:bg-purple-900/30 dark:text-purple-300">
+                🟣 {getChurchEventName(current.dateKey)}
+              </span>
+            )}
           </p>
           <KakaoShareButton
             title={`길가는교회 주보 (${current.issue})`}
