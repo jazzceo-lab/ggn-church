@@ -31,8 +31,8 @@ export default function MediaPage() {
 
 function MediaPageInner() {
   const searchParams = useSearchParams();
-  const { user, loading: authLoading, isAdmin, hasRole } = useAuth();
-  const canManageVideo = isAdmin || hasRole("media_manager");
+  const { user, loading: authLoading, isAdmin, hasRoleScope } = useAuth();
+  const canManageVideo = isAdmin || hasRoleScope("media_manager");
   const [tab, setTab] = useState("video");
   const [items, setItems] = useState([]);
   const [urls, setUrls] = useState({});
