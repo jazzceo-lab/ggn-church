@@ -8,6 +8,7 @@ import { pathLabel } from "@/lib/pageLabels";
 const AuthContext = createContext({
   user: null,
   loading: true,
+  pendingApproval: false,
   isAdmin: false,
   isBoardAdmin: false,
   district: null,
@@ -15,7 +16,6 @@ const AuthContext = createContext({
   displayName: null,
   churchId: null,
   roles: new Set(),
-  hasRole: () => false,
   hasRoleScope: () => false,
   unreadCount: 0,
   refreshUnreadCount: () => {},
@@ -31,6 +31,7 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const pathname = usePathname();
   const [user, setUser] = useState(null);
+  const [pendingApproval, setPendingApproval] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isBoardAdmin, setIsBoardAdmin] = useState(false);
   const [district, setDistrict] = useState(null);
@@ -53,6 +54,7 @@ export function AuthProvider({ children }) {
 
   async function loadProfile(currentUser) {
     if (!currentUser) {
+      setPendingApproval(false);
       setIsAdmin(false);
       setIsBoardAdmin(false);
       setDistrict(null);
@@ -64,12 +66,15 @@ export function AuthProvider({ children }) {
     }
     const { data } = await supabase
       .from("profiles")
-      .select("is_admin, is_board_admin, is_suspended, district, board_last_seen_at, title, display_name, church_id")
+      .select(
+        "is_admin, is_board_admin, is_suspended, approval_status, district, board_last_seen_at, title, display_name, church_id"
+      )
       .eq("id", currentUser.id)
       .single();
 
     if (data?.is_suspended) {
       await supabase.auth.signOut();
+      setPendingApproval(false);
       setIsAdmin(false);
       setIsBoardAdmin(false);
       setDistrict(null);
@@ -82,6 +87,10 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // [미적용] 회원가입 승인제가 꺼져 있는 지금은 approval_status 컬럼 자체가 없어서
+    // data?.approval_status는 항상 undefined -> false. 승인제를 켜는 마이그레이션을
+    // 적용해야 비로소 pending 회원에게 승인대기 화면이 뜨기 시작한다.
+    setPendingApproval(data?.approval_status === "pending");
     setIsAdmin(data?.is_admin ?? false);
     setIsBoardAdmin(data?.is_board_admin ?? false);
     setDistrict(data?.district ?? null);
@@ -404,6 +413,7 @@ export function AuthProvider({ children }) {
       value={{
         user,
         loading,
+        pendingApproval,
         isAdmin,
         isBoardAdmin,
         district,
@@ -411,7 +421,6 @@ export function AuthProvider({ children }) {
         displayName,
         churchId,
         roles,
-        hasRole: (key) => roles.has(`${key}:`),
         hasRoleScope: (key, scope) => roles.has(`${key}:${scope ?? ""}`),
         unreadCount,
         refreshUnreadCount: () => refreshUnreadCount(),
@@ -424,7 +433,26 @@ export function AuthProvider({ children }) {
         onlinePresence,
       }}
     >
-      {children}
+      {/* [미적용] approval_status 컬럼이 없으면 pendingApproval은 항상 false라 이 화면은 절대 안 뜬다. */}
+      {user && pendingApproval ? (
+        <main className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center justify-center px-4 py-12 text-center">
+          <h1 className="font-serif text-2xl font-bold text-foreground">
+            길가는 교회에 오신 걸 환영합니다
+          </h1>
+          <p className="mt-3 text-sm text-foreground/60">관리자 승인 대기중입니다.</p>
+          <p className="mt-1 text-xs text-foreground/40">
+            승인이 완료되면 로그인 후 바로 이용하실 수 있어요.
+          </p>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="mt-6 rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+          >
+            로그아웃
+          </button>
+        </main>
+      ) : (
+        children
+      )}
       {toast && (
         <a
           href={toast.href}

@@ -114,3 +114,7 @@ function collectRosterNames() {
 
 // 제직명단·구역 편성표(teams 페이지) 전체에 등장하는 이름의 총 인원수(중복 제거).
 export const TOTAL_ROSTER_COUNT = collectRosterNames().size;
+
+// [미적용] 회원가입 승인제용. 이름만으로는 본인 확인이 안 되므로 자동승인에는 쓰지 않고,
+// 관리자 회원관리 화면에서 "명단일치" 배지로 참고 정보만 보여주는 용도로만 쓴다.
+export const ROSTER_NAMES = collectRosterNames();

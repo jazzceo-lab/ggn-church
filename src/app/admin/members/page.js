@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
-import { SIGNUP_GROUP_OPTIONS, DISTRICT_NAMES, TOTAL_ROSTER_COUNT } from "@/lib/teamRoster";
+import { SIGNUP_GROUP_OPTIONS, DISTRICT_NAMES, TOTAL_ROSTER_COUNT, ROSTER_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
 
 const UNASSIGNED = "미배정";
@@ -36,6 +36,33 @@ export default function AdminMembersPage() {
   const [recentActivityById, setRecentActivityById] = useState({});
   const [renamingId, setRenamingId] = useState(null);
   const [renameInput, setRenameInput] = useState("");
+  // [미적용] 회원가입 승인제 on/off. app_settings 테이블에 이 키가 없는 지금은
+  // signupApprovalRequired가 항상 false로 남아 스위치가 그려지지 않는다.
+  const [signupApprovalRequired, setSignupApprovalRequired] = useState(false);
+  const [togglingApproval, setTogglingApproval] = useState(false);
+
+  async function loadApprovalSetting() {
+    const { data } = await supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "signup_approval_required")
+      .maybeSingle();
+    if (data) setSignupApprovalRequired(data.value);
+  }
+
+  async function toggleSignupApproval() {
+    setTogglingApproval(true);
+    const { error } = await supabase
+      .from("app_settings")
+      .update({ value: !signupApprovalRequired })
+      .eq("key", "signup_approval_required");
+    setTogglingApproval(false);
+    if (error) {
+      window.alert("설정 변경에 실패했어요: " + error.message);
+      return;
+    }
+    setSignupApprovalRequired((v) => !v);
+  }
 
   function toggleDistrict(name) {
     setOpenDistricts((prev) => {
@@ -52,7 +79,7 @@ export default function AdminMembersPage() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, created_at, phone"
+        "id, email, display_name, district, title, is_admin, is_board_admin, is_suspended, approval_status, created_at, phone"
       )
       .order("created_at", { ascending: false });
 
@@ -144,7 +171,10 @@ export default function AdminMembersPage() {
   }
 
   useEffect(() => {
-    if (isAdmin) loadMembers();
+    if (isAdmin) {
+      loadMembers();
+      loadApprovalSetting();
+    }
   }, [isAdmin]);
 
   // 가입회원 수를 실시간으로 갱신 - 새 회원가입/탈퇴가 생기면 목록 전체를 다시 불러온다.
@@ -168,6 +198,20 @@ export default function AdminMembersPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
+
+  // [미적용] 회원가입 승인제. approval_status 컬럼이 아직 없는 지금은 m.approval_status가
+  // 항상 undefined라 아래 버튼/배지는 그려지지 않는다.
+  async function approveMember(member) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ approval_status: "approved" })
+      .eq("id", member.id);
+    if (error) {
+      window.alert("승인 처리에 실패했어요: " + error.message);
+      return;
+    }
+    loadMembers();
+  }
 
   async function toggleSuspend(member) {
     const { error } = await supabase
@@ -365,6 +409,17 @@ export default function AdminMembersPage() {
         </span>
       </div>
 
+      <label className="mt-3 flex items-center gap-2 text-sm text-foreground/70">
+        <input
+          type="checkbox"
+          checked={signupApprovalRequired}
+          disabled={togglingApproval}
+          onChange={toggleSignupApproval}
+          className="h-5 w-5 accent-brand"
+        />
+        회원가입 관리자 승인 필요 (켜면 신규가입자는 승인 전까지 대기 화면만 보여요)
+      </label>
+
       {duplicateNameGroups.length > 0 && (
         <div className="mt-4 rounded-xl border border-amber-300/60 bg-amber-50 p-4 dark:border-amber-400/30 dark:bg-amber-900/15">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
@@ -542,6 +597,19 @@ export default function AdminMembersPage() {
                     정지됨
                   </span>
                 )}
+                {m.approval_status === "pending" && (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                    승인대기
+                  </span>
+                )}
+                {m.approval_status === "pending" && ROSTER_NAMES.has((m.display_name ?? "").trim()) && (
+                  <span
+                    title="이름은 참고용일 뿐 본인 확인은 아니니, 실제 그 교인이 맞는지 확인 후 승인해주세요."
+                    className="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"
+                  >
+                    📋 명단일치
+                  </span>
+                )}
                 {notifyingIds.has(m.id) && (
                   <span className="ml-2 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
                     🔔 알림 켜짐
@@ -702,6 +770,14 @@ export default function AdminMembersPage() {
               </div>
             </div>
             <div className="flex shrink-0 gap-2">
+              {m.approval_status === "pending" && (
+                <button
+                  onClick={() => approveMember(m)}
+                  className="rounded-full border border-brand bg-brand-tint px-3 py-1 text-xs font-medium text-brand-dark hover:bg-brand/20"
+                >
+                  승인
+                </button>
+              )}
               <button
                 onClick={() => toggleAdmin(m)}
                 className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"

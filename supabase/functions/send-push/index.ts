@@ -102,13 +102,23 @@ Deno.serve(async (req) => {
     const { data: admins } = await supabase.from("profiles").select("id").eq("is_admin", true);
     recipientIds = (admins ?? []).map((a) => a.id);
     excludeUserId = record.id;
-    notification = {
-      title: "길가는교회",
-      body: `🎉 새 회원이 가입했어요: ${record.display_name || "이름 미입력"} (${record.email})${
-        record.district ? ` · 소속: ${record.district}` : ""
-      }`,
-      url: "/admin/members",
-    };
+    // [미적용] 승인제 켜지면(approval_status: 'pending') 승인 요청 문구로, 지금처럼 즉시가입이면 기존 문구 그대로.
+    notification =
+      record.approval_status === "pending"
+        ? {
+            title: "길가는교회",
+            body: `🔔 회원가입 승인 요청: ${record.display_name || "이름 미입력"} (${record.email})${
+              record.district ? ` · 소속: ${record.district}` : ""
+            }`,
+            url: "/admin/members",
+          }
+        : {
+            title: "길가는교회",
+            body: `🎉 새 회원이 가입했어요: ${record.display_name || "이름 미입력"} (${record.email})${
+              record.district ? ` · 소속: ${record.district}` : ""
+            }`,
+            url: "/admin/members",
+          };
   } else if (table === "comments") {
     // 내 글에 댓글이 달렸을 때 글쓴이에게만 알림(본인이 자기 글에 단 댓글은 제외).
     const { data: post } = await supabase
