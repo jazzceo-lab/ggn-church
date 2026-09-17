@@ -9,7 +9,8 @@ export default function MessageFab() {
   const pathname = usePathname();
   const totalUnread = unreadCount + groupUnreadCount;
 
-  if (loading || !user || pathname === "/messages") return null;
+  // 개별 채팅방(1:1/그룹)에서는 입력창이 늘어나면 전송 버튼과 겹치므로 숨긴다.
+  if (loading || !user || pathname.startsWith("/messages")) return null;
 
   return (
     <Link
