@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useRef } from "react";
 
 const MAX_HEIGHT = 120; // 이 높이를 넘으면 박스 안에서 스크롤
 
 // 채팅 입력칸. 한 줄 넘게 쓰면 위 내용이 안 보이던 문제를 고치기 위해, 글이 길어지면
 // 박스가 같이 늘어나는 textarea로 만들었다. Enter는 전송, Shift+Enter는 줄바꿈.
-export default function ChatComposerInput({ value, onChange, onEnterSend, placeholder, className }) {
-  const ref = useRef(null);
+// forwardRef: 이모지 버튼이 커서 위치에 삽입하려면 실제 textarea DOM이 필요해서 노출한다.
+const ChatComposerInput = forwardRef(function ChatComposerInput(
+  { value, onChange, onEnterSend, placeholder, className },
+  forwardedRef
+) {
+  const innerRef = useRef(null);
+  const ref = forwardedRef ?? innerRef;
 
   useEffect(() => {
     const el = ref.current;
@@ -34,4 +39,6 @@ export default function ChatComposerInput({ value, onChange, onEnterSend, placeh
       className={`resize-none overflow-y-auto leading-6 ${className ?? ""}`}
     />
   );
-}
+});
+
+export default ChatComposerInput;

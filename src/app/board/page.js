@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
@@ -14,6 +14,8 @@ import { DISTRICT_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
 import { avatarUrl } from "@/lib/avatar";
 import AvatarLightbox from "@/components/AvatarLightbox";
+import EmojiPickerButton from "@/components/EmojiPickerButton";
+import { insertAtCursor } from "@/lib/insertAtCursor";
 
 // DB(boards 테이블) 조회 전/실패 시 보여줄 기본값. 관리자가 게시판 관리 화면에서
 // 추가·수정한 내용은 boards 테이블에서 불러온 값이 우선한다.
@@ -69,6 +71,7 @@ export default function BoardPage() {
   const [showCompose, setShowCompose] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const bodyRef = useRef(null);
   const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -76,6 +79,7 @@ export default function BoardPage() {
   const [comments, setComments] = useState({});
   const [expandedPosts, setExpandedPosts] = useState([]);
   const [commentInputs, setCommentInputs] = useState({});
+  const commentInputRefs = useRef({});
   const [commentSubmitting, setCommentSubmitting] = useState(null);
 
   const [likes, setLikes] = useState({});
@@ -89,6 +93,7 @@ export default function BoardPage() {
   const [editingPostId, setEditingPostId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const editBodyRef = useRef(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
 
   async function loadPosts(cat, districtFilter) {
@@ -744,12 +749,17 @@ export default function BoardPage() {
               className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
             />
             <textarea
+              ref={bodyRef}
               required
               rows={3}
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="내용을 나눠주세요"
               className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+            />
+            <EmojiPickerButton
+              onPick={(emoji) => insertAtCursor(bodyRef.current, body, setBody, emoji)}
+              className="flex w-fit items-center gap-1 rounded-full border border-black/10 px-3 py-1.5 text-sm text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
             />
             <div>
               <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-foreground/60">
@@ -847,10 +857,15 @@ export default function BoardPage() {
                   className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
                 />
                 <textarea
+                  ref={editBodyRef}
                   rows={3}
                   value={editBody}
                   onChange={(e) => setEditBody(e.target.value)}
                   className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+                />
+                <EmojiPickerButton
+                  onPick={(emoji) => insertAtCursor(editBodyRef.current, editBody, setEditBody, emoji)}
+                  className="flex w-fit items-center gap-1 rounded-full border border-black/10 px-3 py-1.5 text-sm text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
                 />
                 <div className="flex items-center gap-2">
                   <button
@@ -1036,6 +1051,7 @@ export default function BoardPage() {
                     className="mt-2 flex items-center gap-2"
                   >
                     <input
+                      ref={(el) => (commentInputRefs.current[post.id] = el)}
                       type="text"
                       value={commentInputs[post.id] ?? ""}
                       onChange={(e) =>
@@ -1043,6 +1059,17 @@ export default function BoardPage() {
                       }
                       placeholder="댓글을 입력하세요"
                       className="flex-1 rounded-md border border-black/10 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-white/10"
+                    />
+                    <EmojiPickerButton
+                      onPick={(emoji) =>
+                        insertAtCursor(
+                          commentInputRefs.current[post.id],
+                          commentInputs[post.id] ?? "",
+                          (next) => setCommentInputs((prev) => ({ ...prev, [post.id]: next })),
+                          emoji
+                        )
+                      }
+                      className="flex shrink-0 items-center justify-center rounded-full border border-black/10 p-1.5 text-sm text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
                     />
                     <button
                       type="submit"
