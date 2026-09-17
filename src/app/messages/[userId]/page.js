@@ -20,9 +20,7 @@ import ForwardPicker from "@/components/ForwardPicker";
 import DeleteMessageDialog from "@/components/DeleteMessageDialog";
 import { loadHiddenMessageIds, hideMessageLocally } from "@/lib/hiddenMessages";
 import { getClearedAt } from "@/lib/clearedConversations";
-import ChatComposerInput from "@/components/ChatComposerInput";
-import EmojiPickerButton from "@/components/EmojiPickerButton";
-import { insertAtCursor } from "@/lib/insertAtCursor";
+import ChatComposerRow from "@/components/ChatComposerRow";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -498,45 +496,15 @@ export default function ConversationPage() {
         </p>
       )}
 
-      <form onSubmit={handleSend} className="mt-2 flex items-center gap-2">
-        <label
-          aria-label="사진/동영상 첨부"
-          title="사진/동영상 첨부"
-          className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 p-2 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-        >
-          🖼️
-          <input
-            type="file"
-            accept="image/*,video/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </label>
-        <label
-          aria-label="파일 첨부"
-          title="파일 첨부"
-          className="flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-black/10 p-2 text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-        >
-          📎
-          <input type="file" onChange={handleFileChange} className="hidden" />
-        </label>
-        <ChatComposerInput
-          ref={composerRef}
-          value={body}
-          onChange={setBody}
-          onEnterSend={() => handleSend()}
-          placeholder="메시지를 입력하세요"
-          className="flex-1 rounded-2xl border border-black/10 px-4 py-2 text-sm dark:border-white/10 dark:bg-white/5"
-        />
-        <EmojiPickerButton onPick={(emoji) => insertAtCursor(composerRef.current, body, setBody, emoji)} />
-        <button
-          type="submit"
-          disabled={sending}
-          className="shrink-0 rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
-        >
-          보내기
-        </button>
-      </form>
+      <ChatComposerRow
+        composerRef={composerRef}
+        value={body}
+        onChange={setBody}
+        onEnterSend={() => handleSend()}
+        onSubmit={handleSend}
+        onFileChange={handleFileChange}
+        sending={sending}
+      />
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
       <AvatarLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />

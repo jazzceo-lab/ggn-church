@@ -748,19 +748,21 @@ export default function BoardPage() {
               placeholder="제목"
               className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
             />
-            <textarea
-              ref={bodyRef}
-              required
-              rows={3}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="내용을 나눠주세요"
-              className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-            />
-            <EmojiPickerButton
-              onPick={(emoji) => insertAtCursor(bodyRef.current, body, setBody, emoji)}
-              className="flex w-fit items-center gap-1 rounded-full border border-black/10 px-3 py-1.5 text-sm text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-            />
+            <div className="relative">
+              <textarea
+                ref={bodyRef}
+                required
+                rows={3}
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder="내용을 나눠주세요"
+                className="w-full rounded-md border border-black/10 px-3 py-2 pr-11 text-sm dark:border-white/10 dark:bg-white/10"
+              />
+              <EmojiPickerButton
+                onPick={(emoji) => insertAtCursor(bodyRef.current, body, setBody, emoji)}
+                className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
+              />
+            </div>
             <div>
               <label className="flex w-fit cursor-pointer items-center gap-2 text-sm text-foreground/60">
                 <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
@@ -856,17 +858,19 @@ export default function BoardPage() {
                   onChange={(e) => setEditTitle(e.target.value)}
                   className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
                 />
-                <textarea
-                  ref={editBodyRef}
-                  rows={3}
-                  value={editBody}
-                  onChange={(e) => setEditBody(e.target.value)}
-                  className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-                />
-                <EmojiPickerButton
-                  onPick={(emoji) => insertAtCursor(editBodyRef.current, editBody, setEditBody, emoji)}
-                  className="flex w-fit items-center gap-1 rounded-full border border-black/10 px-3 py-1.5 text-sm text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-                />
+                <div className="relative">
+                  <textarea
+                    ref={editBodyRef}
+                    rows={3}
+                    value={editBody}
+                    onChange={(e) => setEditBody(e.target.value)}
+                    className="w-full rounded-md border border-black/10 px-3 py-2 pr-11 text-sm dark:border-white/10 dark:bg-white/10"
+                  />
+                  <EmojiPickerButton
+                    onPick={(emoji) => insertAtCursor(editBodyRef.current, editBody, setEditBody, emoji)}
+                    className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
+                  />
+                </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleEditSave(post.id)}
@@ -1050,33 +1054,38 @@ export default function BoardPage() {
                     onSubmit={(e) => handleAddComment(e, post.id)}
                     className="mt-2 flex items-center gap-2"
                   >
-                    <input
-                      ref={(el) => (commentInputRefs.current[post.id] = el)}
-                      type="text"
-                      value={commentInputs[post.id] ?? ""}
-                      onChange={(e) =>
-                        setCommentInputs((prev) => ({ ...prev, [post.id]: e.target.value }))
-                      }
-                      placeholder="댓글을 입력하세요"
-                      className="flex-1 rounded-md border border-black/10 px-3 py-1.5 text-sm dark:border-white/10 dark:bg-white/10"
-                    />
-                    <EmojiPickerButton
-                      onPick={(emoji) =>
-                        insertAtCursor(
-                          commentInputRefs.current[post.id],
-                          commentInputs[post.id] ?? "",
-                          (next) => setCommentInputs((prev) => ({ ...prev, [post.id]: next })),
-                          emoji
-                        )
-                      }
-                      className="flex shrink-0 items-center justify-center rounded-full border border-black/10 p-1.5 text-sm text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-                    />
+                    <div className="relative flex-1">
+                      <input
+                        ref={(el) => (commentInputRefs.current[post.id] = el)}
+                        type="text"
+                        value={commentInputs[post.id] ?? ""}
+                        onChange={(e) =>
+                          setCommentInputs((prev) => ({ ...prev, [post.id]: e.target.value }))
+                        }
+                        placeholder="댓글을 입력하세요"
+                        className="w-full rounded-md border border-black/10 py-1.5 pl-3 pr-9 text-sm dark:border-white/10 dark:bg-white/10"
+                      />
+                      <EmojiPickerButton
+                        onPick={(emoji) =>
+                          insertAtCursor(
+                            commentInputRefs.current[post.id],
+                            commentInputs[post.id] ?? "",
+                            (next) => setCommentInputs((prev) => ({ ...prev, [post.id]: next })),
+                            emoji
+                          )
+                        }
+                        className="absolute bottom-1 right-1 flex h-6 w-6 items-center justify-center rounded-full text-sm text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
+                      />
+                    </div>
                     <button
                       type="submit"
                       disabled={commentSubmitting === post.id}
-                      className="shrink-0 rounded-full bg-brand px-3 py-1.5 text-xs text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
+                      aria-label="댓글 등록"
+                      className="flex shrink-0 items-center justify-center rounded-full bg-brand p-2 text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
                     >
-                      등록
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                        <path d="M3 11.5L21 3l-4 18-6-6-4 3v-5l-4-1.5z" />
+                      </svg>
                     </button>
                   </form>
                 )}
