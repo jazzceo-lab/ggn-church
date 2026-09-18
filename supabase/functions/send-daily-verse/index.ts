@@ -93,7 +93,7 @@ Deno.serve(async (_req) => {
   const notification = {
     title: `📖 오늘의 성경 · ${ref}`,
     body: verseText,
-    url: "/scripture",
+    url: `/daily-verse-card?ref=${encodeURIComponent(ref)}&text=${encodeURIComponent(verseText)}`,
     image: imageUrl,
   };
 
