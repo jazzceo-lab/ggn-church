@@ -64,10 +64,13 @@ export function AuthProvider({ children }) {
       setRoles(new Set());
       return;
     }
+    // [미적용] approval_status 컬럼은 회원가입 승인제 마이그레이션 적용 전까지 DB에 없음.
+    // select에 넣으면 쿼리 전체가 실패해서 관리자 여부까지 조회가 안 되므로(→ 관리자 메뉴가
+    // 안 보이는 버그), 마이그레이션 적용 후에 다시 추가할 것.
     const { data } = await supabase
       .from("profiles")
       .select(
-        "is_admin, is_board_admin, is_suspended, approval_status, district, board_last_seen_at, title, display_name, church_id"
+        "is_admin, is_board_admin, is_suspended, district, board_last_seen_at, title, display_name, church_id"
       )
       .eq("id", currentUser.id)
       .single();
