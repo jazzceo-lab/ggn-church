@@ -144,6 +144,11 @@ function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
             const isConfession = label === "신앙고백" && detail === "사도신경";
             const prayerMemberId =
               label === "기도" || label === "헌금기도" ? findMemberIdByName(detail, members) : null;
+            const isSermon = label === "말씀";
+            const { refPart: speakerPart, namePart: sermonTitle } = isSermon
+              ? splitBibleReading(detail)
+              : { refPart: "", namePart: "" };
+            const speakerMemberId = isSermon ? findMemberIdByName(speakerPart, members) : null;
             return (
               <li key={i} className="flex items-start gap-2 py-2 tracking-tight">
                 <span className="w-[68px] shrink-0 font-medium text-foreground/80">{label}</span>
@@ -192,6 +197,21 @@ function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
                         )}
                       </>
                     )}
+                  </span>
+                ) : isSermon ? (
+                  <span className="flex-1 text-right text-foreground/60">
+                    {speakerMemberId ? (
+                      <Link
+                        href={`/messages/${speakerMemberId}`}
+                        onClick={onLinkClick}
+                        className="text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                      >
+                        {speakerPart}
+                      </Link>
+                    ) : (
+                      speakerPart
+                    )}
+                    {sermonTitle && ` · ${sermonTitle}`}
                   </span>
                 ) : isConfession ? (
                   <Link
