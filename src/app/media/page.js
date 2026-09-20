@@ -54,6 +54,7 @@ function MediaPageInner() {
   const [youtubeLoading, setYoutubeLoading] = useState(true);
 
   const [expandedItems, setExpandedItems] = useState([]);
+  const [showOlderVideos, setShowOlderVideos] = useState(false);
 
   function toggleExpandedItem(id) {
     setExpandedItems((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -477,7 +478,12 @@ function MediaPageInner() {
         {!loading && items.length === 0 && (
           <li className="text-sm text-foreground/50">아직 등록된 콘텐츠가 없어요.</li>
         )}
-        {items.map((item) => (
+        {(canManageVideo || tab !== "video"
+          ? items
+          : showOlderVideos
+            ? items.slice(0, 3)
+            : items.slice(0, 1)
+        ).map((item) => (
           <li
             key={item.id}
             className="rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5"
@@ -542,6 +548,17 @@ function MediaPageInner() {
             </div>
           </li>
         ))}
+        {!canManageVideo && tab === "video" && items.length > 1 && (
+          <li>
+            <button
+              type="button"
+              onClick={() => setShowOlderVideos((v) => !v)}
+              className="w-full rounded-xl border border-black/10 py-2 text-sm text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+            >
+              {showOlderVideos ? "접기" : `지난 영상 보기 (${Math.min(items.length - 1, 2)})`}
+            </button>
+          </li>
+        )}
       </ul>
       )}
     </main>
