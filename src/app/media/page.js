@@ -55,6 +55,7 @@ function MediaPageInner() {
 
   const [expandedItems, setExpandedItems] = useState([]);
   const [showOlderVideos, setShowOlderVideos] = useState(false);
+  const [videoSearch, setVideoSearch] = useState("");
 
   function toggleExpandedItem(id) {
     setExpandedItems((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -473,17 +474,31 @@ function MediaPageInner() {
           </ul>
         </div>
       ) : (
-      <ul className="mt-6 space-y-4">
+      <>
+      {tab === "video" && items.length > 0 && (
+        <input
+          type="text"
+          value={videoSearch}
+          onChange={(e) => setVideoSearch(e.target.value)}
+          placeholder="제목으로 검색"
+          className="mt-6 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+        />
+      )}
+      <ul className={`space-y-4 ${tab === "video" && items.length > 0 ? "mt-3" : "mt-6"}`}>
         {loading && <li className="text-sm text-foreground/50">불러오는 중...</li>}
         {!loading && items.length === 0 && (
           <li className="text-sm text-foreground/50">아직 등록된 콘텐츠가 없어요.</li>
         )}
-        {(canManageVideo || tab !== "video"
-          ? items
-          : showOlderVideos
-            ? items.slice(0, 3)
-            : items.slice(0, 1)
-        ).map((item) => (
+        {(() => {
+          if (tab !== "video") return items;
+          const isSearching = videoSearch.trim() !== "";
+          const filtered = isSearching
+            ? items.filter((i) => i.title?.toLowerCase().includes(videoSearch.trim().toLowerCase()))
+            : items;
+          if (isSearching) return filtered;
+          if (showOlderVideos) return canManageVideo ? filtered : filtered.slice(0, 3);
+          return filtered.slice(0, 1);
+        })().map((item) => (
           <li
             key={item.id}
             className="rounded-xl border border-black/10 bg-white/60 p-4 dark:border-white/10 dark:bg-white/5"
@@ -548,18 +563,21 @@ function MediaPageInner() {
             </div>
           </li>
         ))}
-        {!canManageVideo && tab === "video" && items.length > 1 && (
+        {tab === "video" && videoSearch.trim() === "" && items.length > 1 && (
           <li>
             <button
               type="button"
               onClick={() => setShowOlderVideos((v) => !v)}
               className="w-full rounded-xl border border-black/10 py-2 text-sm text-foreground/60 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
             >
-              {showOlderVideos ? "접기" : `지난 영상 보기 (${Math.min(items.length - 1, 2)})`}
+              {showOlderVideos
+                ? "접기"
+                : `지난 영상 보기 (${canManageVideo ? items.length - 1 : Math.min(items.length - 1, 2)})`}
             </button>
           </li>
         )}
       </ul>
+      </>
       )}
     </main>
   );
