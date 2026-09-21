@@ -1,159 +1,127 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useAuth } from "@/components/AuthProvider";
-import { supabase } from "@/lib/supabaseClient";
-import { districts, CHOIR as choir, DEPARTMENTS as departments } from "@/lib/teamRoster";
-
-function Card({ title, children }) {
+export default function Terms() {
   return (
-    <section className="mt-6 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
-      <h2 className="font-serif font-semibold text-foreground">{title}</h2>
-      {children}
-    </section>
-  );
-}
+    <div style={{ 
+      maxWidth: '900px', 
+      margin: '0 auto', 
+      padding: '40px 20px', 
+      lineHeight: '1.8',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <h1>길가는교회 이용약관</h1>
+      <p style={{ color: '#666', marginBottom: '30px' }}>시행일: 2026년 10월</p>
 
-// 이름이 가입회원 명단에 있으면 클릭해서 바로 쪽지를 보낼 수 있게 이어준다.
-function Names({ text, directory }) {
-  const names = text.split(/\s+/).filter(Boolean);
-  return names.map((name, i) => {
-    const id = directory.get(name);
-    return (
-      <span key={i}>
-        {i > 0 && " "}
-        {id ? (
-          <Link
-            href={`/messages/${id}`}
-            className="text-brand-dark underline decoration-brand-dark/40 underline-offset-2 hover:text-brand"
-          >
-            {name}
-          </Link>
-        ) : (
-          name
-        )}
-      </span>
-    );
-  });
-}
+      <hr style={{ margin: '40px 0' }} />
 
-export default function TeamsPage() {
-  const { user, loading } = useAuth();
-  const [directory, setDirectory] = useState(new Map());
+      <h2>제1조. 목적</h2>
+      <p>이 약관은 길가는교회(이하 "교회")가 제공하는 길가는교회 앱(이하 "앱")의 이용 조건 및 절차, 이용자의 권리·의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.</p>
 
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("member_directory")
-      .select("id, display_name")
-      .neq("id", user.id)
-      .then(({ data, error }) => {
-        if (error) console.error("회원 명단 조회 실패:", error.message);
-        setDirectory(new Map((data ?? []).map((m) => [m.display_name, m.id])));
-      });
-  }, [user]);
+      <h2>제2조. 서비스 개요</h2>
+      <p><strong>1. 서비스 제공자:</strong> 길가는교회</p>
+      <p><strong>2. 서비스 성격:</strong> 무료 제공 서비스</p>
+      <p><strong>3. 서비스 내용:</strong></p>
+      <ul>
+        <li>교회 공지사항 및 안내사항 전달</li>
+        <li>주보(주간 일정) 디지털 배포</li>
+        <li>교인 간 채팅 및 커뮤니케이션</li>
+        <li>교회 소식 알림</li>
+        <li>기타 교회 운영 관련 정보 제공</li>
+      </ul>
 
-  if (loading) {
-    return <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12" />;
-  }
+      <h2>제3조. 사용 대상 및 이용 제한</h2>
+      <p><strong>1. 이용 대상:</strong> 길가는교회 교인 및 교회로부터 초대를 받은 자에 한함</p>
+      <p><strong>2. 이용 제한:</strong></p>
+      <ul>
+        <li>다른 교회 또는 기관을 위한 배포 및 전환 금지</li>
+        <li>앱의 복제, 변조, 분석 금지</li>
+        <li>상업적 목적의 사용 금지</li>
+        <li>기술적 해킹, 비정상적인 접근 시도 금지</li>
+      </ul>
 
-  if (!user) {
-    return (
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 text-center">
-        <h1 className="font-serif text-2xl font-bold text-foreground">제직명단·구역 편성</h1>
-        <p className="mt-3 text-sm text-foreground/60">
-          교우님들의 개인정보 보호를 위해 로그인한 교인만 볼 수 있어요.
-        </p>
-        <Link
-          href="/login"
-          className="mt-6 inline-block rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark"
-        >
-          로그인하러 가기
-        </Link>
-      </main>
-    );
-  }
+      <h2>제4조. 사용자의 의무</h2>
+      <p><strong>1. 이용자는 다음 행위를 하지 않아야 합니다</strong></p>
+      <ul>
+        <li>타인의 개인정보를 도용하거나 무단 사용</li>
+        <li>욕설, 명예훼손, 음란물 등 부적절한 내용 게시</li>
+        <li>스팸, 광고, 불법 콘텐츠 배포</li>
+        <li>앱의 정상 운영을 방해하는 행위</li>
+        <li>타인의 권리 침해</li>
+      </ul>
+      <p><strong>2. 책임있는 사용:</strong></p>
+      <ul>
+        <li>이용자는 자신의 계정과 비밀번호를 안전하게 관리할 책임이 있습니다</li>
+        <li>타인의 계정 무단 사용으로 인한 손해는 이용자가 책임집니다</li>
+      </ul>
 
-  return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 pt-3 pb-12">
-      <h1 className="font-serif text-2xl font-bold text-foreground">2026년 제직명단·구역 편성</h1>
-      <p className="mt-2 text-sm text-foreground/50">
-        로그인한 교인에게만 보이는 페이지입니다.
-        <br />
-        (교인이름을 누르면 GGN톡 실행)
-      </p>
+      <h2>제5조. 개인정보 보호</h2>
+      <p><strong>1. 개인정보 수집 및 이용:</strong></p>
+      <ul>
+        <li>앱은 서비스 제공을 위해 필요한 최소한의 개인정보만 수집합니다</li>
+        <li>개인정보의 수집·이용·처리에 대한 자세한 내용은 '개인정보처리방침'을 참고하시기 바랍니다</li>
+      </ul>
+      <p><strong>2. 정보 보안:</strong></p>
+      <ul>
+        <li>교회는 수집한 정보를 안전하게 관리하기 위해 기술적, 관리적 조치를 취합니다</li>
+        <li>다만, 통신 중단 또는 기술적 결함 등으로 인한 정보 유실은 교회의 책임을 제한할 수 있습니다</li>
+      </ul>
 
-      <Card title="👔 교역자">
-        <dl className="mt-3 space-y-2">
-          {[
-            { name: "임원일", title: "담임목사" },
-            { name: "정상우", title: "목사" },
-            { name: "송혜영", title: "목사" },
-            { name: "김태민", title: "목사" },
-          ].map(({ name, title }) => (
-            <div key={name} className="flex items-center justify-between">
-              <dd className="text-foreground/80">
-                <Names text={name} directory={directory} />
-              </dd>
-              <span className="rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-dark">
-                {title}
-              </span>
-            </div>
-          ))}
-        </dl>
-      </Card>
+      <h2>제6조. 서비스 중단 및 변경</h2>
+      <p><strong>1. 서비스 중단:</strong></p>
+      <ul>
+        <li>교회는 운영상, 기술상의 필요에 따라 서비스를 중단할 수 있습니다</li>
+        <li>중단 시 사전에 공지하며, 긴급한 경우 사후 공지할 수 있습니다</li>
+      </ul>
+      <p><strong>2. 서비스 변경:</strong></p>
+      <ul>
+        <li>교회는 서비스의 일부 또는 전부를 변경할 수 있습니다</li>
+        <li>주요 기능 변경 시 사전 공지합니다</li>
+      </ul>
+      <p><strong>3. 데이터 보관:</strong></p>
+      <ul>
+        <li>서비스 중단 시 이용자 데이터는 일정 기간 후 삭제될 수 있습니다</li>
+      </ul>
 
-      <Card title="성가대">
-        <dl className="mt-3 space-y-1 text-sm">
-          {choir.map(([role, names]) => (
-            <div key={role} className="flex gap-2">
-              <dt className="w-20 shrink-0 text-foreground/50">{role}</dt>
-              <dd className="text-foreground/80">
-                <Names text={names} directory={directory} />
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </Card>
+      <h2>제7조. 면책조항</h2>
+      <p><strong>1. 교회는 다음 사항에 대해 책임을 지지 않습니다</strong></p>
+      <ul>
+        <li>이용자 과실로 인한 손해</li>
+        <li>통신 장애 또는 네트워크 문제로 인한 서비스 중단</li>
+        <li>이용자가 게시한 콘텐츠의 정확성, 합법성</li>
+        <li>이용자 간의 분쟁</li>
+      </ul>
+      <p><strong>2. 서비스 무보증:</strong></p>
+      <ul>
+        <li>앱은 "있는 그대로" 제공되는 무료 서비스입니다</li>
+        <li>교회는 특정 목적에 대한 적합성, 상품성, 비침해성을 보증하지 않습니다</li>
+      </ul>
 
-      {departments.map((dept) => (
-        <Card key={dept.name} title={dept.name}>
-          <dl className="mt-3 space-y-1 text-sm">
-            {dept.leads.map(([role, name]) => (
-              <div key={role} className="flex gap-2">
-                <dt className="w-20 shrink-0 text-foreground/50">{role}</dt>
-                <dd className="text-foreground/80">
-                  <Names text={name} directory={directory} />
-                </dd>
-              </div>
-            ))}
-            {dept.teachers && (
-              <div className="flex gap-2">
-                <dt className="w-20 shrink-0 text-foreground/50">교사</dt>
-                <dd className="text-foreground/80">
-                  <Names text={dept.teachers} directory={directory} />
-                </dd>
-              </div>
-            )}
-          </dl>
-        </Card>
-      ))}
+      <h2>제8조. 이용 종료</h2>
+      <p><strong>1. 이용 종료 사유:</strong></p>
+      <ul>
+        <li>이용자의 교회 탈퇴, 타교회 이동</li>
+        <li>본 약관 위반 시 이용자의 접근권 회수 가능</li>
+      </ul>
+      <p><strong>2. 이용 종료 시 처리:</strong></p>
+      <ul>
+        <li>개인정보는 '개인정보처리방침'에 따라 처리됩니다</li>
+      </ul>
 
-      <Card title="구역 편성표">
-        <ul className="mt-3 divide-y divide-black/5 text-sm dark:divide-white/10">
-          {districts.map(([district, leader, members]) => (
-            <li key={district} className="flex flex-col gap-1 py-2 sm:flex-row sm:gap-3">
-              <span className="w-32 shrink-0 whitespace-nowrap font-medium text-foreground/80">
-                {district} · <Names text={leader} directory={directory} />
-              </span>
-              <span className="text-foreground/60">
-                <Names text={members} directory={directory} />
-              </span>
-            </li>
-          ))}
-        </ul>
-      </Card>
-    </main>
+      <h2>제9조. 약관의 변경</h2>
+      <p>교회는 필요한 경우 본 약관을 변경할 수 있습니다</p>
+      <ul>
+        <li>변경 시 사전에 앱 내 공지합니다</li>
+        <li>이용자가 변경된 약관에 동의하지 않는 경우, 서비스 이용을 중단할 수 있습니다</li>
+      </ul>
+
+      <h2>제10조. 분쟁 해결</h2>
+      <p><strong>1.</strong> 이 약관 및 서비스 이용에 관한 분쟁은 대한민국 법률에 따라 처리됩니다</p>
+      <p><strong>2. 문의 및 건의:</strong> 서비스 관련 문의는 ggnch.shop 관리자에게 연락주시기 바랍니다</p>
+
+      <h2>제11조. 기타</h2>
+      <p><strong>1. 약관의 해석:</strong> 이 약관에 명시되지 않은 사항은 대한민국 관계 법령에 따릅니다</p>
+      <p><strong>2. 약관의 효력:</strong> 본 약관의 일부가 무효하더라도, 나머지 조항의 효력은 유지됩니다</p>
+
+      <hr style={{ margin: '40px 0' }} />
+      <p style={{ fontSize: '14px', color: '#999' }}>이용약관에 동의함으로써 위 모든 조건을 인정하는 것으로 간주됩니다.</p>
+    </div>
   );
 }
