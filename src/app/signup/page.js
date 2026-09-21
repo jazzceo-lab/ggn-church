@@ -89,10 +89,7 @@ export default function SignupPage() {
   if (done) {
     return (
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12 text-center">
-        <p className="text-base font-bold text-red-600 dark:text-red-400">
-          TEST 기간에는 인증메일 확인없이 회원가입이 가능합니다.
-        </p>
-        <h1 className="mt-3 font-serif text-xl font-bold text-foreground">가입 확인 메일을 보냈어요</h1>
+        <h1 className="font-serif text-xl font-bold text-foreground">가입 확인 메일을 보냈어요</h1>
         <p className="mt-3 text-sm text-foreground/50">
           입력하신 이메일함을 확인해서 인증 링크를 눌러주세요. 인증 후 로그인하실 수 있어요.
         </p>
