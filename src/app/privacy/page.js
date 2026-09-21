@@ -1,90 +1,110 @@
-export const metadata = {
-  title: "개인정보 처리방침 | 길가는교회",
-};
-
-export default function PrivacyPage() {
+export default function Privacy() {
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
-      <h1 className="font-serif text-2xl font-bold text-foreground">개인정보 처리방침</h1>
-      <p className="mt-2 text-sm text-foreground/50">시행일자: 2026년 8월 25일</p>
+    <div style={{ 
+      maxWidth: '900px', 
+      margin: '0 auto', 
+      padding: '40px 20px', 
+      lineHeight: '1.8',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <h1>길가는교회 개인정보처리방침</h1>
+      <p style={{ color: '#666', marginBottom: '30px' }}>시행일: 2026년 10월</p>
 
-      <div className="mt-8 space-y-8 text-sm leading-7 text-foreground/80">
-        <section>
-          <p>
-            길가는교회(이하 &ldquo;교회&rdquo;)는 길가는교회 앱(이하 &ldquo;서비스&rdquo;)을
-            이용하는 교인의 개인정보를 소중히 다루며, 아래와 같이 개인정보를 수집·이용합니다.
-          </p>
-        </section>
+      <hr style={{ margin: '40px 0' }} />
 
-        <section>
-          <h2 className="font-serif text-lg font-semibold text-foreground">
-            1. 수집하는 개인정보 항목
-          </h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>회원가입 시: 이메일 주소, 비밀번호, 이름, 소속 구분(구역/부서)</li>
-            <li>서비스 이용 시: 게시판 글·댓글, 채팅(1:1 메시지) 내용, 첨부파일·이미지</li>
-            <li>알림 신청 시: 푸시 알림 수신을 위한 기기 구독 정보</li>
-          </ul>
-        </section>
+      <h2>제1조. 개인정보처리방침의 목적</h2>
+      <p>길가는교회(이하 "교회")는 이용자의 개인정보를 보호하고 이와 관련된 불만을 신속하고 원활하게 처리하기 위하여 다음과 같은 개인정보처리방침을 수립·운영합니다. 본 방침은 교회가 제공하는 길가는교회 앱(이하 "앱")과 관련하여 적용됩니다.</p>
 
-        <section>
-          <h2 className="font-serif text-lg font-semibold text-foreground">
-            2. 개인정보의 수집 및 이용 목적
-          </h2>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>회원 확인 및 로그인 등 서비스 이용</li>
-            <li>교회소식·주보·일정 안내 및 교인 간 소통(게시판, 채팅)</li>
-            <li>채팅 수신 등 알림 발송</li>
-            <li>부정 이용 방지 및 서비스 운영·관리</li>
-          </ul>
-        </section>
+      <h2>제2조. 개인정보 처리자 및 연락처</h2>
+      <p><strong>1. 개인정보 처리자:</strong> 길가는교회</p>
+      <p><strong>2. 개인정보 담당자:</strong></p>
+      <ul>
+        <li>이름: ggnch.shop 관리자</li>
+        <li>연락처: ggnch.shop 앱 내 문의하기</li>
+      </ul>
 
-        <section>
-          <h2 className="font-serif text-lg font-semibold text-foreground">
-            3. 개인정보의 보유 및 이용 기간
-          </h2>
-          <p className="mt-2">
-            회원 탈퇴 또는 계정 삭제 시까지 보유하며, 삭제 요청 시 지체 없이 파기합니다. 관계
-            법령에 따라 보존이 필요한 경우 해당 법령에서 정한 기간 동안 보관합니다.
-          </p>
-        </section>
+      <h2>제3조. 수집하는 개인정보의 항목 및 수집 방법</h2>
+      <p><strong>1. 수집하는 개인정보 항목:</strong></p>
+      <ul>
+        <li><strong>필수 항목:</strong> 이름, 전화번호, 이메일, 로그인 정보</li>
+        <li><strong>선택 항목:</strong> 프로필 사진, 직책/부서(교회 내 역할)</li>
+        <li><strong>자동수집:</strong> 기기 정보, 접속 로그, 앱 이용 기록</li>
+      </ul>
+      <p><strong>2. 수집 방법:</strong></p>
+      <ul>
+        <li>이용자의 직접 입력 (회원가입, 프로필 작성)</li>
+        <li>앱의 자동 수집 기능 (로그 기록, 접근 기술)</li>
+        <li>교회의 기존 교인 정보 (초대 시)</li>
+      </ul>
 
-        <section>
-          <h2 className="font-serif text-lg font-semibold text-foreground">
-            4. 개인정보의 제3자 제공 및 처리위탁
-          </h2>
-          <p className="mt-2">
-            교회는 원칙적으로 이용자의 개인정보를 외부에 제공하지 않으며, 서비스 운영을 위해 아래
-            업체에 처리를 위탁하고 있습니다.
-          </p>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            <li>Supabase (데이터베이스·인증·파일 저장)</li>
-            <li>Vercel (웹사이트 호스팅)</li>
-            <li>Resend (이메일 발송)</li>
-          </ul>
-        </section>
+      <h2>제4조. 개인정보의 이용 목적</h2>
+      <p>교회는 수집한 개인정보를 다음의 목적으로만 이용합니다:</p>
+      <ul>
+        <li>앱 서비스 제공 및 이용자 관리</li>
+        <li>공지사항 및 주보 배포</li>
+        <li>교인 간 채팅 및 메시징 운영</li>
+        <li>푸시 알림 발송</li>
+        <li>서비스 개선 및 기술 지원</li>
+        <li>법적 의무 이행</li>
+      </ul>
 
-        <section>
-          <h2 className="font-serif text-lg font-semibold text-foreground">
-            5. 이용자의 권리
-          </h2>
-          <p className="mt-2">
-            이용자는 언제든지 본인의 개인정보를 조회·수정할 수 있으며, 회원 탈퇴 및 개인정보
-            삭제를 요청할 수 있습니다. 요청은 아래 문의처로 연락해 주세요.
-          </p>
-        </section>
+      <h2>제5조. 개인정보의 보관 및 보유 기간</h2>
+      <p><strong>1. 보유 기간:</strong></p>
+      <ul>
+        <li>기본: 서비스 이용 기간 동안 보관</li>
+        <li>서비스 종료 후: 1년간 보관 후 안전하게 삭제</li>
+      </ul>
+      <p><strong>2. 예외:</strong> 법령에 의한 의무 보관 정보는 그에 따라 보관</p>
 
-        <section>
-          <h2 className="font-serif text-lg font-semibold text-foreground">6. 문의처</h2>
-          <p className="mt-2">
-            길가는교회
-            <br />
-            경기도 부천시 원미구 중동로248번길 52, 9층
-            <br />
-            TEL. 032-321-9182
-          </p>
-        </section>
-      </div>
-    </main>
+      <h2>제6조. 개인정보의 안전성 확보 조치</h2>
+      <p>교회는 개인정보를 안전하게 보호하기 위하여 다음의 기술적, 관리적 조치를 취합니다:</p>
+      <ul>
+        <li>암호화 기술을 이용한 데이터 보호</li>
+        <li>접근 권한 제한</li>
+        <li>정기적인 보안 점검</li>
+        <li>이용자 교육 및 보안 의식 강화</li>
+      </ul>
+
+      <h2>제7조. 개인정보의 제3자 제공</h2>
+      <p><strong>1. 원칙:</strong> 교회는 이용자의 개인정보를 제3자에게 제공하지 않습니다</p>
+      <p><strong>2. 예외:</strong> 다음의 경우에는 이용자의 명시적 동의 또는 법령에 따라 제공할 수 있습니다</p>
+      <ul>
+        <li>법률에 의해 요구되는 경우</li>
+        <li>수사기관의 정당한 요청이 있는 경우</li>
+      </ul>
+
+      <h2>제8조. 이용자의 권리</h2>
+      <p><strong>1. 이용자는 언제든지 다음의 권리를 행사할 수 있습니다:</strong></p>
+      <ul>
+        <li>개인정보 열람 및 확인</li>
+        <li>개인정보 정정 및 삭제 요청</li>
+        <li>개인정보 처리 정지 요청</li>
+        <li>앱 이용 계정 삭제</li>
+      </ul>
+      <p><strong>2. 권리 행사 방법:</strong> ggnch.shop 앱 내 문의하기를 통해 요청</p>
+
+      <h2>제9조. 쿠키 및 기술의 사용</h2>
+      <p><strong>1.</strong> 앱은 서비스 개선을 위해 기술적 정보를 자동으로 수집합니다</p>
+      <p><strong>2.</strong> 이용자는 앱 설정에서 데이터 수집을 제한할 수 있습니다</p>
+
+      <h2>제10조. 개인정보 처리 방침 변경</h2>
+      <p>이 방침은 필요에 따라 변경될 수 있으며, 변경 시 앱 내에서 공지합니다. 중요한 변경은 사전에 알려드립니다.</p>
+
+      <h2>제11조. 불만 처리 및 피해 구제</h2>
+      <p><strong>1. 개인정보 처리와 관련하여 불만이 있으신 이용자는 다음의 절차로 처리됩니다:</strong></p>
+      <ul>
+        <li>교회에 문의 (앱 내 문의하기)</li>
+        <li>개인정보 침해 신고: 개인정보보호위원회 (www.privacy.go.kr)</li>
+      </ul>
+
+      <h2>제12조. 미성년자 개인정보 보호</h2>
+      <p>14세 미만 미성년자의 개인정보는 보호자의 동의 하에 수집됩니다.</p>
+
+      <h2>제13조. 국제 이용자 보호</h2>
+      <p>본 방침은 대한민국 '개인정보보호법'을 기준으로 작성되었습니다.</p>
+
+      <hr style={{ margin: '40px 0' }} />
+      <p style={{ fontSize: '14px', color: '#999' }}>본 개인정보처리방침은 2026년 10월부터 시행됩니다.</p>
+    </div>
   );
 }
