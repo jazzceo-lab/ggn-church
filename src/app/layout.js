@@ -35,6 +35,10 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#c19c89",
+  // 이게 없으면 시스템이 다크 테마인 기기에서 크롬/안드로이드가 "이 페이지는
+  // 다크모드를 자체 지원 안 함"으로 보고 색을 강제로 보정해버려서, 앱 자체의
+  // 라이트/다크 전환(ThemeToggle)과 무관하게 항상 어둡게 보이는 문제가 있었음.
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({ children }) {
