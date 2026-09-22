@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "shop.ggnch.twa",
+      "sha256_cert_fingerprints": [
+        "D6:73:C3:09:50:72:91:96:DB:C7:95:C5:97:39:61:78:E5:8C:D1:34:0C:60:E2:E0:71:13:65:D7:ED:94:A0:8A"
+      ]
+    }
+  }
+]
