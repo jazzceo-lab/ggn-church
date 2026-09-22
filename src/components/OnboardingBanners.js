@@ -1,18 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import NotificationPromptBanner from "@/components/NotificationPromptBanner";
-import InstallAppBanner from "@/components/InstallAppBanner";
 
-// 알림 배너를 먼저 보여주고, 그게 닫히거나(또는 애초에 뜰 필요가 없으면)
-// 이어서 앱 설치 배너를 보여준다. 두 배너가 동시에 뜨지 않게 순서를 정리한다.
+// Play 스토어로 앱을 설치하는 게 기본 경로가 되면서 "홈 화면에 추가" 안내
+// 배너(InstallAppBanner)는 더 이상 필요 없어져 제거함. 알림 권한 배너는
+// 설치 경로와 무관하게 여전히 필요해서 유지.
 export default function OnboardingBanners() {
-  const [notificationDone, setNotificationDone] = useState(false);
-
-  return (
-    <>
-      <NotificationPromptBanner onResolved={() => setNotificationDone(true)} />
-      {notificationDone && <InstallAppBanner />}
-    </>
-  );
+  return <NotificationPromptBanner />;
 }
