@@ -50,3 +50,19 @@ export async function listenNativeNotificationTap(router) {
     if (url) router.push(url);
   });
 }
+
+// 앱을 열 때마다(최초 실행 + 백그라운드에서 복귀할 때) 알림 목록/배지를 비운다.
+// 안 지우면 알림을 다 읽어도 홈 화면 아이콘 배지 숫자가 그대로 남아있음.
+export async function clearNativeNotificationsOnResume() {
+  if (typeof window === "undefined") return;
+  const { Capacitor } = await import("@capacitor/core");
+  if (!Capacitor.isNativePlatform()) return;
+
+  const { PushNotifications } = await import("@capacitor/push-notifications");
+  const { App } = await import("@capacitor/app");
+
+  PushNotifications.removeAllDeliveredNotifications();
+  App.addListener("appStateChange", ({ isActive }) => {
+    if (isActive) PushNotifications.removeAllDeliveredNotifications();
+  });
+}
