@@ -12,7 +12,17 @@ export default function PushSubscribeButton() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setSupported(typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window);
+    (async () => {
+      // Capacitor 네이티브 앱의 웹뷰엔 웹 표준 Push API(PushManager)가 없어서,
+      // 그 조건만 보면 FCM으로 알림을 받을 수 있는 네이티브 앱에서도 버튼이
+      // 숨겨져버린다. 네이티브 플랫폼이면 별도로 지원함을 표시.
+      const { Capacitor } = await import("@capacitor/core");
+      if (Capacitor.isNativePlatform()) {
+        setSupported(true);
+        return;
+      }
+      setSupported(typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window);
+    })();
   }, []);
 
   useEffect(() => {
@@ -35,6 +45,14 @@ export default function PushSubscribeButton() {
   async function handleDisable() {
     setLoading(true);
     try {
+      const { Capacitor } = await import("@capacitor/core");
+      if (Capacitor.isNativePlatform()) {
+        await supabase.from("fcm_tokens").delete().eq("user_id", user.id);
+        setSubscribed(false);
+        setLoading(false);
+        return;
+      }
+
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
