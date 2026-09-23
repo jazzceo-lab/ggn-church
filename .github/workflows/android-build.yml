@@ -26,11 +26,6 @@ jobs:
       - name: Sync Capacitor Android project
         run: npx cap sync android
 
-      - name: Debug secret length (no content exposed)
-        run: |
-          echo -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | wc -c
-          echo -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | tr -d '[:space:]' | wc -c
-
       - name: Restore keystore
         run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 -d > android/app/release.keystore
 
