@@ -64,9 +64,26 @@ export async function sendFcm(
   notification: { title: string; body: string; url: string; image?: string }
 ): Promise<{ ok: boolean; invalidToken: boolean }> {
   const raw = Deno.env.get("FCM_SERVICE_ACCOUNT_JSON");
-  if (!raw) return { ok: false, invalidToken: false };
-  const serviceAccount = JSON.parse(raw);
-  const accessToken = await getAccessToken(serviceAccount);
+  if (!raw) {
+    console.error("FCM_SERVICE_ACCOUNT_JSON secret이 설정되지 않았습니다.");
+    return { ok: false, invalidToken: false };
+  }
+
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(raw);
+  } catch (e) {
+    console.error("FCM_SERVICE_ACCOUNT_JSON JSON 파싱 실패:", e.message);
+    return { ok: false, invalidToken: false };
+  }
+
+  let accessToken;
+  try {
+    accessToken = await getAccessToken(serviceAccount);
+  } catch (e) {
+    console.error("FCM OAuth 토큰 발급 실패:", e.message);
+    return { ok: false, invalidToken: false };
+  }
 
   const res = await fetch(
     `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
@@ -86,6 +103,7 @@ export async function sendFcm(
   if (res.ok) return { ok: true, invalidToken: false };
 
   const err = await res.json().catch(() => null);
+  console.error("FCM 발송 실패:", res.status, JSON.stringify(err));
   const status = err?.error?.status;
   // 앱 삭제/토큰 만료 등으로 더 이상 유효하지 않은 토큰 — 정리 대상.
   const invalidToken = status === "NOT_FOUND" || status === "UNREGISTERED" || status === "INVALID_ARGUMENT";
