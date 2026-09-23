@@ -17,8 +17,8 @@ export async function subscribeNativePush(user) {
     return { error: "알림 권한을 허용해주셔야 알림을 받을 수 있어요." };
   }
 
-  await PushNotifications.register();
-
+  // register()가 끝나자마자(때로는 그 안에서 동기적으로) "registration" 이벤트가
+  // 발생할 수 있어서, 리스너를 먼저 걸어두지 않으면 토큰을 놓친다.
   return new Promise((resolve) => {
     PushNotifications.addListener("registration", async (token) => {
       await supabase
@@ -33,6 +33,8 @@ export async function subscribeNativePush(user) {
     PushNotifications.addListener("registrationError", (err) => {
       resolve({ error: err?.error || "FCM 등록에 실패했어요." });
     });
+
+    PushNotifications.register();
   });
 }
 
