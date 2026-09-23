@@ -66,7 +66,37 @@ send-push, send-daily-verse 엣지함수 재배포. 다음에도 같은 방식(f
 
 ## ⬜ 아직 easychurch-app에 반영 안 됨
 
-(현재 없음 — 2026-09-17 기준 church-app의 모든 커밋이 반영 완료됨)
+| church-app 커밋 | 내용 | 반영일 |
+|---|---|---|
+| `51c9f8a` | 🟢 범용 — 오늘의 성경 푸시 클릭 시 전체화면 카드 뷰어 추가 | 2026-09-22 |
+| `5b8732d` | 🟢 범용 — 관리자 메뉴 안 보이던 버그 수정 (approval_status 컬럼 미존재로 쿼리 실패) | 2026-09-19 |
+| `792eaa1` | 🟢 범용 — 자료실 게시판 글쓰기 실패 수정 (제약조건 이름 불일치) | 2026-09-22 |
+| `517e6a9` | 🟢 범용 — 주보 '말씀'(설교자) 이름도 회원이면 채팅 링크 연결 | 2026-09-22 |
+| `60c453d` | 🟢 범용 — 찬양·영상 클라우드 링크 목록 접기(일반 3개/관리자 전체) | 2026-09-22 |
+| `3dcacbd` | 🟢 범용 — 찬양·영상 목록 제목 검색 추가, 관리자도 접기 가능 | 2026-09-22 |
+| `e41bfb9`/`b2ac599` | 🟢 범용 — 이용약관/개인정보처리방침 페이지 추가 (Play Store 제출용, easychurch도 필요) | 2026-09-22 |
+| `11128de` | 🟢 범용 — 회원가입 완료 화면의 테스트용 안내 문구 제거 | 2026-09-22 |
+| `040213c` | 🟢 범용 — teams(제직명단) 페이지가 이용약관으로 잘못 덮어써진 사고 복구 | 2026-09-22 |
+| `a33ef0d` | 🟢 범용 — 홈화면 설치 안내 배너 제거(Play Store 배포 후 불필요), 폴더블 폰트 과확대 CSS 수정(`html{font-size:16px}`) | 2026-09-22 |
+| `70d5a8c` | 🟢 범용 — 다크 테마 기기에서 라이트/다크 전환 안 되던 문제 수정 (`color-scheme` 메타 추가) | 2026-09-22 |
+| `80cd5c5` | ⚪ 판단 필요 — 회원가입 관리자 승인제 준비 코드(미적용). easychurch도 승인제 원하는지 먼저 물어볼 것 | 2026-09-18 |
+| `e002141` | 🟢 범용 — graphify 미사용 의존성 제거, hasRole/hasRoleScope 중복 정리 (easychurch는 이미 자체 반영함, `ac5ac1f` 참고 — 충돌 여부 확인 필요) | 2026-09-18 |
+
+**Android 앱 배포 인프라 (TWA→Capacitor 전환, 2026-09-22~23, 커밋 `dfdc8d5`~`7964dc8`):**
+🟢 범용이지만 **파일을 그대로 cherry-pick하면 안 됨** — church-app 전용 식별자(패키지명
+`shop.ggnch.twa`, Firebase 프로젝트 `ggnch-2847c`, Play Console 서명 키)가 코드에 박혀있어서,
+easychurch용으로 포팅하려면 **같은 구조를 easychurch 전용 값으로 새로 설정**해야 함 (Capacitor
+프로젝트 자체는 재사용 가능하나 `capacitor.config.ts`의 appId/서버 URL, `android/app/build.gradle`의
+applicationId, `google-services.json`, 서명 키 전부 easychurch 것으로 새로 발급).
+자세한 배경/이유/겪은 문제들은 memory
+[project_capacitor_fcm_migration.md](C:\Users\jazzc\.claude\projects\N-----GGNCH\memory\project_capacitor_fcm_migration.md)와
+[project_playstore_signing.md](C:\Users\jazzc\.claude\projects\N-----GGNCH\memory\project_playstore_signing.md)
+참고 — church-app에서 겪은 시행착오(Node 버전, base64 시크릿 붙여넣기 실수, force-dark API
+버전별 차이, 버전코드 누락 등)를 easychurch에서 반복 안 하도록 그대로 참고할 것.
+FCM 푸시 채널(`fcm_tokens` 테이블, `supabase/functions/_shared/fcm.ts`, `send-push`/
+`send-daily-verse` 병행 발송 로직)은 코드 자체는 그대로 포팅 가능하나, easychurch 전용 Firebase
+프로젝트의 서비스 계정 JSON을 easychurch Supabase 프로젝트(`tmlmauznjcfqtugytkfd`) 시크릿으로
+새로 등록해야 동작함.
 
 ## 🚫 의도적으로 포팅 제외됨 (길가는교회 전용)
 
@@ -79,16 +109,16 @@ send-push, send-daily-verse 엣지함수 재배포. 다음에도 같은 방식(f
 
 ## 🕓 church-app에도 아직 커밋 안 된 작업중 (당연히 easychurch 미반영)
 
-- 회원가입 관리자 승인제 — 코드만 준비됨, 미적용/미커밋 (2026년 10월 활성화 예정, 10/1 알람 예약됨)
-  - `supabase/migrations/20261001000000_signup_approval.sql`
-  - `src/components/AuthProvider.js` (승인대기 화면)
-  - `src/app/admin/members/page.js` (on/off 스위치, 승인 버튼, 제직명단 일치 배지)
-  - `supabase/functions/send-push/index.ts` (승인요청 알림 문구)
-- `hasRole`/`hasRoleScope` 중복 정리 + `graphify` 의존성 제거 — church-app 로컬에 작업은
-  되어있으나 아직 커밋 안 함(사용자가 "나중에 한꺼번에" 커밋 예정). 참고로 easychurch-app은
-  이 정리를 이미 자체적으로(다른 세션에서) 커밋 `ac5ac1f`로 끝내둔 상태.
+- 회원가입 관리자 승인제 — 코드는 커밋됨(`80cd5c5`, 위 표에 ⚪로 있음)이나 DB 마이그레이션은
+  미적용(2026년 10월 활성화 예정, 10/1 알람 예약됨). `AuthProvider.js`의 프로필 조회 쿼리에서
+  `approval_status`를 일부러 빼놓은 상태(넣으면 관리자 메뉴가 깨지는 버그가 있었음 — `5b8732d`
+  참고) — 활성화 시점에 다시 넣어야 함.
+
+**TWA(PWABuilder) 시절 커밋들(`d1f6bdc`, `3c7aadd` 등 assetlinks.json 관련)은 포팅 대상에서
+제외.** Capacitor로 완전히 갈아탔기 때문에 이제 의미 없는 과거 시도임 — easychurch도 Android
+배포하려면 위 "Android 앱 배포 인프라" 항목대로 Capacitor로 바로 가면 됨, TWA를 거칠 필요 없음.
 
 ---
-_마지막 갱신: 2026-09-17, church-app HEAD `0018101` 기준 / easychurch-app HEAD `ba336c2`
-기준. 둘 다 완전히 동기화된 상태. church-app에 새 커밋이 쌓이면 "아직 반영 안 됨" 표를
-다시 채워나갈 것._
+_마지막 갱신: 2026-09-23, church-app HEAD `7964dc8` 기준. easychurch-app은 여전히 `ba336c2`
+(2026-09-17) 기준이라 위 "아직 반영 안 됨" 표 전체가 밀려있음 — 다음 정기 포팅 때 분류대로
+진행할 것._
