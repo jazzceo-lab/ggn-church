@@ -7,10 +7,10 @@ android {
         applicationId "shop.ggnch.twa"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // 이전 TWA(PWABuilder) 빌드에서 versionCode 1~3까지 이미 Play Console에 올라갔음 —
-        // 같은 shop.ggnch.twa 패키지를 이어서 쓰므로 4부터 시작 (project_playstore_signing.md 참고).
-        versionCode 4
-        versionName "1.0.0"
+        // Play Console에 올라간 최고 versionCode를 항상 확인하고 그다음 숫자로 갱신할 것
+        // (project_playstore_signing.md 참고). 4까지 올라갔으므로 5.
+        versionCode 5
+        versionName "1.0.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
