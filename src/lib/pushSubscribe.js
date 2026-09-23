@@ -1,7 +1,18 @@
 import { supabase } from "@/lib/supabaseClient";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/pushConfig";
+import { subscribeNativePush, isNativePushSubscribed } from "@/lib/pushSubscribeNative";
+
+// Capacitor 앱(안드로이드 WebView)은 웹 표준 Push API를 지원하지 않아서 FCM으로
+// 갈라진다. 두 경로 다 이 함수들을 그대로 호출하는 기존 화면(알림 배너, 회원정보
+// 버튼)은 변경 없이 재사용 — 여기서 플랫폼만 갈라준다.
+async function isNative() {
+  if (typeof window === "undefined") return false;
+  const { Capacitor } = await import("@capacitor/core");
+  return Capacitor.isNativePlatform();
+}
 
 export async function isPushSubscribed(user) {
+  if (await isNative()) return isNativePushSubscribed(user);
   if (!("serviceWorker" in navigator)) return false;
   const reg = await navigator.serviceWorker.ready;
   const sub = await reg.pushManager.getSubscription();
@@ -21,6 +32,7 @@ export async function isPushSubscribed(user) {
 }
 
 export async function subscribeToPush(user) {
+  if (await isNative()) return subscribeNativePush(user);
   try {
     const reg = await navigator.serviceWorker.register("/sw.js");
     await navigator.serviceWorker.ready;

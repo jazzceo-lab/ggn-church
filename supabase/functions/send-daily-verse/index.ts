@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3";
+import { sendFcm } from "../_shared/fcm.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -131,6 +132,26 @@ Deno.serve(async (_req) => {
     }
   }
 
+  // 안드로이드 앱(Capacitor/FCM) 사용자에게도 병행 발송.
+  const { data: allFcmTokens } = await supabase.from("fcm_tokens").select("id, user_id, token");
+  let fcmTokens = allFcmTokens ?? [];
+  if (fcmTokens.length) {
+    const fcmUserIds = [...new Set(fcmTokens.map((t) => t.user_id))];
+    const { data: fcmPrefs } = await supabase
+      .from("profiles")
+      .select("id, notify_daily_verse")
+      .in("id", fcmUserIds);
+    const fcmDisabledIds = new Set((fcmPrefs ?? []).filter((p) => p.notify_daily_verse === false).map((p) => p.id));
+    fcmTokens = fcmTokens.filter((t) => !fcmDisabledIds.has(t.user_id));
+  }
+  const fcmResults = await Promise.allSettled(fcmTokens.map((t) => sendFcm(t.token, notification)));
+  for (let i = 0; i < fcmResults.length; i++) {
+    const result = fcmResults[i];
+    if (result.status === "fulfilled" && result.value.invalidToken) {
+      await supabase.from("fcm_tokens").delete().eq("id", fcmTokens[i].id);
+    }
+  }
+
   // 발송 완료 표시. once는 1회성이라 다음 발송이 다시 안 걸리도록 날짜를 비운다.
   await supabase
     .from("daily_verse_settings")
@@ -141,7 +162,7 @@ Deno.serve(async (_req) => {
     })
     .eq("id", 1);
 
-  return new Response(JSON.stringify({ sent: results.length, ref, imageUrl }), {
+  return new Response(JSON.stringify({ sent: results.length, sentFcm: fcmResults.length, ref, imageUrl }), {
     headers: { "Content-Type": "application/json" },
   });
 });

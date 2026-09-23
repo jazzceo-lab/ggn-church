@@ -46,3 +46,12 @@ supabase/.temp/
 autoaccept.ps1
 inner_claude.bat
 run_claude_auto.bat
+
+# Capacitor/Android — 서명 키, google-services.json 등 비밀값은 절대 커밋 안 함
+android/app/release.keystore
+android/app/google-services.json
+android/app/build/
+android/.gradle/
+android/build/
+android/local.properties
+android/capacitor-cordova-android-plugins/

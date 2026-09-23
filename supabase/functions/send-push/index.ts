@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3";
+import { sendFcm } from "../_shared/fcm.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -199,7 +200,27 @@ Deno.serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ sent: results.length }), {
+  // 안드로이드 앱(Capacitor/FCM) 사용자에게도 병행 발송. 실패해도 위 웹 푸시 결과와
+  // 무관하게 독립적으로 처리 — 한쪽이 죽어도 다른 쪽은 영향 없음.
+  let fcmQuery = supabase.from("fcm_tokens").select("id, user_id, token");
+  if (recipientIds) fcmQuery = fcmQuery.in("user_id", recipientIds);
+  const { data: allFcmTokens } = await fcmQuery;
+  let fcmTokens = (allFcmTokens ?? []).filter((t) => t.user_id !== excludeUserId);
+  if (NOTIFY_COLUMN && fcmTokens.length) {
+    const fcmUserIds = [...new Set(fcmTokens.map((t) => t.user_id))];
+    const { data: fcmPrefs } = await supabase.from("profiles").select(`id, ${NOTIFY_COLUMN}`).in("id", fcmUserIds);
+    const fcmDisabledIds = new Set((fcmPrefs ?? []).filter((p) => p[NOTIFY_COLUMN] === false).map((p) => p.id));
+    fcmTokens = fcmTokens.filter((t) => !fcmDisabledIds.has(t.user_id));
+  }
+  const fcmResults = await Promise.allSettled(fcmTokens.map((t) => sendFcm(t.token, notification)));
+  for (let i = 0; i < fcmResults.length; i++) {
+    const result = fcmResults[i];
+    if (result.status === "fulfilled" && result.value.invalidToken) {
+      await supabase.from("fcm_tokens").delete().eq("id", fcmTokens[i].id);
+    }
+  }
+
+  return new Response(JSON.stringify({ sent: results.length, sentFcm: fcmResults.length }), {
     headers: { "Content-Type": "application/json" },
   });
 });
