@@ -9,6 +9,7 @@ import ScrollFadeBottom from "@/components/ScrollFadeBottom";
 import MessageFab from "@/components/MessageFab";
 import PwaUpdater from "@/components/PwaUpdater";
 import NativePushTapHandler from "@/components/NativePushTapHandler";
+import NativeAppUpdateChecker from "@/components/NativeAppUpdateChecker";
 
 const notoSans = Noto_Sans_KR({
   variable: "--font-sans-kr",
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
         <PwaUpdater />
         <KakaoInAppEscape />
         <NativePushTapHandler />
+        <NativeAppUpdateChecker />
         <AuthProvider>
           <OnboardingBanners />
           <PopupNotice />
