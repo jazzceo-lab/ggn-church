@@ -13,12 +13,14 @@ export default function PushSubscribeButton() {
 
   useEffect(() => {
     (async () => {
-      // Capacitor 네이티브 앱의 웹뷰엔 웹 표준 Push API(PushManager)가 없어서,
-      // 그 조건만 보면 FCM으로 알림을 받을 수 있는 네이티브 앱에서도 버튼이
-      // 숨겨져버린다. 네이티브 플랫폼이면 별도로 지원함을 표시.
+      // 네이티브 앱은 최초 실행 시 자동으로 알림 권한을 요청/등록하고(NativePushTapHandler),
+      // 이후엔 일반 앱들처럼 OS 설정에서만 켜고 끄게 한다 — 앱 안 🔔와 OS 설정이 따로
+      // 놀면서 혼선을 주지 않도록 네이티브에서는 이 버튼 자체를 숨긴다.
+      // 웹(아이폰 홈화면 바로가기 포함)은 OS 차원의 권한 설정이 없어 🔔가 유일한
+      // 구독 on/off 수단이라 그대로 유지.
       const { Capacitor } = await import("@capacitor/core");
       if (Capacitor.isNativePlatform()) {
-        setSupported(true);
+        setSupported(false);
         return;
       }
       setSupported(typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window);
