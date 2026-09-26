@@ -4,14 +4,17 @@ import { z } from "zod";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 
 // 관리자는 매주 주보 사진 2장을 받는다: 표지(호수·날짜만 필요)와 상세 페이지
-// (예배순서·교회소식). 표어/기도제목/섬김이는 매주 거의 안 바뀌어서 "최근 주보 복사해서
-// 새로 만들기"로 이미 채워지므로, 여기서는 매주 실제로 바뀌는 것만 추출한다.
+// (예배순서·교회소식). 표어/섬김이는 매주 거의 안 바뀌어서 "최근 주보 복사해서 새로
+// 만들기"로 이미 채워지므로 제외. 기도제목은 바뀌는 주가 있어 사진에 있으면 추출한다.
 const BulletinExtractSchema = z.object({
   issue: z.string().nullable().describe("표지에 적힌 주보 호수 (예: '27권 34호'). 안 보이면 null"),
   bulletin_date: z
     .string()
     .nullable()
     .describe("표지에 적힌 예배 날짜, YYYY-MM-DD 형식. 안 보이면 null"),
+  prayers: z
+    .array(z.string())
+    .describe("기도제목 각 항목의 텍스트(번호 제외). 사진에 기도제목이 없으면 빈 배열"),
   order: z
     .array(z.object({ label: z.string(), detail: z.string() }))
     .describe("예배순서. 각 항목은 {label, detail} 쌍"),
@@ -29,7 +32,9 @@ const BulletinExtractSchema = z.object({
 
 const SYSTEM_PROMPT = `너는 한국 교회 주보 사진을 읽어서 구조화된 JSON으로 정리하는 도우미야. 매주 두 장의 사진이 들어온다: 표지(호수·날짜만 있음)와 예배순서·교회소식이 나온 상세 페이지. 아래 규칙을 정확히 지켜.
 
-- issue와 bulletin_date는 표지 사진 상단의 "OO권 OO호  YYYY. M. D." 같은 줄에서만 뽑는다. 표어·기도제목·섬김이 등 다른 내용은 읽지 않는다 (이미 다른 방법으로 채워져 있음).
+- issue와 bulletin_date는 표지 사진 상단의 "OO권 OO호  YYYY. M. D." 같은 줄에서만 뽑는다.
+- prayers: 어느 사진이든(주로 표지) "기도제목" 섹션이 있으면 각 항목을 번호를 떼고 하나의 문자열로 담는다. 줄바꿈으로 나뉘어 있어도 한 항목이면 합친다. 없으면 빈 배열.
+- 표어·섬김이는 읽지 않는다 (이미 다른 방법으로 채워져 있음).
 - 예배순서(order)는 상세 페이지에 보이는 순서 그대로, 각 줄을 {label, detail} 쌍으로 만든다. "인사와 나눔", "묵도", "기원", "헌금기도", "축도"처럼 내용이 없는 항목은 detail을 빈 문자열로 둔다.
 - "찬송"의 detail은 "OO장 (가사/절 정보)" 형식으로 통일한다. 예: "14장 (2,3절)".
 - "교독문"의 detail은 반드시 "OO번 (설명)" 형식으로 쓴다. 사진에 "#10"처럼 써 있어도 "10번"으로 바꾼다.

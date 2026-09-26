@@ -194,6 +194,7 @@ function BulletinManager() {
         bulletin_date: r.bulletin_date || f.bulletin_date,
         order: r.order?.length ? arrayToPairs(r.order.map((o) => [o.label, o.detail])) : f.order,
         news: r.news?.length ? arrayToLines(r.news) : f.news,
+        prayers: r.prayers?.length ? arrayToLines(r.prayers) : f.prayers,
       }));
       if (r.events?.length > 0) {
         setExtractedEvents(r.events);
@@ -364,7 +365,7 @@ function BulletinManager() {
             <p className="text-sm font-medium text-brand-dark">📷 사진으로 자동 채우기 (AI)</p>
             <p className="text-xs text-foreground/50">
               표지 사진(호수·날짜)과 예배순서·교회소식이 나온 사진, 두 장을 함께 올리면 AI가 읽어서
-              채워줘요. 표어·기도제목·섬김이는 최근 주보에서 이미 채워져 있으니 그대로 둬요. 채운
+              채워줘요. 기도제목도 사진에 있으면 새로 채우고, 표어·섬김이는 최근 주보 내용을 그대로 둬요. 채운
               뒤에는 꼭 내용을 확인하고 필요한 부분만 고쳐주세요.
             </p>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
