@@ -12,14 +12,30 @@ export async function isNativePushSubscribed(user) {
 export async function subscribeNativePush(user) {
   const { PushNotifications } = await import("@capacitor/push-notifications");
 
-  const perm = await PushNotifications.requestPermissions();
+  let perm;
+  try {
+    perm = await PushNotifications.requestPermissions();
+  } catch (e) {
+    return { error: "권한 요청 중 오류: " + e.message };
+  }
   if (perm.receive !== "granted") {
     return { error: "알림 권한을 허용해주셔야 알림을 받을 수 있어요." };
   }
 
   // register()가 끝나자마자(때로는 그 안에서 동기적으로) "registration" 이벤트가
   // 발생할 수 있어서, 리스너를 먼저 걸어두지 않으면 토큰을 놓친다.
+  // Play Services/FCM 쪽 문제로 두 이벤트 다 안 오는 경우를 대비해 타임아웃도 둔다
+  // (안 두면 실패 원인도 못 보고 그냥 무한 대기하게 됨).
   return new Promise((resolve) => {
+    let done = false;
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      resolve(result);
+    };
+    const timer = setTimeout(() => finish({ error: "등록 응답 없음(10초 타임아웃) — Play Services/FCM 문제일 수 있음" }), 10000);
+
     PushNotifications.addListener("registration", async (token) => {
       const { error: upsertError } = await supabase
         .from("fcm_tokens")
@@ -27,14 +43,18 @@ export async function subscribeNativePush(user) {
           { user_id: user.id, token: token.value, platform: "android", last_seen_at: new Date().toISOString() },
           { onConflict: "user_id,token" }
         );
-      resolve({ error: upsertError ? "토큰 저장 실패: " + upsertError.message : null });
+      finish({ error: upsertError ? "토큰 저장 실패: " + upsertError.message : null });
     });
 
     PushNotifications.addListener("registrationError", (err) => {
-      resolve({ error: err?.error || "FCM 등록에 실패했어요." });
+      finish({ error: err?.error || "FCM 등록에 실패했어요." });
     });
 
-    PushNotifications.register();
+    try {
+      PushNotifications.register();
+    } catch (e) {
+      finish({ error: "register() 호출 중 오류: " + e.message });
+    }
   });
 }
 
