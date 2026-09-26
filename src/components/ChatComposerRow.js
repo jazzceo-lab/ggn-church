@@ -102,7 +102,7 @@ export default function ChatComposerRow({
         />
         <EmojiPickerButton
           onPick={(emoji) => insertAtCursor(composerRef.current, value, onChange, emoji)}
-          className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
+          className="absolute bottom-1.5 right-1.5 md:right-5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
         />
       </div>
 

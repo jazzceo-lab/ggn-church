@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import EmojiPickerButton from "@/components/EmojiPickerButton";
+import ChatComposerInput from "@/components/ChatComposerInput";
 import { insertAtCursor } from "@/lib/insertAtCursor";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -389,18 +390,16 @@ export default function MessagesPage() {
           {selectedIds.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
               <div className="relative">
-                <textarea
+                <ChatComposerInput
                   ref={composeRef}
-                  required
-                  rows={3}
                   value={composeBody}
-                  onChange={(e) => setComposeBody(e.target.value)}
+                  onChange={setComposeBody}
                   placeholder="메시지를 입력하세요"
                   className="w-full rounded-md border border-black/10 py-2 pl-3 pr-10 text-sm dark:border-white/10 dark:bg-white/10"
                 />
                 <EmojiPickerButton
                   onPick={(emoji) => insertAtCursor(composeRef.current, composeBody, setComposeBody, emoji)}
-                  className="absolute bottom-2 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
+                  className="absolute bottom-2 right-1.5 md:right-5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
                 />
               </div>
               {sendError && <p className="text-sm text-red-600">{sendError}</p>}
@@ -465,18 +464,16 @@ export default function MessagesPage() {
           {groupSelectedIds.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
               <div className="relative">
-                <textarea
+                <ChatComposerInput
                   ref={groupBodyRef}
-                  required
-                  rows={3}
                   value={groupBody}
-                  onChange={(e) => setGroupBody(e.target.value)}
+                  onChange={setGroupBody}
                   placeholder="첫 메시지를 입력하세요"
                   className="w-full rounded-md border border-black/10 py-2 pl-3 pr-10 text-sm dark:border-white/10 dark:bg-white/10"
                 />
                 <EmojiPickerButton
                   onPick={(emoji) => insertAtCursor(groupBodyRef.current, groupBody, setGroupBody, emoji)}
-                  className="absolute bottom-2 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
+                  className="absolute bottom-2 right-1.5 md:right-5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
                 />
               </div>
               {groupError && <p className="text-sm text-red-600">{groupError}</p>}
