@@ -52,9 +52,9 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <PwaUpdater />
         <KakaoInAppEscape />
-        <NativePushTapHandler />
         <NativeAppUpdateChecker />
         <AuthProvider>
+          <NativePushTapHandler />
           <OnboardingBanners />
           <PopupNotice />
           <NavBar />

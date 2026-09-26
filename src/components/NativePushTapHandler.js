@@ -29,19 +29,14 @@ export default function NativePushTapHandler() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      // 임시 진단용 alert들(추후 원인 파악되면 다 제거) — 어느 단계에서 멈추는지도 같이 확인.
       try {
         const { Capacitor } = await import("@capacitor/core");
         if (!Capacitor.isNativePlatform()) return;
-        if (await isNativePushSubscribed(user)) {
-          window.alert("이미 등록된 상태로 판단되어 스킵함 (user: " + user.id + ")");
-          return;
-        }
-        window.alert("자동등록 시작 (user: " + user.id + ")");
+        if (await isNativePushSubscribed(user)) return;
         const { error } = await subscribeNativePush(user);
-        window.alert("자동등록 결과: " + (error ?? "성공"));
+        if (error) console.error("FCM 자동등록 실패:", error);
       } catch (e) {
-        window.alert("자동등록 중 예외 발생: " + (e?.message ?? String(e)));
+        console.error("FCM 자동등록 중 예외:", e);
       }
     })();
   }, [user]);
