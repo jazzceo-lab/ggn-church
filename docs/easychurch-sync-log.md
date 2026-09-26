@@ -11,7 +11,7 @@ easychurch-app은 2026-09-13 저녁, church-app 커밋 `5a1cebb`(2026-09-13,
 주 1회 몰아서 easychurch-app에 반영하는 방식. 그래서 이 표는 항상 빠짐없이 최신 상태로
 유지해야 함 — church-app 커밋이 생길 때마다 바로바로 이 문서에 기록.
 
-**다음 정기 포팅 예정일: 2026-09-24 (목) 오후 6시** — 매주 목요일 오후 6시 알람 예약됨.
+**다음 정기 포팅 예정일: 2026-10-01 (목) 오후 6시** (9/24분은 미진행 — 이번에 함께 반영) — 매주 목요일 오후 6시 알람 예약됨.
 그 사이 church-app에 쌓인 새 커밋을 그날 한꺼번에 반영.
 
 **포팅 대상 분류 (2026-09-17 방침 확정):** ggnch.shop(church-app)은 앞으로도 길가는교회
@@ -81,6 +81,14 @@ send-push, send-daily-verse 엣지함수 재배포. 다음에도 같은 방식(f
 | `70d5a8c` | 🟢 범용 — 다크 테마 기기에서 라이트/다크 전환 안 되던 문제 수정 (`color-scheme` 메타 추가) | 2026-09-22 |
 | `80cd5c5` | ⚪ 판단 필요 — 회원가입 관리자 승인제 준비 코드(미적용). easychurch도 승인제 원하는지 먼저 물어볼 것 | 2026-09-18 |
 | `e002141` | 🟢 범용 — graphify 미사용 의존성 제거, hasRole/hasRoleScope 중복 정리 (easychurch는 이미 자체 반영함, `ac5ac1f` 참고 — 충돌 여부 확인 필요) | 2026-09-18 |
+| `ae588c3` | 🟢 범용 — 오늘의 성경 카드뷰어 가로모드 전체화면 + 그만보기 버튼 | 2026-09-24 |
+| `6399a21` | 🟢 범용 — 공지사항 예약전송 (DB: popup_notices.scheduled_at + pg_cron + UPDATE 트리거, 마이그레이션 URL/키 easychurch로 교체) | 2026-09-26 |
+| `ed538ae` | 🟢 범용 — GGN톡 1:1/그룹 메시지 예약전송 (DB: scheduled_messages + pg_cron) | 2026-09-26 |
+| `66b7d06` | 🟢 범용 — **버그수정** 그룹채팅(conversation_messages) push 트리거 누락 추가. easychurch도 같은 누락 있을 가능성 높음 — 꼭 확인 (마이그레이션 URL/키 교체) | 2026-09-26 |
+| `a10969b` | 🟢 범용 — 여러명 보내기/새 그룹방 첫메시지 입력창에 이모지 버튼 | 2026-09-26 |
+| `06d17a4`, `9a42df0`, `b613997`, `8a0feae`, `7727172`, `f7c11c4`, `888239c`, `2e97e89` | 🟢 범용(Android 앱 인프라 묶음) — 앱 자동업데이트, FCM 등록 리스너 순서, 네이티브 🔔 숨김+자동등록, FCM 로그, 배지 정리, 등록 타임아웃. **핵심: `NativePushTapHandler`는 반드시 `AuthProvider` 안에 둘 것**(`2e97e89` — 밖에 두면 user를 못 받아 등록이 전혀 안 됨). 아래 "Android 앱 배포 인프라" 항목과 함께 포팅 | 2026-09-23~26 |
+| `7ff611b`, `cc79c26` | 🚫 포팅 불필요 — church-app 전용 versionCode 갱신 | — |
+| `3a7d528`, `c46cb30` | 🚫 포팅 불필요 — 임시 진단 alert (이후 커밋에서 제거됨) | — |
 
 **Android 앱 배포 인프라 (TWA→Capacitor 전환, 2026-09-22~23, 커밋 `dfdc8d5`~`7964dc8`):**
 🟢 범용이지만 **파일을 그대로 cherry-pick하면 안 됨** — church-app 전용 식별자(패키지명
@@ -119,6 +127,6 @@ FCM 푸시 채널(`fcm_tokens` 테이블, `supabase/functions/_shared/fcm.ts`, `
 배포하려면 위 "Android 앱 배포 인프라" 항목대로 Capacitor로 바로 가면 됨, TWA를 거칠 필요 없음.
 
 ---
-_마지막 갱신: 2026-09-23, church-app HEAD `7964dc8` 기준. easychurch-app은 여전히 `ba336c2`
+_마지막 갱신: 2026-09-26, church-app HEAD `a10969b` 기준. easychurch-app은 여전히 `ba336c2`
 (2026-09-17) 기준이라 위 "아직 반영 안 됨" 표 전체가 밀려있음 — 다음 정기 포팅 때 분류대로
 진행할 것._
