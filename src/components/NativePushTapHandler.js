@@ -32,7 +32,9 @@ export default function NativePushTapHandler() {
       const { Capacitor } = await import("@capacitor/core");
       if (!Capacitor.isNativePlatform()) return;
       if (await isNativePushSubscribed(user)) return;
-      await subscribeNativePush(user);
+      const { error } = await subscribeNativePush(user);
+      // 임시 진단용: 자동등록이 왜 실패하는지 화면에서 바로 보이게(추후 원인 파악되면 제거).
+      if (error && typeof window !== "undefined") window.alert("알림 자동등록 실패: " + error);
     })();
   }, [user]);
 

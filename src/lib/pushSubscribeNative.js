@@ -21,13 +21,13 @@ export async function subscribeNativePush(user) {
   // 발생할 수 있어서, 리스너를 먼저 걸어두지 않으면 토큰을 놓친다.
   return new Promise((resolve) => {
     PushNotifications.addListener("registration", async (token) => {
-      await supabase
+      const { error: upsertError } = await supabase
         .from("fcm_tokens")
         .upsert(
           { user_id: user.id, token: token.value, platform: "android", last_seen_at: new Date().toISOString() },
           { onConflict: "user_id,token" }
         );
-      resolve({ error: null });
+      resolve({ error: upsertError ? "토큰 저장 실패: " + upsertError.message : null });
     });
 
     PushNotifications.addListener("registrationError", (err) => {
