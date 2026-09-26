@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import EmojiPickerButton from "@/components/EmojiPickerButton";
+import { insertAtCursor } from "@/lib/insertAtCursor";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -32,6 +34,8 @@ export default function MessagesPage() {
 
   const [selectedIds, setSelectedIds] = useState([]);
   const [composeBody, setComposeBody] = useState("");
+  const composeRef = useRef(null);
+  const groupBodyRef = useRef(null);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState("");
 
@@ -384,14 +388,21 @@ export default function MessagesPage() {
 
           {selectedIds.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
-              <textarea
-                required
-                rows={3}
-                value={composeBody}
-                onChange={(e) => setComposeBody(e.target.value)}
-                placeholder="메시지를 입력하세요"
-                className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-              />
+              <div className="relative">
+                <textarea
+                  ref={composeRef}
+                  required
+                  rows={3}
+                  value={composeBody}
+                  onChange={(e) => setComposeBody(e.target.value)}
+                  placeholder="메시지를 입력하세요"
+                  className="w-full rounded-md border border-black/10 py-2 pl-3 pr-10 text-sm dark:border-white/10 dark:bg-white/10"
+                />
+                <EmojiPickerButton
+                  onPick={(emoji) => insertAtCursor(composeRef.current, composeBody, setComposeBody, emoji)}
+                  className="absolute bottom-2 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
+                />
+              </div>
               {sendError && <p className="text-sm text-red-600">{sendError}</p>}
               <button
                 type="submit"
@@ -453,14 +464,21 @@ export default function MessagesPage() {
 
           {groupSelectedIds.length > 0 && (
             <div className="mt-4 space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
-              <textarea
-                required
-                rows={3}
-                value={groupBody}
-                onChange={(e) => setGroupBody(e.target.value)}
-                placeholder="첫 메시지를 입력하세요"
-                className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-              />
+              <div className="relative">
+                <textarea
+                  ref={groupBodyRef}
+                  required
+                  rows={3}
+                  value={groupBody}
+                  onChange={(e) => setGroupBody(e.target.value)}
+                  placeholder="첫 메시지를 입력하세요"
+                  className="w-full rounded-md border border-black/10 py-2 pl-3 pr-10 text-sm dark:border-white/10 dark:bg-white/10"
+                />
+                <EmojiPickerButton
+                  onPick={(emoji) => insertAtCursor(groupBodyRef.current, groupBody, setGroupBody, emoji)}
+                  className="absolute bottom-2 right-1.5 flex h-7 w-7 items-center justify-center rounded-full text-base text-foreground/50 hover:bg-black/5 dark:hover:bg-white/10"
+                />
+              </div>
               {groupError && <p className="text-sm text-red-600">{groupError}</p>}
               <button
                 type="submit"
