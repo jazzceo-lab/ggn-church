@@ -47,12 +47,32 @@ export default function GroupConversationPage() {
   const [forwardContent, setForwardContent] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [hiddenIds, setHiddenIds] = useState(new Set());
+  const [scheduled, setScheduled] = useState([]);
   const bottomRef = useRef(null);
   const longPressTimer = useRef(null);
 
   useEffect(() => {
     setHiddenIds(loadHiddenMessageIds("group"));
   }, []);
+
+  async function loadScheduled() {
+    const { data } = await supabase
+      .from("scheduled_messages")
+      .select("id, body, scheduled_at")
+      .eq("message_type", "group")
+      .eq("conversation_id", conversationId)
+      .order("scheduled_at", { ascending: true });
+    setScheduled(data ?? []);
+  }
+
+  useEffect(() => {
+    if (user && conversationId) loadScheduled();
+  }, [user, conversationId]);
+
+  async function cancelScheduled(id) {
+    await supabase.from("scheduled_messages").delete().eq("id", id);
+    loadScheduled();
+  }
 
   function startLongPress(m) {
     longPressTimer.current = setTimeout(() => setActiveMessage(m), 450);
@@ -241,6 +261,49 @@ export default function GroupConversationPage() {
     setFile(null);
     setReplyingTo(null);
     loadThread();
+  }
+
+  async function handleScheduleSend(scheduledAt) {
+    setSending(true);
+    setError("");
+
+    let attachmentUrl = null;
+    let attachmentName = null;
+
+    if (file) {
+      const uploadFile = file.type.startsWith("image/")
+        ? await resizeImageFile(file, { maxSize: 1600 })
+        : file;
+      const path = safeStoragePath(user.id, uploadFile.name);
+      const { error: uploadError } = await uploadFileWithRetry("attachments", path, uploadFile);
+
+      if (uploadError) {
+        setSending(false);
+        setError("파일 업로드에 실패했어요: " + uploadError.message);
+        return;
+      }
+      attachmentUrl = supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl;
+      attachmentName = uploadFile.name;
+    }
+
+    const { error } = await supabase.from("scheduled_messages").insert({
+      message_type: "group",
+      sender_id: user.id,
+      conversation_id: conversationId,
+      body,
+      attachment_url: attachmentUrl,
+      attachment_name: attachmentName,
+      scheduled_at: scheduledAt.toISOString(),
+    });
+
+    setSending(false);
+    if (error) {
+      setError("예약 등록에 실패했어요: " + error.message);
+      return;
+    }
+    setBody("");
+    setFile(null);
+    loadScheduled();
   }
 
   async function handleReact(reactionType) {
@@ -586,6 +649,21 @@ export default function GroupConversationPage() {
         </p>
       )}
 
+      {scheduled.length > 0 && (
+        <div className="mt-2 space-y-1 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs dark:border-amber-900/40 dark:bg-amber-900/10">
+          {scheduled.map((s) => (
+            <div key={s.id} className="flex items-center justify-between gap-2 text-amber-800 dark:text-amber-300">
+              <span className="truncate">
+                ⏰ {new Date(s.scheduled_at).toLocaleString("ko-KR")} — {s.body || "(첨부파일)"}
+              </span>
+              <button onClick={() => cancelScheduled(s.id)} className="shrink-0 underline hover:no-underline">
+                취소
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <ChatComposerRow
         composerRef={composerRef}
         value={body}
@@ -593,6 +671,7 @@ export default function GroupConversationPage() {
         onEnterSend={() => handleSend()}
         onSubmit={handleSend}
         onFileChange={handleFileChange}
+        onSchedule={handleScheduleSend}
         sending={sending}
       />
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
