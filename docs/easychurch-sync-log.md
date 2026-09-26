@@ -86,6 +86,7 @@ send-push, send-daily-verse 엣지함수 재배포. 다음에도 같은 방식(f
 | `ed538ae` | 🟢 범용 — GGN톡 1:1/그룹 메시지 예약전송 (DB: scheduled_messages + pg_cron) | 2026-09-26 |
 | `66b7d06` | 🟢 범용 — **버그수정** 그룹채팅(conversation_messages) push 트리거 누락 추가. easychurch도 같은 누락 있을 가능성 높음 — 꼭 확인 (마이그레이션 URL/키 교체) | 2026-09-26 |
 | `a10969b` | 🟢 범용 — 여러명 보내기/새 그룹방 첫메시지 입력창에 이모지 버튼 | 2026-09-26 |
+| `94bcc61` | 🟢 범용 — 메시지 입력창 화면 절반까지 자동확장 + 웹 드래그 크기조절 | 2026-09-26 |
 | `06d17a4`, `9a42df0`, `b613997`, `8a0feae`, `7727172`, `f7c11c4`, `888239c`, `2e97e89` | 🟢 범용(Android 앱 인프라 묶음) — 앱 자동업데이트, FCM 등록 리스너 순서, 네이티브 🔔 숨김+자동등록, FCM 로그, 배지 정리, 등록 타임아웃. **핵심: `NativePushTapHandler`는 반드시 `AuthProvider` 안에 둘 것**(`2e97e89` — 밖에 두면 user를 못 받아 등록이 전혀 안 됨). 아래 "Android 앱 배포 인프라" 항목과 함께 포팅 | 2026-09-23~26 |
 | `7ff611b`, `cc79c26` | 🚫 포팅 불필요 — church-app 전용 versionCode 갱신 | — |
 | `3a7d528`, `c46cb30` | 🚫 포팅 불필요 — 임시 진단 alert (이후 커밋에서 제거됨) | — |
@@ -127,6 +128,6 @@ FCM 푸시 채널(`fcm_tokens` 테이블, `supabase/functions/_shared/fcm.ts`, `
 배포하려면 위 "Android 앱 배포 인프라" 항목대로 Capacitor로 바로 가면 됨, TWA를 거칠 필요 없음.
 
 ---
-_마지막 갱신: 2026-09-26, church-app HEAD `a10969b` 기준. easychurch-app은 여전히 `ba336c2`
+_마지막 갱신: 2026-09-26, church-app HEAD `94bcc61` 기준. easychurch-app은 여전히 `ba336c2`
 (2026-09-17) 기준이라 위 "아직 반영 안 됨" 표 전체가 밀려있음 — 다음 정기 포팅 때 분류대로
 진행할 것._
