@@ -29,12 +29,20 @@ export default function NativePushTapHandler() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { Capacitor } = await import("@capacitor/core");
-      if (!Capacitor.isNativePlatform()) return;
-      if (await isNativePushSubscribed(user)) return;
-      const { error } = await subscribeNativePush(user);
-      // 임시 진단용: 자동등록이 왜 실패하는지 화면에서 바로 보이게(추후 원인 파악되면 제거).
-      if (error && typeof window !== "undefined") window.alert("알림 자동등록 실패: " + error);
+      // 임시 진단용 alert들(추후 원인 파악되면 다 제거) — 어느 단계에서 멈추는지도 같이 확인.
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (!Capacitor.isNativePlatform()) return;
+        if (await isNativePushSubscribed(user)) {
+          window.alert("이미 등록된 상태로 판단되어 스킵함 (user: " + user.id + ")");
+          return;
+        }
+        window.alert("자동등록 시작 (user: " + user.id + ")");
+        const { error } = await subscribeNativePush(user);
+        window.alert("자동등록 결과: " + (error ?? "성공"));
+      } catch (e) {
+        window.alert("자동등록 중 예외 발생: " + (e?.message ?? String(e)));
+      }
     })();
   }, [user]);
 
