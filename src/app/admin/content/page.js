@@ -34,6 +34,7 @@ const emptyBulletinForm = {
   verse: "",
   goals: "",
   prayers: "",
+  leader: "",
   order: "",
   news: "",
   staff: "",
@@ -50,6 +51,7 @@ function bulletinRowToForm(row) {
     verse: c.theme?.verse ?? "",
     goals: arrayToLines(c.theme?.goals),
     prayers: arrayToLines(c.prayers),
+    leader: c.leader ?? "",
     order: arrayToPairs(c.order),
     news: arrayToLines(c.news),
     staff: arrayToPairs(c.staff),
@@ -66,6 +68,7 @@ function formToContent(form) {
       goals: linesToArray(form.goals),
     },
     prayers: linesToArray(form.prayers),
+    leader: form.leader.trim(),
     order: pairsToArray(form.order),
     news: linesToArray(form.news),
     staff: pairsToArray(form.staff),
@@ -195,6 +198,7 @@ function BulletinManager() {
         order: r.order?.length ? arrayToPairs(r.order.map((o) => [o.label, o.detail])) : f.order,
         news: r.news?.length ? arrayToLines(r.news) : f.news,
         prayers: r.prayers?.length ? arrayToLines(r.prayers) : f.prayers,
+        leader: r.leader || f.leader,
       }));
       if (r.events?.length > 0) {
         setExtractedEvents(r.events);
@@ -478,6 +482,17 @@ function BulletinManager() {
               rows={3}
               value={form.goals}
               onChange={(e) => setForm((f) => ({ ...f, goals: e.target.value }))}
+              className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs text-foreground/60">예배 인도 (비워두면 &quot;임원일 목사&quot;)</label>
+            <input
+              type="text"
+              value={form.leader}
+              onChange={(e) => setForm((f) => ({ ...f, leader: e.target.value }))}
+              placeholder="예: 임원일 목사"
               className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
             />
           </div>

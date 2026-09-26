@@ -12,6 +12,10 @@ const BulletinExtractSchema = z.object({
     .string()
     .nullable()
     .describe("표지에 적힌 예배 날짜, YYYY-MM-DD 형식. 안 보이면 null"),
+  leader: z
+    .string()
+    .nullable()
+    .describe("예배 인도자 이름+직분 (예: '임원일 목사'). 안 보이면 null"),
   prayers: z
     .array(z.string())
     .describe("기도제목 각 항목의 텍스트(번호 제외). 사진에 기도제목이 없으면 빈 배열"),
@@ -34,6 +38,7 @@ const SYSTEM_PROMPT = `너는 한국 교회 주보 사진을 읽어서 구조화
 
 - issue와 bulletin_date는 표지 사진 상단의 "OO권 OO호  YYYY. M. D." 같은 줄에서만 뽑는다.
 - prayers: 어느 사진이든(주로 표지) "기도제목" 섹션이 있으면 각 항목을 번호를 떼고 하나의 문자열로 담는다. 줄바꿈으로 나뉘어 있어도 한 항목이면 합친다. 없으면 빈 배열.
+- leader: 예배순서 근처에 "인도 OOO 목사", "인도: OOO 전도사" 같은 표기가 있으면 "이름 직분" 형태로 담는다 (예: "임원일 목사"). 없으면 null.
 - 표어·섬김이는 읽지 않는다 (이미 다른 방법으로 채워져 있음).
 - 예배순서(order)는 상세 페이지에 보이는 순서 그대로, 각 줄을 {label, detail} 쌍으로 만든다. "인사와 나눔", "묵도", "기원", "헌금기도", "축도"처럼 내용이 없는 항목은 detail을 빈 문자열로 둔다.
 - "찬송"의 detail은 "OO장 (가사/절 정보)" 형식으로 통일한다. 예: "14장 (2,3절)".

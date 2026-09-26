@@ -129,7 +129,7 @@ function BulletinContent({ bulletin, members, onLinkClick, isLoggedIn }) {
       <section className="mt-6 rounded-xl border border-black/10 bg-emerald-50 p-5 dark:border-white/10 dark:bg-emerald-900/15" id="worship-order">
         <div className="flex items-baseline justify-between">
           <h2 className="font-serif font-semibold text-foreground">예배순서</h2>
-          <p className="text-sm text-foreground/50">오전 11:30 · 인도 임원일 목사</p>
+          <p className="text-sm text-foreground/50">오전 11:30 · 인도 {bulletin.leader || "임원일 목사"}</p>
         </div>
         <ul className="mt-3 divide-y divide-black/5 text-sm dark:divide-white/10">
           {bulletin.order.map(([label, detail], i) => {
