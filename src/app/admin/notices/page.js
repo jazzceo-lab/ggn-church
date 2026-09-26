@@ -19,6 +19,7 @@ export default function AdminNoticesPage() {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
   const [sendPush, setSendPush] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
@@ -26,7 +27,7 @@ export default function AdminNoticesPage() {
     setLoading(true);
     const { data } = await supabase
       .from("popup_notices")
-      .select("id, title, image_path, is_active, send_push, created_at")
+      .select("id, title, image_path, is_active, send_push, scheduled_at, created_at")
       .order("created_at", { ascending: false });
     setNotices(data ?? []);
     setLoading(false);
@@ -50,11 +51,22 @@ export default function AdminNoticesPage() {
       return;
     }
 
-    await supabase.from("popup_notices").update({ is_active: false }).eq("is_active", true);
+    // 예약시간이 미래면 지금은 비활성 상태로만 저장해두고, pg_cron
+    // (publish_scheduled_notices, 1분마다)이 시간 되면 활성화 + 푸시발송한다.
+    // 즉시발송이면 기존처럼 바로 활성화.
+    const isScheduled = scheduledAt && new Date(scheduledAt).getTime() > Date.now();
 
-    const { error: insertError } = await supabase
-      .from("popup_notices")
-      .insert({ title: title || null, image_path: path, is_active: true, send_push: sendPush });
+    if (!isScheduled) {
+      await supabase.from("popup_notices").update({ is_active: false }).eq("is_active", true);
+    }
+
+    const { error: insertError } = await supabase.from("popup_notices").insert({
+      title: title || null,
+      image_path: path,
+      is_active: !isScheduled,
+      send_push: sendPush,
+      scheduled_at: isScheduled ? new Date(scheduledAt).toISOString() : null,
+    });
 
     if (insertError) {
       setUploading(false);
@@ -66,6 +78,16 @@ export default function AdminNoticesPage() {
     setTitle("");
     setFile(null);
     setSendPush(false);
+    setScheduledAt("");
+    loadNotices();
+  }
+
+  async function cancelSchedule(notice) {
+    const { error } = await supabase.from("popup_notices").update({ scheduled_at: null }).eq("id", notice.id);
+    if (error) {
+      window.alert("예약 취소에 실패했어요: " + error.message);
+      return;
+    }
     loadNotices();
   }
 
@@ -149,13 +171,27 @@ export default function AdminNoticesPage() {
           />
           🔔 전체회원 푸시 알림으로도 발송 (긴급/중요 공지만 체크. 평소엔 앱 접속시 팝업으로만 노출돼요)
         </label>
+        <label className="block text-sm text-foreground/70">
+          <span className="mb-1 block">⏰ 예약전송 (선택, 비워두면 즉시 등록)</span>
+          <input
+            type="datetime-local"
+            value={scheduledAt}
+            onChange={(e) => setScheduledAt(e.target.value)}
+            min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
+            className="w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
+          />
+        </label>
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
           disabled={uploading || !file}
           className="rounded-full bg-brand px-4 py-2 text-sm text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
         >
-          {uploading ? "업로드 중..." : "등록 (자동으로 활성화)"}
+          {uploading
+            ? "업로드 중..."
+            : scheduledAt && new Date(scheduledAt).getTime() > Date.now()
+              ? "예약 등록"
+              : "등록 (자동으로 활성화)"}
         </button>
       </form>
 
@@ -187,12 +223,25 @@ export default function AdminNoticesPage() {
                     🔔 푸시발송
                   </span>
                 )}
+                {!notice.is_active && notice.scheduled_at && (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                    ⏰ {new Date(notice.scheduled_at).toLocaleString("ko-KR")} 예약
+                  </span>
+                )}
               </p>
               <p className="mt-1 text-xs text-foreground/40">
                 {new Date(notice.created_at).toLocaleString("ko-KR")}
               </p>
             </div>
             <div className="flex shrink-0 gap-2">
+              {!notice.is_active && notice.scheduled_at && (
+                <button
+                  onClick={() => cancelSchedule(notice)}
+                  className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                >
+                  예약취소
+                </button>
+              )}
               <button
                 onClick={() => toggleActive(notice)}
                 className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
