@@ -6,6 +6,8 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { SIGNUP_GROUP_OPTIONS, DISTRICT_NAMES, TOTAL_ROSTER_COUNT, ROSTER_NAMES } from "@/lib/teamRoster";
 import { titleBadgeClass } from "@/lib/memberTitle";
+import { displayEmail } from "@/lib/loginId";
+import { MIN_PASSWORD_LENGTH } from "@/lib/passwordPolicy";
 
 const UNASSIGNED = "미배정";
 const NO_TITLE = "없음";
@@ -36,8 +38,6 @@ export default function AdminMembersPage() {
   const [recentActivityById, setRecentActivityById] = useState({});
   const [renamingId, setRenamingId] = useState(null);
   const [renameInput, setRenameInput] = useState("");
-  // [미적용] 회원가입 승인제 on/off. app_settings 테이블에 이 키가 없는 지금은
-  // signupApprovalRequired가 항상 false로 남아 스위치가 그려지지 않는다.
   const [signupApprovalRequired, setSignupApprovalRequired] = useState(false);
   const [togglingApproval, setTogglingApproval] = useState(false);
 
@@ -199,8 +199,6 @@ export default function AdminMembersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin]);
 
-  // [미적용] 회원가입 승인제. approval_status 컬럼이 아직 없는 지금은 m.approval_status가
-  // 항상 undefined라 아래 버튼/배지는 그려지지 않는다.
   async function approveMember(member) {
     const { error } = await supabase
       .from("profiles")
@@ -316,7 +314,7 @@ export default function AdminMembersPage() {
   async function handleDelete(member) {
     if (
       !window.confirm(
-        `${member.display_name ?? member.email} 님을 완전히 삭제할까요?\n로그인 계정까지 함께 삭제되어, 같은 이메일로 다시 가입할 수 있게 돼요.`
+        `${member.display_name ?? member.email} 님을 완전히 삭제할까요?\n로그인 계정까지 함께 삭제되어, 같은 이메일(휴대폰 번호)로 다시 가입할 수 있게 돼요.`
       )
     )
       return;
@@ -337,6 +335,28 @@ export default function AdminMembersPage() {
       return;
     }
     loadMembers();
+  }
+
+  async function handleResetPassword(member) {
+    const newPassword = window.prompt(
+      `${member.display_name ?? "회원"} 님의 새 비밀번호를 입력하세요 (${MIN_PASSWORD_LENGTH}자 이상).\n알려드린 뒤 로그인해서 직접 바꾸시도록 안내해주세요.`
+    );
+    if (!newPassword) return;
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      window.alert(`비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 해요.`);
+      return;
+    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    const res = await fetch("/api/admin/reset-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionData.session?.access_token}`,
+      },
+      body: JSON.stringify({ targetUserId: member.id, newPassword }),
+    });
+    const data = await res.json();
+    window.alert(res.ok ? "비밀번호를 초기화했어요." : "초기화에 실패했어요: " + (data.error ?? "알 수 없는 오류"));
   }
 
   if (!authLoading && !isAdmin) {
@@ -443,7 +463,7 @@ export default function AdminMembersPage() {
                     <li key={m.id} className="text-xs text-foreground/70">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span>
-                          {m.email} · {m.district || "미배정"} · 가입{" "}
+                          {displayEmail(m.email)} · {m.district || "미배정"} · 가입{" "}
                           {new Date(m.created_at).toLocaleDateString("ko-KR")} · 마지막 로그인{" "}
                           {activityById[m.id]?.lastSignInAt
                             ? new Date(activityById[m.id].lastSignInAt).toLocaleDateString("ko-KR")
@@ -651,7 +671,7 @@ export default function AdminMembersPage() {
                   이름 수정
                 </button>
               )}
-              <p className="mt-1 text-xs text-foreground/50">{m.email}</p>
+              <p className="mt-1 text-xs text-foreground/50">{displayEmail(m.email)}</p>
               {m.phone && (
                 <p className="mt-0.5 text-xs text-foreground/50">📞 {m.phone}</p>
               )}
@@ -795,6 +815,12 @@ export default function AdminMembersPage() {
                 className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
               >
                 {m.is_suspended ? "정지 해제" : "정지"}
+              </button>
+              <button
+                onClick={() => handleResetPassword(m)}
+                className="rounded-full border border-black/10 px-3 py-1 text-xs text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              >
+                비밀번호 초기화
               </button>
               <button
                 onClick={() => handleDelete(m)}

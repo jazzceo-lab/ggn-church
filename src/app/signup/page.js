@@ -7,6 +7,7 @@ import { DISTRICT_NAMES, DEPARTMENT_GROUPS } from "@/lib/teamRoster";
 import { MIN_PASSWORD_LENGTH } from "@/lib/passwordPolicy";
 import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 import PasswordInput from "@/components/PasswordInput";
+import { phoneDigits, phoneToEmail } from "@/lib/loginId";
 
 const DISTRICT_OPTIONS = [...DISTRICT_NAMES, ...DEPARTMENT_GROUPS];
 
@@ -70,16 +71,31 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
 
-    const fullPhone = phoneRest ? `010-${phoneRest}` : null;
+    if (phoneDigits(phoneRest).length !== 8) {
+      setLoading(false);
+      setError("휴대폰 번호 8자리를 모두 입력해주세요.");
+      return;
+    }
+    const fullPhone = `010-${phoneRest}`;
+    const trimmedEmail = email.trim();
 
+    // 이메일은 선택. 안 적으면 휴대폰 번호가 로그인 아이디가 된다(loginId.js 참고).
     const { error } = await supabase.auth.signUp({
-      email,
+      email: trimmedEmail || phoneToEmail(fullPhone),
       password,
       options: { data: { display_name: displayName, district: district || null, phone: fullPhone } },
     });
 
     setLoading(false);
     if (error) {
+      if (/already registered|already exists/i.test(error.message)) {
+        setError(
+          trimmedEmail
+            ? "이미 가입된 이메일이에요. 로그인하시거나 비밀번호 찾기를 이용해주세요."
+            : "이 휴대폰 번호로 이미 가입된 계정이 있어요. 가족이 같은 번호를 쓰신다면 이메일을 함께 입력해서 가입해주세요."
+        );
+        return;
+      }
       setError("회원가입에 실패했어요: " + error.message);
       return;
     }
@@ -89,9 +105,10 @@ export default function SignupPage() {
   if (done) {
     return (
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-12 text-center">
-        <h1 className="font-serif text-xl font-bold text-foreground">가입 확인 메일을 보냈어요</h1>
+        <h1 className="font-serif text-xl font-bold text-foreground">가입 신청이 완료됐어요</h1>
         <p className="mt-3 text-sm text-foreground/50">
-          입력하신 이메일함을 확인해서 인증 링크를 눌러주세요. 인증 후 로그인하실 수 있어요.
+          관리자가 확인 후 승인하면 이용하실 수 있어요. 로그인은{" "}
+          {email.trim() ? "이메일" : "휴대폰 번호"}와 비밀번호로 하시면 돼요.
         </p>
         <Link href="/login" className="mt-6 font-medium text-brand-dark underline">
           로그인 화면으로
@@ -188,10 +205,31 @@ export default function SignupPage() {
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground/80">이메일</label>
+          <label className="block text-sm font-medium text-foreground/80">휴대폰 번호</label>
+          <p className="mt-0.5 text-xs text-foreground/50">
+            로그인할 때 사용해요. 번호는 다른 회원에게 보이지 않아요.
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-sm text-foreground/60">010-</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              required
+              maxLength="9"
+              value={phoneRest}
+              onChange={(e) => setPhoneRest(formatPhoneRest(e.target.value))}
+              placeholder="0000-0000"
+              className="flex-1 rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground/80">이메일 (선택)</label>
+          <p className="mt-0.5 text-xs text-foreground/50">
+            적어두시면 비밀번호를 잊었을 때 메일로 다시 설정할 수 있어요.
+          </p>
           <input
             type="email"
-            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -210,25 +248,6 @@ export default function SignupPage() {
           />
           <PasswordStrengthMeter password={password} />
         </div>
-        {/* 전화번호 필드 - 나중에 활성화 예정
-        <div>
-          <label className="block text-sm font-medium text-foreground/80">전화번호 (선택)</label>
-          <p className="mt-0.5 text-xs text-foreground/50">핸드폰 번호는 노출되지 않으며 교회에서 단체문자 발송시에만 사용됩니다.</p>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-sm text-foreground/60">010-</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength="9"
-              value={phoneRest}
-              onChange={(e) => setPhoneRest(formatPhoneRest(e.target.value))}
-              placeholder="0000-0000"
-              className="flex-1 rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
-            />
-          </div>
-        </div>
-        */}
-
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button

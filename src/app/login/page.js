@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import PasswordInput from "@/components/PasswordInput";
+import { loginIdToEmail } from "@/lib/loginId";
 
 export default function LoginPage() {
   return (
@@ -27,11 +28,15 @@ function LoginForm() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: loginIdToEmail(email), password });
 
     setLoading(false);
     if (error) {
-      setError("로그인에 실패했어요: " + error.message);
+      setError(
+        /invalid login credentials/i.test(error.message)
+          ? "휴대폰 번호(또는 이메일)나 비밀번호가 맞지 않아요."
+          : "로그인에 실패했어요: " + error.message
+      );
       return;
     }
     // 카톡 공유 링크 등으로 특정 페이지에 왔다가 로그인이 필요해서 여기로 온 경우,
@@ -47,13 +52,14 @@ function LoginForm() {
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-foreground/80">이메일</label>
+          <label className="block text-sm font-medium text-foreground/80">휴대폰 번호 또는 이메일</label>
           <input
-            type="email"
+            type="text"
+            autoComplete="username"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            placeholder="010-0000-0000 또는 you@example.com"
             className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
           />
         </div>

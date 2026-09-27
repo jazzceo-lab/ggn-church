@@ -47,6 +47,10 @@ export default function ForgotPasswordPage() {
       <p className="mt-2 text-sm text-foreground/50">
         가입하신 이메일 주소를 입력하시면 재설정 링크를 보내드려요.
       </p>
+      <p className="mt-2 rounded-md bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+        이메일 없이 휴대폰 번호로만 가입하셨다면 메일을 받을 수 없어요. 교회 관리자에게 비밀번호
+        초기화를 요청해주세요.
+      </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div>

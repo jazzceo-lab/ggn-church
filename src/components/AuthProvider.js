@@ -64,13 +64,10 @@ export function AuthProvider({ children }) {
       setRoles(new Set());
       return;
     }
-    // [미적용] approval_status 컬럼은 회원가입 승인제 마이그레이션 적용 전까지 DB에 없음.
-    // select에 넣으면 쿼리 전체가 실패해서 관리자 여부까지 조회가 안 되므로(→ 관리자 메뉴가
-    // 안 보이는 버그), 마이그레이션 적용 후에 다시 추가할 것.
     const { data } = await supabase
       .from("profiles")
       .select(
-        "is_admin, is_board_admin, is_suspended, district, board_last_seen_at, title, display_name, church_id"
+        "is_admin, is_board_admin, is_suspended, approval_status, district, board_last_seen_at, title, display_name, church_id"
       )
       .eq("id", currentUser.id)
       .single();
@@ -90,9 +87,6 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // [미적용] 회원가입 승인제가 꺼져 있는 지금은 approval_status 컬럼 자체가 없어서
-    // data?.approval_status는 항상 undefined -> false. 승인제를 켜는 마이그레이션을
-    // 적용해야 비로소 pending 회원에게 승인대기 화면이 뜨기 시작한다.
     setPendingApproval(data?.approval_status === "pending");
     setIsAdmin(data?.is_admin ?? false);
     setIsBoardAdmin(data?.is_board_admin ?? false);
@@ -436,7 +430,6 @@ export function AuthProvider({ children }) {
         onlinePresence,
       }}
     >
-      {/* [미적용] approval_status 컬럼이 없으면 pendingApproval은 항상 false라 이 화면은 절대 안 뜬다. */}
       {user && pendingApproval ? (
         <main className="mx-auto flex w-full max-w-sm flex-1 flex-col items-center justify-center px-4 py-12 text-center">
           <h1 className="font-serif text-2xl font-bold text-foreground">
