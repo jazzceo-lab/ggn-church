@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import CrossBackground from "@/components/CrossBackground";
+import TextZoom from "@/components/TextZoom";
 
 export default function GyodokmunPage() {
   const [number, setNumber] = useState(null);
@@ -68,7 +69,7 @@ export default function GyodokmunPage() {
         )}
       </div>
 
-      <div className="relative flex-1 overflow-auto px-6 pb-6 pt-2">
+      <TextZoom className="px-6 pb-6 pt-2">
         {!loaded ? (
           <p className="text-sm text-foreground/50">불러오는 중...</p>
         ) : !entry ? (
@@ -85,7 +86,7 @@ export default function GyodokmunPage() {
             ))}
           </div>
         )}
-      </div>
+      </TextZoom>
     </div>
   );
 }

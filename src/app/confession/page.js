@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import CrossBackground from "@/components/CrossBackground";
+import TextZoom from "@/components/TextZoom";
 
 const STANZAS = [
   ["나는", "전능하신 아버지 하나님,", "천지의 창조주를 믿습니다."],
@@ -58,7 +59,7 @@ export default function ConfessionPage() {
         <p className="mt-1 text-sm font-medium text-foreground">새번역 · 사도신경</p>
       </div>
 
-      <div className="relative flex-1 overflow-auto px-6 pt-2 pb-6">
+      <TextZoom className="px-6 pt-2 pb-6">
         <div className="mx-auto max-w-lg space-y-2.5 text-base leading-6 text-foreground/90">
           {STANZAS.map((stanza, i) => (
             <div key={i} className="space-y-0.5">
@@ -69,7 +70,7 @@ export default function ConfessionPage() {
           ))}
           <p className="pt-1 font-semibold text-brand-dark">아멘</p>
         </div>
-      </div>
+      </TextZoom>
     </div>
   );
 }
