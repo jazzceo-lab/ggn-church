@@ -160,6 +160,18 @@ Deno.serve(async (req) => {
       url: "/board",
     };
     excludeUserId = record.user_id;
+    // 구역 게시판(청년부 포함) 글은 그 구역 회원만 볼 수 있으므로 알림도 그 구역 회원에게만.
+    // (예전엔 전 교인에게 가서 다른 구역 글 제목까지 노출됐음)
+    if (record.category === "district") {
+      if (!record.district) {
+        return new Response(JSON.stringify({ skipped: true }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      const { data: members } = await supabase.from("profiles").select("id").eq("district", record.district);
+      recipientIds = (members ?? []).map((m) => m.id);
+      if (record.district === "청년부") notification.url = "/board?youth=1";
+    }
   } else {
     return new Response(JSON.stringify({ skipped: true }), {
       headers: { "Content-Type": "application/json" },
