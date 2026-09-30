@@ -6,6 +6,14 @@ import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { canManageYouth, canViewYouth, parseYouthBulletinDate } from "@/lib/youth";
 import { splitBibleRefs } from "@/lib/bibleBooks";
+import KakaoShareButton from "@/components/KakaoShareButton";
+import { resizeImageFile } from "@/lib/resizeImage";
+import { safeStoragePath } from "@/lib/storagePath";
+import { uploadFileWithRetry } from "@/lib/uploadWithRetry";
+
+function coverUrl(path) {
+  return path ? supabase.storage.from("attachments").getPublicUrl(path).data.publicUrl : null;
+}
 
 function formatDate(d) {
   return new Date(d + "T00:00:00").toLocaleDateString("ko-KR", {
@@ -28,6 +36,9 @@ export default function YouthBulletinPage() {
   const [editingId, setEditingId] = useState(null);
   const [body, setBody] = useState("");
   const [date, setDate] = useState("");
+  const [coverPath, setCoverPath] = useState(null);
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,13 +46,19 @@ export default function YouthBulletinPage() {
     setLoading(true);
     const { data } = await supabase
       .from("youth_bulletins")
-      .select("id, bulletin_date, body")
+      .select("id, bulletin_date, body, cover_path")
       .order("bulletin_date", { ascending: false })
       .order("id", { ascending: false });
     setItems(data ?? []);
     setOpenId((prev) => prev ?? data?.[0]?.id ?? null);
     setLoading(false);
   }
+
+  // 카톡 공유 링크(/youth/bulletin?id=..)로 들어오면 그 주보를 펼친다.
+  useEffect(() => {
+    const id = Number(new URLSearchParams(window.location.search).get("id"));
+    if (id) setOpenId(id);
+  }, []);
 
   useEffect(() => {
     if (auth.user && canViewYouth(auth)) load();
@@ -54,10 +71,22 @@ export default function YouthBulletinPage() {
     if (parsed) setDate(parsed);
   }
 
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(coverFile);
+    setCoverPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [coverFile]);
+
   function startNew() {
     setEditingId(null);
     setBody("");
     setDate("");
+    setCoverPath(null);
+    setCoverFile(null);
     setError("");
     setShowForm(true);
   }
@@ -66,6 +95,8 @@ export default function YouthBulletinPage() {
     setEditingId(item.id);
     setBody(item.body);
     setDate(item.bulletin_date);
+    setCoverPath(item.cover_path);
+    setCoverFile(null);
     setError("");
     setShowForm(true);
   }
@@ -78,7 +109,21 @@ export default function YouthBulletinPage() {
     }
     setSaving(true);
     setError("");
-    const payload = { bulletin_date: date, body: body.trim() };
+
+    let nextCoverPath = coverPath;
+    if (coverFile) {
+      const resized = await resizeImageFile(coverFile, { maxSize: 1600 });
+      const path = safeStoragePath("youth-bulletins", resized.name);
+      const { error: uploadError } = await uploadFileWithRetry("attachments", path, resized);
+      if (uploadError) {
+        setSaving(false);
+        setError("표지 사진 업로드에 실패했어요: " + uploadError.message);
+        return;
+      }
+      nextCoverPath = path;
+    }
+
+    const payload = { bulletin_date: date, body: body.trim(), cover_path: nextCoverPath };
     const { error: saveError } = editingId
       ? await supabase.from("youth_bulletins").update(payload).eq("id", editingId)
       : await supabase.from("youth_bulletins").insert(payload);
@@ -86,6 +131,10 @@ export default function YouthBulletinPage() {
     if (saveError) {
       setError("저장에 실패했어요: " + saveError.message);
       return;
+    }
+    // 사진을 바꿨으면 예전 표지 파일은 정리
+    if (coverPath && coverPath !== nextCoverPath) {
+      await supabase.storage.from("attachments").remove([coverPath]);
     }
     setShowForm(false);
     setOpenId(null);
@@ -99,6 +148,7 @@ export default function YouthBulletinPage() {
       window.alert("삭제에 실패했어요: " + deleteError.message);
       return;
     }
+    if (item.cover_path) await supabase.storage.from("attachments").remove([item.cover_path]);
     load();
   }
 
@@ -107,6 +157,16 @@ export default function YouthBulletinPage() {
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 text-center">
         <h1 className="font-serif text-2xl font-bold text-foreground">청년부 주보</h1>
         <p className="mt-3 text-sm text-foreground/60">청년부 회원만 볼 수 있어요.</p>
+        {!auth.user && (
+          <Link
+            href={`/login?next=${encodeURIComponent(
+              "/youth/bulletin" + (typeof window !== "undefined" ? window.location.search : "")
+            )}`}
+            className="mt-6 inline-block text-brand-dark underline"
+          >
+            로그인하러 가기
+          </Link>
+        )}
       </main>
     );
   }
@@ -137,6 +197,39 @@ export default function YouthBulletinPage() {
           <p className="text-xs text-foreground/50">
             받은 주보 글을 그대로 붙여넣으세요. 첫 줄의 (2026.09.27)에서 날짜를 자동으로 읽어요.
           </p>
+          <div>
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground/60">
+              <span className="rounded-full border border-black/10 px-3 py-1.5 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                🖼️ 표지 사진 {coverPath || coverFile ? "바꾸기" : "선택"}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)}
+                className="hidden"
+              />
+            </label>
+            {(coverPreview || coverUrl(coverPath)) && (
+              <div className="mt-2 flex items-start gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverPreview || coverUrl(coverPath)}
+                  alt="표지 미리보기"
+                  className="h-32 rounded-lg border border-black/10 object-cover dark:border-white/10"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCoverFile(null);
+                    setCoverPath(null);
+                  }}
+                  className="text-xs text-foreground/40 hover:text-red-600"
+                >
+                  ✕ 빼기
+                </button>
+              </div>
+            )}
+          </div>
           <textarea
             rows={14}
             value={body}
@@ -192,6 +285,14 @@ export default function YouthBulletinPage() {
             </button>
             {openId === item.id && (
               <div className="border-t border-black/5 px-5 py-4 dark:border-white/10">
+                {item.cover_path && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={coverUrl(item.cover_path)}
+                    alt={`${formatDate(item.bulletin_date)} 청년부 주보 표지`}
+                    className="mb-4 w-full rounded-lg border border-black/10 dark:border-white/10"
+                  />
+                )}
                 <p className="whitespace-pre-wrap break-keep text-[15px] leading-7 text-foreground/90">
                   {splitBibleRefs(item.body).map((part, i) =>
                     part.href ? (
@@ -207,6 +308,16 @@ export default function YouthBulletinPage() {
                     )
                   )}
                 </p>
+                <div className="mt-4">
+                  <KakaoShareButton
+                    title={`길가는교회 청년부 주보 (${formatDate(item.bulletin_date)})`}
+                    description={
+                      item.body.match(/제목\s*:\s*(.+)/)?.[1]?.trim() ?? item.body.split("\n")[0]
+                    }
+                    url={`${window.location.origin}/youth/bulletin?id=${item.id}`}
+                    imageUrl={coverUrl(item.cover_path)}
+                  />
+                </div>
                 {canManage && (
                   <div className="mt-4 flex gap-2">
                     <button

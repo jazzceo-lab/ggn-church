@@ -19,7 +19,7 @@ function loadKakaoSdk() {
   return sdkLoadPromise;
 }
 
-export default function KakaoShareButton({ title, description, url }) {
+export default function KakaoShareButton({ title, description, url, imageUrl }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function KakaoShareButton({ title, description, url }) {
       content: {
         title,
         description,
-        imageUrl: `${window.location.origin}/images/logo-mark.jpg`,
+        imageUrl: imageUrl || `${window.location.origin}/images/logo-mark.jpg`,
         link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
       },
       buttons: [
