@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { pathLabel } from "@/lib/pageLabels";
+import { applyTheme } from "@/lib/themes";
 
 const AuthContext = createContext({
   user: null,
@@ -54,6 +55,7 @@ export function AuthProvider({ children }) {
 
   async function loadProfile(currentUser) {
     if (!currentUser) {
+      applyTheme(null);
       setPendingApproval(false);
       setIsAdmin(false);
       setIsBoardAdmin(false);
@@ -67,7 +69,7 @@ export function AuthProvider({ children }) {
     const { data } = await supabase
       .from("profiles")
       .select(
-        "is_admin, is_board_admin, is_suspended, approval_status, district, board_last_seen_at, title, display_name, church_id"
+        "is_admin, is_board_admin, is_suspended, approval_status, district, board_last_seen_at, title, display_name, church_id, theme_preset"
       )
       .eq("id", currentUser.id)
       .single();
@@ -87,6 +89,8 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // ponytail: 첫 화면은 기본색(warm)으로 그렸다가 개인 색으로 바뀜(잠깐 깜빡임) — 거슬리면 쿠키로 서버에서 적용
+    applyTheme(data?.theme_preset);
     setPendingApproval(data?.approval_status === "pending");
     setIsAdmin(data?.is_admin ?? false);
     setIsBoardAdmin(data?.is_board_admin ?? false);

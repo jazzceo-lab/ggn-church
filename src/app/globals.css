@@ -30,6 +30,70 @@
   --brand-tint: #2a2019;
 }
 
+/* 회원별 화면 색(profiles.theme_preset → <html data-church-theme>).
+   warm은 위 :root/.dark 기본값 그대로. 다크 선택자가 라이트보다 우선하도록
+   html.dark[...]로 한 단계 더 구체적으로 쓴다. */
+html[data-church-theme="forest"] {
+  --background: #f5f8f4;
+  --brand: #5f8f6e;
+  --brand-dark: #466d53;
+  --brand-tint: #e3eee5;
+}
+html.dark[data-church-theme="forest"] {
+  --background: #111713;
+  --brand: #8ab89a;
+  --brand-dark: #6f9d80;
+  --brand-tint: #1c2a21;
+}
+html[data-church-theme="ocean"] {
+  --background: #f4f7fa;
+  --brand: #5b86b0;
+  --brand-dark: #3f6891;
+  --brand-tint: #e1ebf5;
+}
+html.dark[data-church-theme="ocean"] {
+  --background: #0f141a;
+  --brand: #8fb3d6;
+  --brand-dark: #6d97c0;
+  --brand-tint: #1a2533;
+}
+html[data-church-theme="lavender"] {
+  --background: #f8f6fb;
+  --brand: #8a76b5;
+  --brand-dark: #6c5a98;
+  --brand-tint: #ebe5f5;
+}
+html.dark[data-church-theme="lavender"] {
+  --background: #15121a;
+  --brand: #b3a3d8;
+  --brand-dark: #9582c2;
+  --brand-tint: #251f33;
+}
+html[data-church-theme="rose"] {
+  --background: #fbf6f7;
+  --brand: #c07a8a;
+  --brand-dark: #a05d6e;
+  --brand-tint: #f5e3e7;
+}
+html.dark[data-church-theme="rose"] {
+  --background: #1a1214;
+  --brand: #dba0ad;
+  --brand-dark: #c68493;
+  --brand-tint: #301d22;
+}
+html[data-church-theme="slate"] {
+  --background: #f6f7f8;
+  --brand: #56657a;
+  --brand-dark: #3e4b5c;
+  --brand-tint: #e4e8ed;
+}
+html.dark[data-church-theme="slate"] {
+  --background: #111317;
+  --brand: #97a6ba;
+  --brand-dark: #7a8aa0;
+  --brand-tint: #1f242c;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;

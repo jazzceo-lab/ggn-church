@@ -12,6 +12,7 @@ import { resizeImageFile } from "@/lib/resizeImage";
 import { MIN_PASSWORD_LENGTH } from "@/lib/passwordPolicy";
 import PasswordStrengthMeter from "@/components/PasswordStrengthMeter";
 import PasswordInput from "@/components/PasswordInput";
+import { THEME_PRESETS, applyTheme } from "@/lib/themes";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -56,6 +57,7 @@ export default function AccountPage() {
   const [notifyBoardPrayer, setNotifyBoardPrayer] = useState(true);
   const [notifyBoardShare, setNotifyBoardShare] = useState(true);
   const [notifySaving, setNotifySaving] = useState(false);
+  const [myTheme, setMyTheme] = useState("warm");
 
   useEffect(() => {
     if (!user) {
@@ -65,7 +67,7 @@ export default function AccountPage() {
     supabase
       .from("profiles")
       .select(
-        "avatar_path, phone, notify_messages, notify_bulletin, notify_notice, notify_daily_verse, notify_board_district, notify_board_prayer, notify_board_share"
+        "avatar_path, phone, notify_messages, notify_bulletin, notify_notice, notify_daily_verse, notify_board_district, notify_board_prayer, notify_board_share, theme_preset"
       )
       .eq("id", user.id)
       .single()
@@ -84,6 +86,7 @@ export default function AccountPage() {
         setNotifyBoardDistrict(data?.notify_board_district ?? true);
         setNotifyBoardPrayer(data?.notify_board_prayer ?? true);
         setNotifyBoardShare(data?.notify_board_share ?? true);
+        setMyTheme(data?.theme_preset ?? "warm");
         setLoading(false);
       });
   }, [user]);
@@ -159,6 +162,19 @@ export default function AccountPage() {
     setFile(null);
     setPhoneRest(trimmedRest);
     setSuccess(true);
+  }
+
+  // 내 화면 색: 고르는 즉시 적용·저장 (null/warm = 기본색)
+  async function handleThemeSelect(value) {
+    const prev = myTheme;
+    setMyTheme(value);
+    applyTheme(value);
+    const { error: themeError } = await supabase.from("profiles").update({ theme_preset: value }).eq("id", user.id);
+    if (themeError) {
+      setMyTheme(prev);
+      applyTheme(prev);
+      window.alert("화면 색 변경에 실패했어요: " + themeError.message);
+    }
   }
 
   async function handleNotifyToggle(column, value, setter) {
@@ -328,6 +344,31 @@ export default function AccountPage() {
             {saving ? "저장 중..." : "저장"}
           </button>
         </form>
+      )}
+
+      {!loading && !loadError && (
+        <div className="mt-6 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
+          <h2 className="font-medium text-foreground">🎨 내 화면 색</h2>
+          <p className="text-sm text-foreground/50">내 화면에만 적용돼요.</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {THEME_PRESETS.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => handleThemeSelect(t.value)}
+                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${
+                  myTheme === t.value ? "border-brand ring-2 ring-brand/40" : "border-black/10 hover:bg-black/5 dark:border-white/10"
+                }`}
+              >
+                <span className="flex h-5 w-8 shrink-0 overflow-hidden rounded-full">
+                  <span className="w-1/2" style={{ background: t.brand }} />
+                  <span className="w-1/2" style={{ background: t.tint }} />
+                </span>
+                <span className="break-keep">{t.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       {!loading && !loadError && (
