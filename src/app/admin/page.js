@@ -76,6 +76,13 @@ const DEFAULT_MENU_ITEMS = [
     description: "삭제된 게시물 복구 또는 영구 삭제",
     href: "/admin/trash",
   },
+  {
+    id: "youth",
+    icon: "🙌",
+    title: "청년부",
+    description: "청년부 주보 · 게시판 · 신청·설문",
+    href: "/youth",
+  },
 ];
 
 export default function AdminDashboard() {
@@ -108,6 +115,8 @@ export default function AdminDashboard() {
         const ordered = data.menu_order
           .map((id) => DEFAULT_MENU_ITEMS.find((item) => item.id === id))
           .filter(Boolean);
+        // 저장된 순서 이후 새로 추가된 카드는 맨 뒤에 붙인다(안 그러면 안 보임).
+        ordered.push(...DEFAULT_MENU_ITEMS.filter((item) => !data.menu_order.includes(item.id)));
         console.log("정렬된 메뉴:", ordered.map(m => m.id));
         setMenuItems(ordered);
       } else {

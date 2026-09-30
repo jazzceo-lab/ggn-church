@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 import FontSizeControl from "@/components/FontSizeControl";
 import ThemeToggle from "@/components/ThemeToggle";
 import PushSubscribeButton from "@/components/PushSubscribeButton";
+import { YOUTH } from "@/lib/youth";
 
 const publicLinks = [
   { href: "/", label: "소개" },
@@ -152,8 +153,16 @@ function NavLink({ href, className, plain, children }) {
 }
 
 export default function NavBar() {
-  const { user, loading, isAdmin, unreadCount, boardNewCount, groupUnreadCount } = useAuth();
+  const { user, loading, isAdmin, district, hasRoleScope, unreadCount, boardNewCount, groupUnreadCount } =
+    useAuth();
   const counts = { messages: unreadCount + groupUnreadCount, board: boardNewCount };
+  // 청년부·목회자·청년부 임원진은 "회원정보" 자리에 "청년부" 메뉴가 뜬다(회원정보는 상단 사람
+  // 아이콘으로 들어감). 관리자는 관리자 화면의 "청년부" 카드로 들어간다.
+  const showYouthMenu =
+    user && (district === YOUTH || district === "목회자" || hasRoleScope("youth_officer", ""));
+  const visibleMemberLinks = showYouthMenu
+    ? memberLinks.map((l) => (l.href === "/account" ? { href: "/youth", label: "청년부" } : l))
+    : memberLinks;
   const router = useRouter();
   const [memberMenuOpen, setMemberMenuOpen] = useState(true);
 
@@ -270,7 +279,7 @@ export default function NavBar() {
           </button>
           {memberMenuOpen && (
           <nav className="mt-1 grid grid-cols-3 gap-x-6 gap-y-2 text-[15px]">
-            {memberLinks.map((link) => (
+            {visibleMemberLinks.map((link) => (
               <NavLink
                 key={link.href}
                 href={link.href}

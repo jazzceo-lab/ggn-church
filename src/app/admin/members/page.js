@@ -19,6 +19,7 @@ const BOARD_DISTRICTS = [...DISTRICT_NAMES, "청년부"];
 const ROLE_OPTIONS = [
   { key: "media_manager", label: "찬양팀 영상 관리 권한" },
   { key: "district_leader", label: "구역장 (구역공지 권한)", scoped: true },
+  { key: "youth_officer", label: "청년부 임원진 (청년부 주보·신청설문 관리)" },
 ];
 const ROLE_LABELS = Object.fromEntries(ROLE_OPTIONS.map((r) => [r.key, r.label]));
 const SCOPED_ROLE_KEYS = new Set(ROLE_OPTIONS.filter((r) => r.scoped).map((r) => r.key));
