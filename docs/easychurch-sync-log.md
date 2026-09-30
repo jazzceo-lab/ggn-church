@@ -99,6 +99,7 @@ send-push, send-daily-verse 엣지함수 재배포. 다음에도 같은 방식(f
 | `db623be` | ⚪ 판단 필요 — 이메일 인증 없이 휴대폰 번호 가입/로그인(내부용 가짜이메일 `{번호}@phone.ggnch.shop`) + 승인제 실제 적용(AuthProvider가 approval_status 조회) + 관리자 비밀번호 초기화. easychurch는 멀티테넌시라 가짜이메일 도메인·번호 중복(교회 간) 처리와 승인제 재설계(`80cd5c5` 항목 참고) 필요 | 2026-09-27 |
 | `2dd890e` | 🚫 포팅 불필요 — 개인 화면 색(테마)은 easychurch에서 church-app으로 역포팅한 것(easychurch 원본: 20260930000000_profile_theme.sql). 같은 커밋의 채팅통계 권한 회수는 위 보안 항목 참고 | — |
 | `21b774f` | 🟡 길가는교회 전용 — 청년부 전용 메뉴(청년부 화면·청년부 주보·youth_officer 역할, can_manage_youth/can_view_youth). 특정 부서명·권한 구성에 맞춘 것이라 easychurch엔 부서 기능으로 일반화하지 않는 한 불필요 | 2026-09-30 |
+| `8424943` | 🟢 범용(일부) — bibleBooks.js에 splitBibleRefs(자유 텍스트 속 성경구절 자동 링크) + 성경 약어 66권(신·고전·요일 등, 앞에 한글 붙으면 제외해 '오전 10:30' 오인 방지). 청년부 첫화면 이동(YouthLanding)은 🟡 전용 | 2026-09-30 |
 | `27ed796` | 🟢 범용 — **보안(최우선)** member_directory/bulletins_public 뷰의 anon/authenticated 쓰기권한 회수(뷰가 소유자권한이라 비로그인도 profiles·bulletins 수정/삭제 가능했음), 회원명단 비로그인 노출 차단, admin_menu_order RLS. easychurch 뷰도 같은 구멍 있는지 즉시 확인. 승인 RESTRICTIVE 정책 부분은 승인제 도입 여부 따라  (+`2dd890e`: admin_chat_message_count 비로그인 실행권한 회수) | 2026-09-28 |
 | `428c81f` | ⚪ 판단 필요 — 환영 쪽지를 승인 순간에 발송(트리거 2개로 분리), 🔔 안내 문구 제거. 승인제(`db623be`)와 묶어서 판단 | 2026-09-28 |
 | `e41bfb9`/`b2ac599` | ⚪ 판단 필요 — 이용약관/개인정보처리방침 페이지. 9/24 포팅 때 보류됨(easychurch 개인정보처리방침은 이미 자체 수정본, 이용약관은 내용 미정). easychurch용 약관 문구를 정해야 진행 가능 | 2026-09-22 |
