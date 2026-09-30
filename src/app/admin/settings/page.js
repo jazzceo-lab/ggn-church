@@ -4,6 +4,7 @@ import { useAuth } from "@/components/AuthProvider";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import AppVersionSetting from "@/components/AppVersionSetting";
 
 export default function AppSettingsPage() {
   const { loading: authLoading, isAdmin, churchId } = useAuth();
@@ -176,6 +177,8 @@ export default function AppSettingsPage() {
           )}
         </div>
       </form>
+
+      <AppVersionSetting />
     </main>
   );
 }
