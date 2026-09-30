@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import PasswordInput from "@/components/PasswordInput";
 import { loginIdToEmail } from "@/lib/loginId";
+import { YOUTH_LANDED_KEY } from "@/components/YouthLanding";
 
 export default function LoginPage() {
   return (
@@ -42,6 +43,10 @@ function LoginForm() {
     // 카톡 공유 링크 등으로 특정 페이지에 왔다가 로그인이 필요해서 여기로 온 경우,
     // 로그인 후 그 페이지로 돌려보낸다. next가 없으면 홈으로.
     const next = searchParams.get("next");
+    // 같은 세션에서 다시 로그인해도 청년부는 첫 화면이 청년부 메뉴가 되도록(YouthLanding).
+    try {
+      sessionStorage.removeItem(YOUTH_LANDED_KEY);
+    } catch {}
     router.push(next && next.startsWith("/") ? next : "/");
     router.refresh();
   }

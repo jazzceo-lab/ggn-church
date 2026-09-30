@@ -1,10 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import NaverMap from "@/components/NaverMap";
+import YouthLanding from "@/components/YouthLanding";
 
 export default function Home() {
   return (
     <main className="flex-1">
+      <YouthLanding />
       <section className="relative overflow-hidden">
         <div className="relative h-[220px] w-full sm:h-[300px]">
           <Image

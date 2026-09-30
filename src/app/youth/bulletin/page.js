@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
 import { canManageYouth, canViewYouth, parseYouthBulletinDate } from "@/lib/youth";
+import { splitBibleRefs } from "@/lib/bibleBooks";
 
 function formatDate(d) {
   return new Date(d + "T00:00:00").toLocaleDateString("ko-KR", {
@@ -192,7 +193,19 @@ export default function YouthBulletinPage() {
             {openId === item.id && (
               <div className="border-t border-black/5 px-5 py-4 dark:border-white/10">
                 <p className="whitespace-pre-wrap break-keep text-[15px] leading-7 text-foreground/90">
-                  {item.body}
+                  {splitBibleRefs(item.body).map((part, i) =>
+                    part.href ? (
+                      <a
+                        key={i}
+                        href={part.href}
+                        className="text-brand-dark underline decoration-brand-dark/40 underline-offset-2"
+                      >
+                        {part.text}
+                      </a>
+                    ) : (
+                      part.text
+                    )
+                  )}
                 </p>
                 {canManage && (
                   <div className="mt-4 flex gap-2">
