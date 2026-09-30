@@ -16,6 +16,7 @@ import { avatarUrl } from "@/lib/avatar";
 import AvatarLightbox from "@/components/AvatarLightbox";
 import EmojiPickerButton from "@/components/EmojiPickerButton";
 import { insertAtCursor } from "@/lib/insertAtCursor";
+import { YOUTH, canManageYouth, canViewYouth } from "@/lib/youth";
 
 // DB(boards 테이블) 조회 전/실패 시 보여줄 기본값. 관리자가 게시판 관리 화면에서
 // 추가·수정한 내용은 boards 테이블에서 불러온 값이 우선한다.
@@ -54,13 +55,28 @@ export default function BoardPage() {
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const canReplyToLibrary = category !== "library" || user;
   const [districtView, setDistrictView] = useState(null);
+  // 청년부 메뉴(/youth)의 "게시판"에서 /board?youth=1로 들어오면 청년부 게시판을 바로 연다.
+  // 청년부가 아닌 게시판 관리자·목회자·청년부 임원진도 이 경로로 청년부 게시판을 본다.
+  const [youthMode, setYouthMode] = useState(false);
+  const requestedCategoryRef = useRef(false);
+  const youthAuth = { isAdmin, isBoardAdmin, district: myDistrict, hasRoleScope };
   const resolvedDistrictView =
     districtView ?? (BOARD_DISTRICTS.includes(myDistrict) ? myDistrict : BOARD_DISTRICTS[0]);
   const activeDistrict =
-    category === "district" ? (isAdmin ? resolvedDistrictView : myDistrict) : null;
+    category !== "district"
+      ? null
+      : youthMode
+        ? YOUTH
+        : isAdmin
+          ? resolvedDistrictView
+          : myDistrict;
   const canUseDistrictBoard =
-    category !== "district" || isAdmin || BOARD_DISTRICTS.includes(myDistrict);
+    category !== "district" ||
+    isAdmin ||
+    BOARD_DISTRICTS.includes(myDistrict) ||
+    (youthMode && canViewYouth(youthAuth));
   const isDistrictLeader = category === "district" && hasRoleScope("district_leader", activeDistrict);
+  const isYouthManager = activeDistrict === YOUTH && canManageYouth(youthAuth);
   const [districtAccount, setDistrictAccount] = useState(null);
   const [editingAccount, setEditingAccount] = useState(false);
   const [accountForm, setAccountForm] = useState({ bank_name: "카카오뱅크", account_number: "", account_holder: "" });
@@ -289,11 +305,21 @@ export default function BoardPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requestedCategory = params.get("category");
-    if (requestedCategory) {
+    if (params.get("youth")) {
+      requestedCategoryRef.current = true;
+      setYouthMode(true);
+      setCategory("district");
+    } else if (requestedCategory) {
+      requestedCategoryRef.current = true;
       setCategory(requestedCategory);
       window.history.replaceState(null, "", "/board");
     }
   }, []);
+
+  // 다른 게시판 탭으로 옮기면 청년부 고정 모드 해제
+  useEffect(() => {
+    if (category !== "district") setYouthMode(false);
+  }, [category]);
 
   // 게시판 탭 목록은 관리자가 /admin/boards에서 관리한 내용을 따른다.
   useEffect(() => {
@@ -305,8 +331,9 @@ export default function BoardPage() {
       .then(({ data, error }) => {
         if (error || !data || data.length === 0) return;
         setCategories(data.map((b) => ({ key: b.board_key, label: b.board_name })));
-        // 게시판 순서가 바뀌어도 항상 "help"(앱사용문의)를 기본 게시판으로 설정
-        setCategory("help");
+        // 게시판 순서가 바뀌어도 항상 "help"(앱사용문의)를 기본 게시판으로 설정.
+        // 단, 주소로 특정 게시판을 요청해 들어온 경우엔 덮어쓰지 않는다(예전엔 여기서 되돌아갔음).
+        if (!requestedCategoryRef.current) setCategory("help");
       });
   }, []);
 
@@ -598,7 +625,7 @@ export default function BoardPage() {
         </p>
       )}
 
-      {category === "district" && user && isAdmin && (
+      {category === "district" && user && isAdmin && !youthMode && (
         <div className="mt-4 flex items-center gap-2 text-sm">
           <label className="text-foreground/60">구역 선택</label>
           <select
@@ -617,9 +644,19 @@ export default function BoardPage() {
 
       {category === "district" && user && canUseDistrictBoard && (
         <p className="mt-4 text-sm text-foreground/50">
-          이 게시판은 {activeDistrict} 구역원에게만 보여요.
-          <br />
-          (구역장은 게시글 고정(📌 공지) 버튼 사용가능)
+          {activeDistrict === YOUTH ? (
+            <>
+              이 게시판은 청년부와 청년부 관리자에게만 보여요.
+              <br />
+              (청년부 임원진·목회자는 게시글 고정(📌 공지) 버튼 사용가능)
+            </>
+          ) : (
+            <>
+              이 게시판은 {activeDistrict} 구역원에게만 보여요.
+              <br />
+              (구역장은 게시글 고정(📌 공지) 버튼 사용가능)
+            </>
+          )}
         </p>
       )}
 
@@ -823,7 +860,7 @@ export default function BoardPage() {
               </p>
               {editingPostId !== post.id && (
                 <div className="flex shrink-0 items-center gap-2">
-                  {(isAdmin || isBoardAdmin || isDistrictLeader) && (
+                  {(isAdmin || isBoardAdmin || isDistrictLeader || isYouthManager) && (
                     <button
                       onClick={() => togglePin(post)}
                       className="text-xs text-foreground/40 hover:text-brand-dark"
@@ -831,7 +868,7 @@ export default function BoardPage() {
                       {post.is_pinned ? "고정 해제" : "고정"}
                     </button>
                   )}
-                  {(isAdmin || isBoardAdmin || post.user_id === user?.id) && (
+                  {(isAdmin || isBoardAdmin || isYouthManager || post.user_id === user?.id) && (
                     <button
                       onClick={() => startEditPost(post)}
                       className="text-xs text-foreground/40 hover:text-brand-dark"
@@ -839,7 +876,7 @@ export default function BoardPage() {
                       수정
                     </button>
                   )}
-                  {(isAdmin || isBoardAdmin || post.user_id === user?.id) && (
+                  {(isAdmin || isBoardAdmin || isYouthManager || post.user_id === user?.id) && (
                     <button
                       onClick={() => handleDelete(post.id)}
                       className="text-xs text-foreground/40 hover:text-red-600"
@@ -1035,7 +1072,7 @@ export default function BoardPage() {
                         </span>
                       </p>
                     </div>
-                    {(isAdmin || isBoardAdmin || c.user_id === user?.id) && (
+                    {(isAdmin || isBoardAdmin || isYouthManager || c.user_id === user?.id) && (
                       <button
                         onClick={() => handleDeleteComment(c.id)}
                         className="shrink-0 text-xs text-foreground/40 hover:text-red-600"
