@@ -96,6 +96,15 @@ export default function YouthPage() {
           <p className="mt-2 font-medium text-foreground">단톡방</p>
           <p className="mt-1 text-xs text-foreground/50">{joining ? "여는 중..." : "청년부 GGN톡 단체방"}</p>
         </button>
+        <a href="https://www.instagram.com/ggn_youth_/" target="_blank" rel="noopener noreferrer" className={card}>
+          <svg viewBox="0 0 24 24" className="h-7 w-7 text-foreground/70" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
+          </svg>
+          <p className="mt-2 font-medium text-foreground">인스타그램</p>
+          <p className="mt-1 text-xs text-foreground/50">@ggn_youth_</p>
+        </a>
       </div>
 
       <section className="mt-8">
