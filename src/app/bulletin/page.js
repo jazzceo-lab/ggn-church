@@ -369,7 +369,6 @@ export default function BulletinPage() {
   // 핸드폰 뒤로 가기 버튼 감지
   useEffect(() => {
     const handlePopState = () => {
-      console.log("주보: popstate 감지, 스크롤");
       if (sessionStorage.getItem("isFirstLoadBulletin")) {
         return;
       }
@@ -377,7 +376,6 @@ export default function BulletinPage() {
     };
 
     const handlePageShow = (event) => {
-      console.log("주보: pageshow, persisted:", event.persisted);
       if (event.persisted && !sessionStorage.getItem("isFirstLoadBulletin")) {
         scrollToWorship();
       }
@@ -401,14 +399,12 @@ export default function BulletinPage() {
 
     // 첫 진입이면 스크롤 안 함
     if (isFirstLoad) {
-      console.log("주보: 첫 진입, 스크롤 안 함");
       return;
     }
 
     // "돌아가기" 버튼으로 온 경우
     const shouldScroll = sessionStorage.getItem("returnFromBulletinLink");
     if (shouldScroll) {
-      console.log("주보: 돌아가기로 온 경우, 스크롤");
       sessionStorage.removeItem("returnFromBulletinLink");
       scrollToWorship();
     }

@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import AppVersionSetting from "@/components/AppVersionSetting";
 
 export default function AppSettingsPage() {
-  const { loading: authLoading, isAdmin, churchId } = useAuth();
+  const { loading: authLoading, isAdmin } = useAuth();
   const [formData, setFormData] = useState({
     departments: "",
     sundayServiceTime: "",
@@ -19,16 +19,11 @@ export default function AppSettingsPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!churchId) return;
     loadSettings();
-  }, [churchId]);
+  }, []);
 
   async function loadSettings() {
-    const { data } = await supabase
-      .from("app_settings")
-      .select("*")
-      .eq("church_id", churchId)
-      .single();
+    const { data } = await supabase.from("church_basic_settings").select("*").eq("id", 1).maybeSingle();
 
     if (data) {
       setFormData({
@@ -48,16 +43,16 @@ export default function AppSettingsPage() {
 
     try {
       const { error } = await supabase
-        .from("app_settings")
-        .upsert({
-          church_id: churchId,
+        .from("church_basic_settings")
+        .update({
           departments: formData.departments,
           sunday_service_time: formData.sundayServiceTime,
           wednesday_service_time: formData.wednesdayServiceTime,
           sunday_service_name: formData.sundayServiceName,
           additional_settings: formData.additionalSettings,
           updated_at: new Date().toISOString(),
-        });
+        })
+        .eq("id", 1);
 
       if (error) throw error;
       setMessage("저장되었습니다.");

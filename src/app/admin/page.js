@@ -7,13 +7,6 @@ import { supabase } from "@/lib/supabaseClient";
 
 const DEFAULT_MENU_ITEMS = [
   {
-    id: "church-info",
-    icon: "🏘️",
-    title: "교회 기본정보",
-    description: "로고, 사진, 주소, 전화번호 관리",
-    href: "/admin/church-info",
-  },
-  {
     id: "members",
     icon: "👥",
     title: "회원 관리",
@@ -86,7 +79,7 @@ const DEFAULT_MENU_ITEMS = [
 ];
 
 export default function AdminDashboard() {
-  const { user, loading: authLoading, isAdmin, churchId } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const [menuItems, setMenuItems] = useState(DEFAULT_MENU_ITEMS);
   const [draggingId, setDraggingId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -103,24 +96,18 @@ export default function AdminDashboard() {
         .eq("id", 1)
         .maybeSingle();
 
-      console.log("메뉴 로드 결과:", { data, error });
-
       if (error) {
         console.error("메뉴 순서 로드 실패:", error);
         return;
       }
 
       if (data?.menu_order) {
-        console.log("로드된 menu_order:", data.menu_order);
         const ordered = data.menu_order
           .map((id) => DEFAULT_MENU_ITEMS.find((item) => item.id === id))
           .filter(Boolean);
         // 저장된 순서 이후 새로 추가된 카드는 맨 뒤에 붙인다(안 그러면 안 보임).
         ordered.push(...DEFAULT_MENU_ITEMS.filter((item) => !data.menu_order.includes(item.id)));
-        console.log("정렬된 메뉴:", ordered.map(m => m.id));
         setMenuItems(ordered);
-      } else {
-        console.log("menu_order 데이터가 없음");
       }
     } catch (err) {
       console.error("메뉴 순서 로드 중 오류:", err);
@@ -130,19 +117,15 @@ export default function AdminDashboard() {
   async function saveMenuOrder(newOrder) {
     setSaving(true);
     const orderIds = newOrder.map((item) => item.id);
-    console.log("메뉴 저장 시도:", orderIds);
-    const { error, data } = await supabase.from("admin_menu_order").upsert({
+    const { error } = await supabase.from("admin_menu_order").upsert({
       id: 1,
       menu_order: orderIds,
       updated_at: new Date().toISOString(),
     }, { onConflict: "id" });
-    console.log("저장 결과:", { error, data });
     setSaving(false);
     if (error) {
       console.error("저장 오류:", error);
       window.alert("저장에 실패했어요: " + error.message);
-    } else {
-      console.log("✅ 메뉴 순서 저장 완료");
     }
   }
 

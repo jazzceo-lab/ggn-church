@@ -10,21 +10,12 @@ const TABS = [
   { key: "bulletin", label: "주보" },
   { key: "verses", label: "오늘의 말씀" },
   { key: "gyodokmun", label: "교독문" },
-  { key: "templates", label: "📋 템플릿" },
 ];
 
 function formatKoreanDate(iso) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-").map(Number);
   return `${y}. ${m}. ${d}`;
-}
-
-// 추후 프리미엄 기능별 권한 체크 함수
-// 현재는 모두 true (나중에 회원 등급 시스템 추가 시 여기서 권한 판단)
-function canUsePremiumFeature(churchId, featureKey) {
-  // featureKey: "template_custom", "template_library", "ai_advanced" 등
-  // 추후 회원 등급 DB 조회해서 권한 판단
-  return true;
 }
 
 const emptyBulletinForm = {
@@ -38,8 +29,6 @@ const emptyBulletinForm = {
   order: "",
   news: "",
   staff: "",
-  template_id: null,
-  template_data: {},
 };
 
 function bulletinRowToForm(row) {
@@ -55,8 +44,6 @@ function bulletinRowToForm(row) {
     order: arrayToPairs(c.order),
     news: arrayToLines(c.news),
     staff: arrayToPairs(c.staff),
-    template_id: row.template_id ?? null,
-    template_data: row.template_data ?? {},
   };
 }
 
@@ -75,18 +62,9 @@ function formToContent(form) {
   };
 }
 
-const emptyTemplateForm = {
-  name: "",
-  description: "",
-  fields: [],
-  is_premium: false,
-};
-
 function BulletinManager() {
-  const { churchId } = useAuth();
   const [bulletins, setBulletins] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [templates, setTemplates] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyBulletinForm);
   const [saving, setSaving] = useState(false);
@@ -102,7 +80,7 @@ function BulletinManager() {
     setLoading(true);
     const { data, error: loadError } = await supabase
       .from("bulletins")
-      .select("id, issue, bulletin_date, content, template_id, template_data")
+      .select("id, issue, bulletin_date, content")
       .order("bulletin_date", { ascending: false })
       .order("id", { ascending: false });
     if (loadError) {
@@ -114,28 +92,14 @@ function BulletinManager() {
     setLoading(false);
   }
 
-  async function loadTemplates() {
-    if (!churchId) return;
-    const { data, error } = await supabase
-      .from("bulletin_templates")
-      .select("id, name, fields")
-      .eq("church_id", churchId)
-      .order("created_at", { ascending: false });
-
-    if (!error) {
-      setTemplates(data ?? []);
-    }
-  }
-
   useEffect(() => {
     load();
-    loadTemplates();
-  }, [churchId]);
+  }, []);
 
   function startNew(copyFromLatest) {
     if (copyFromLatest && bulletins[0]) {
       const base = bulletinRowToForm(bulletins[0]);
-      setForm({ ...base, issue: "", bulletin_date: "", template_id: null, template_data: {} });
+      setForm({ ...base, issue: "", bulletin_date: "" });
     } else {
       setForm(emptyBulletinForm);
     }
@@ -225,9 +189,7 @@ function BulletinManager() {
       issue: form.issue.trim(),
       bulletin_date: form.bulletin_date,
       content: formToContent(form),
-      template_id: form.template_id,
-      template_data: form.template_data,
-      send_notification: form.template_id === null,
+      send_notification: true,
     };
     const query =
       editingId === "new"
@@ -287,27 +249,6 @@ function BulletinManager() {
     }
   }
 
-  function handleTemplateChange(templateId) {
-    const selectedTemplate = templates.find((t) => t.id === templateId);
-    setForm((f) => ({
-      ...f,
-      template_id: templateId,
-      template_data: selectedTemplate ? {} : {},
-    }));
-  }
-
-  function updateTemplateData(fieldId, value) {
-    setForm((f) => ({
-      ...f,
-      template_data: {
-        ...f.template_data,
-        [fieldId]: value,
-      },
-    }));
-  }
-
-  const selectedTemplate = templates.find((t) => t.id === form.template_id);
-
   return (
     <div>
       <p className="text-sm text-foreground/50">
@@ -324,14 +265,6 @@ function BulletinManager() {
           >
             새 주보 만들기
           </button>
-          {canUsePremiumFeature(churchId, "template_custom") && templates.length > 0 && (
-            <Link
-              href="/admin/bulletin-templates"
-              className="rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-            >
-              📋 템플릿 관리
-            </Link>
-          )}
         </div>
       )}
 
@@ -340,30 +273,6 @@ function BulletinManager() {
           <p className="font-serif font-semibold text-foreground">
             {editingId === "new" ? "새 주보" : "주보 수정"}
           </p>
-
-          {/* 템플릿 선택 */}
-          {canUsePremiumFeature(churchId, "template_custom") && templates.length > 0 && (
-            <div className="rounded-lg border border-brand/20 bg-brand-tint/20 p-4">
-              <label className="block text-sm font-medium text-foreground">
-                📋 주보 템플릿 <span className="text-xs text-yellow-600">🔒 프리미엄</span>
-              </label>
-              <select
-                value={form.template_id || ""}
-                onChange={(e) => handleTemplateChange(e.target.value || null)}
-                className="mt-2 w-full rounded-lg border border-black/10 bg-white/50 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/5"
-              >
-                <option value="">-- 템플릿 선택 --</option>
-                {templates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-2 text-xs text-foreground/50">
-                선택한 템플릿의 필드를 아래에서 입력할 수 있어요.
-              </p>
-            </div>
-          )}
 
           <div className="space-y-2 rounded-lg border border-brand-dark/20 bg-brand-tint/40 p-4 dark:border-brand/20">
             <p className="text-sm font-medium text-brand-dark">📷 사진으로 자동 채우기 (AI)</p>
@@ -547,37 +456,6 @@ function BulletinManager() {
             />
           </div>
 
-          {/* 템플릿 동적 필드 */}
-          {selectedTemplate && selectedTemplate.fields?.length > 0 && (
-            <div className="rounded-lg border border-brand/20 bg-brand-tint/10 p-4">
-              <p className="mb-3 text-sm font-medium text-foreground">📝 {selectedTemplate.name} 추가 정보</p>
-              <div className="space-y-3">
-                {selectedTemplate.fields.map((field) => (
-                  <div key={field.id}>
-                    <label className="block text-xs text-foreground/60">
-                      {field.name} {field.required && <span className="text-red-600">*</span>}
-                    </label>
-                    {field.type === "long_text" ? (
-                      <textarea
-                        value={form.template_data[field.id] || ""}
-                        onChange={(e) => updateTemplateData(field.id, e.target.value)}
-                        rows={3}
-                        className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-                      />
-                    ) : (
-                      <input
-                        type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"}
-                        value={form.template_data[field.id] || ""}
-                        onChange={(e) => updateTemplateData(field.id, e.target.value)}
-                        className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="flex gap-2">
@@ -611,9 +489,6 @@ function BulletinManager() {
                 <li key={b.id} className="flex items-center justify-between gap-2 px-4 py-3 text-sm">
                   <span className="text-foreground">
                     {b.issue} · {formatKoreanDate(b.bulletin_date)}
-                    {b.template_id && (
-                      <span className="ml-2 inline-block text-xs text-yellow-600">🔒 템플릿</span>
-                    )}
                   </span>
                   <span className="flex shrink-0 gap-3">
                     <button onClick={() => startEdit(b)} className="text-brand-dark hover:underline">
@@ -1155,309 +1030,6 @@ function GyodokmunManager() {
   );
 }
 
-function TemplateManager() {
-  const { churchId } = useAuth();
-  const [templates, setTemplates] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState(emptyTemplateForm);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  async function load() {
-    if (!churchId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const { data, error: loadError } = await supabase
-      .from("bulletin_templates")
-      .select("id, name, description, fields, is_premium, created_at")
-      .eq("church_id", churchId)
-      .order("created_at", { ascending: false });
-    setLoading(false);
-    if (loadError) {
-      setError("불러오기에 실패했어요: " + loadError.message);
-      return;
-    }
-    setTemplates(data ?? []);
-  }
-
-  useEffect(() => {
-    load();
-  }, [churchId]);
-
-  function startNew() {
-    setForm(emptyTemplateForm);
-    setEditingId("new");
-  }
-
-  function startEdit(template) {
-    setForm({
-      name: template.name,
-      description: template.description,
-      fields: template.fields || [],
-      is_premium: template.is_premium,
-    });
-    setEditingId(template.id);
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setForm(emptyTemplateForm);
-    setError("");
-  }
-
-  function addField() {
-    const newField = {
-      id: Date.now().toString(),
-      name: "",
-      type: "text",
-      required: false,
-      order: (form.fields?.length ?? 0) + 1,
-    };
-    setForm((f) => ({
-      ...f,
-      fields: [...(f.fields || []), newField],
-    }));
-  }
-
-  function removeField(fieldId) {
-    setForm((f) => ({
-      ...f,
-      fields: (f.fields || []).filter((fld) => fld.id !== fieldId),
-    }));
-  }
-
-  function updateField(fieldId, key, value) {
-    setForm((f) => ({
-      ...f,
-      fields: (f.fields || []).map((fld) =>
-        fld.id === fieldId ? { ...fld, [key]: value } : fld
-      ),
-    }));
-  }
-
-  async function handleSave() {
-    if (!churchId) {
-      setError("교회 정보를 불러올 수 없어요.");
-      return;
-    }
-    if (!form.name.trim()) {
-      setError("템플릿 이름은 꼭 입력해주세요.");
-      return;
-    }
-    if (!form.fields || form.fields.length === 0) {
-      setError("최소 하나의 필드는 있어야 해요.");
-      return;
-    }
-    setSaving(true);
-    setError("");
-
-    const payload = {
-      church_id: churchId,
-      name: form.name.trim(),
-      description: form.description.trim(),
-      fields: form.fields,
-      is_premium: form.is_premium,
-    };
-
-    const query =
-      editingId === "new"
-        ? supabase.from("bulletin_templates").insert(payload)
-        : supabase.from("bulletin_templates").update(payload).eq("id", editingId);
-
-    const { error: saveError } = await query;
-    setSaving(false);
-    if (saveError) {
-      setError("저장에 실패했어요: " + saveError.message);
-      return;
-    }
-    cancelEdit();
-    load();
-  }
-
-  async function handleDelete(templateId) {
-    if (!window.confirm("이 템플릿을 삭제할까요? 되돌릴 수 없어요.")) return;
-    const { error: deleteError } = await supabase
-      .from("bulletin_templates")
-      .delete()
-      .eq("id", templateId);
-    if (deleteError) {
-      window.alert("삭제에 실패했어요: " + deleteError.message);
-      return;
-    }
-    load();
-  }
-
-  return (
-    <div>
-      <p className="text-sm text-foreground/50">
-        커스텀 주보 템플릿을 만들어서 나중에 새 교회에 배포할 때 사용할 수 있어요.
-      </p>
-
-      {!editingId && (
-        <div className="mt-4">
-          <button
-            onClick={startNew}
-            className="rounded-full bg-brand px-4 py-2 text-sm text-white hover:bg-brand-dark"
-          >
-            새 템플릿 만들기
-          </button>
-        </div>
-      )}
-
-      {editingId && (
-        <div className="mt-4 space-y-3 rounded-xl border border-black/10 bg-white/60 p-5 dark:border-white/10 dark:bg-white/5">
-          <p className="font-serif font-semibold text-foreground">
-            {editingId === "new" ? "새 템플릿" : "템플릿 수정"}
-          </p>
-
-          <div>
-            <label className="block text-xs text-foreground/60">템플릿 이름</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="예: 질문과 기도"
-              className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs text-foreground/60">설명</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={2}
-              placeholder="이 템플릿이 뭐하는 건지 간단히 설명해주세요."
-              className="mt-1 w-full rounded-md border border-black/10 px-3 py-2 text-sm dark:border-white/10 dark:bg-white/10"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.is_premium}
-              onChange={(e) => setForm((f) => ({ ...f, is_premium: e.target.checked }))}
-              className="h-4 w-4 accent-brand"
-            />
-            <label className="text-sm text-foreground/70">프리미엄 기능</label>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-foreground/70">필드</label>
-              <button
-                onClick={addField}
-                className="text-xs text-brand hover:underline"
-              >
-                + 필드 추가
-              </button>
-            </div>
-
-            <div className="space-y-2 pl-3">
-              {form.fields.map((field) => (
-                <div key={field.id} className="space-y-2 rounded-md border border-black/10 bg-black/5 p-3 dark:border-white/10 dark:bg-white/5">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      value={field.name}
-                      onChange={(e) => updateField(field.id, "name", e.target.value)}
-                      placeholder="필드명 (예: 설교 제목)"
-                      className="w-full rounded border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
-                    />
-                    <select
-                      value={field.type}
-                      onChange={(e) => updateField(field.id, "type", e.target.value)}
-                      className="w-full rounded border border-black/10 px-2 py-1 text-xs dark:border-white/10 dark:bg-white/10"
-                    >
-                      <option value="text">짧은 텍스트</option>
-                      <option value="long_text">긴 텍스트</option>
-                      <option value="date">날짜</option>
-                      <option value="number">숫자</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 text-xs text-foreground/70">
-                      <input
-                        type="checkbox"
-                        checked={field.required}
-                        onChange={(e) => updateField(field.id, "required", e.target.checked)}
-                        className="h-3 w-3 accent-brand"
-                      />
-                      필수
-                    </label>
-                    <button
-                      onClick={() => removeField(field.id)}
-                      className="text-xs text-red-600 hover:underline"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <div className="flex gap-2">
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="rounded-full bg-brand px-4 py-2 text-sm text-white hover:bg-brand-dark disabled:opacity-50"
-            >
-              {saving ? "저장 중..." : "저장"}
-            </button>
-            <button
-              onClick={cancelEdit}
-              className="rounded-full border border-black/10 px-4 py-2 text-sm text-foreground/70 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
-            >
-              취소
-            </button>
-          </div>
-        </div>
-      )}
-
-      {!editingId && (
-        <>
-          {loading ? (
-            <p className="mt-4 text-sm text-foreground/50">불러오는 중...</p>
-          ) : templates.length === 0 ? (
-            <p className="mt-4 text-sm text-foreground/50">등록된 템플릿이 없어요.</p>
-          ) : (
-            <ul className="mt-4 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
-              {templates.map((t) => (
-                <li key={t.id} className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
-                  <div className="flex-1">
-                    <p className="font-medium text-foreground">
-                      {t.name}
-                      {t.is_premium && <span className="ml-2 text-xs text-yellow-600">⭐ 프리미엄</span>}
-                    </p>
-                    {t.description && <p className="mt-1 text-xs text-foreground/60">{t.description}</p>}
-                    <p className="mt-1 text-xs text-foreground/50">{t.fields?.length || 0}개 필드</p>
-                  </div>
-                  <span className="flex shrink-0 gap-2">
-                    <button onClick={() => startEdit(t)} className="text-brand-dark hover:underline">
-                      수정
-                    </button>
-                    <button
-                      onClick={() => handleDelete(t.id)}
-                      className="text-foreground/40 hover:text-red-600"
-                    >
-                      삭제
-                    </button>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
 export default function AdminContentPage() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [tab, setTab] = useState("bulletin");
@@ -1503,7 +1075,6 @@ export default function AdminContentPage() {
         {tab === "bulletin" && <BulletinManager />}
         {tab === "verses" && <VerseManager />}
         {tab === "gyodokmun" && <GyodokmunManager />}
-        {tab === "templates" && <TemplateManager />}
       </div>
     </main>
   );

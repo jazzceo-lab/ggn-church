@@ -47,14 +47,6 @@ export default function PushSubscribeButton() {
   async function handleDisable() {
     setLoading(true);
     try {
-      const { Capacitor } = await import("@capacitor/core");
-      if (Capacitor.isNativePlatform()) {
-        await supabase.from("fcm_tokens").delete().eq("user_id", user.id);
-        setSubscribed(false);
-        setLoading(false);
-        return;
-      }
-
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {

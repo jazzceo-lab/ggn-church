@@ -47,7 +47,6 @@ export default function BoardPage() {
     district: myDistrict,
     memberTitle,
     displayName,
-    hasRole,
     hasRoleScope,
     markBoardSeen,
   } = useAuth();
