@@ -29,7 +29,10 @@ export default function YouthBulletinPage() {
   const canManage = canManageYouth(auth);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [openId, setOpenId] = useState(null);
+  const [openId, setOpenId] = useState(null); // 지난 주보 중 펼친 것
+  const [openPast, setOpenPast] = useState(false);
+  const current = items[0] ?? null;
+  const past = items.slice(1);
 
   // 등록/수정 폼. editingId가 있으면 수정.
   const [showForm, setShowForm] = useState(false);
@@ -50,15 +53,14 @@ export default function YouthBulletinPage() {
       .order("bulletin_date", { ascending: false })
       .order("id", { ascending: false });
     setItems(data ?? []);
-    setOpenId((prev) => prev ?? data?.[0]?.id ?? null);
+    // 카톡으로 지난 주보를 공유받아 들어온 경우 지난 주보 칸을 열어 둔다.
+    const sharedId = Number(new URLSearchParams(window.location.search).get("id"));
+    if (sharedId && data?.[0]?.id !== sharedId && data?.some((b) => b.id === sharedId)) {
+      setOpenId(sharedId);
+      setOpenPast(true);
+    }
     setLoading(false);
   }
-
-  // 카톡 공유 링크(/youth/bulletin?id=..)로 들어오면 그 주보를 펼친다.
-  useEffect(() => {
-    const id = Number(new URLSearchParams(window.location.search).get("id"));
-    if (id) setOpenId(id);
-  }, []);
 
   useEffect(() => {
     if (auth.user && canViewYouth(auth)) load();
@@ -266,24 +268,53 @@ export default function YouthBulletinPage() {
         </form>
       )}
 
-      <ul className="mt-6 space-y-3">
-        {loading && <li className="text-sm text-foreground/50">불러오는 중...</li>}
-        {!loading && items.length === 0 && (
-          <li className="text-sm text-foreground/50">아직 등록된 주보가 없어요.</li>
-        )}
-        {items.map((item) => (
-          <li
-            key={item.id}
-            className="rounded-xl border border-black/10 bg-white/60 dark:border-white/10 dark:bg-white/5"
+      {loading && <p className="mt-6 text-sm text-foreground/50">불러오는 중...</p>}
+      {!loading && items.length === 0 && (
+        <p className="mt-6 text-sm text-foreground/50">아직 등록된 주보가 없어요.</p>
+      )}
+
+      {/* 이번 주 주보는 항상 펼쳐서 */}
+      {current && (
+        <section className="mt-6 rounded-xl border border-black/10 bg-white/60 dark:border-white/10 dark:bg-white/5">
+          <p className="px-5 pt-4 font-medium text-foreground">{formatDate(current.bulletin_date)}</p>
+          {renderContent(current)}
+        </section>
+      )}
+
+      {/* 지난 주보는 메인 주보처럼 접어 두고 날짜별로 펼쳐 보기 */}
+      {past.length > 0 && (
+        <section className="mt-10 border-t border-black/10 pt-6 dark:border-white/10">
+          <button
+            type="button"
+            onClick={() => setOpenPast((v) => !v)}
+            className="flex w-full items-center justify-between gap-2 text-left"
           >
-            <button
-              onClick={() => setOpenId(openId === item.id ? null : item.id)}
-              className="flex w-full items-center justify-between px-5 py-3 text-left"
-            >
-              <span className="font-medium text-foreground">{formatDate(item.bulletin_date)}</span>
-              <span className="text-xs text-foreground/40">{openId === item.id ? "접기" : "펼치기"}</span>
-            </button>
-            {openId === item.id && (
+            <h2 className="font-serif font-semibold text-foreground">지난 주보</h2>
+            <span className="text-xs text-foreground/50">{openPast ? "접기 ▲" : "펼치기 ▼"}</span>
+          </button>
+          {openPast && (
+            <ul className="mt-3 divide-y divide-black/10 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
+              {past.map((item) => (
+                <li key={item.id}>
+                  <button
+                    onClick={() => setOpenId(openId === item.id ? null : item.id)}
+                    className="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-black/5 dark:hover:bg-white/10"
+                  >
+                    <span className="font-medium text-foreground">{formatDate(item.bulletin_date)}</span>
+                    <span className="text-foreground/40">{openId === item.id ? "숨기기" : "보기"}</span>
+                  </button>
+                  {openId === item.id && renderContent(item)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+    </main>
+  );
+
+  function renderContent(item) {
+    return (
               <div className="border-t border-black/5 px-5 py-4 dark:border-white/10">
                 {item.cover_path && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -335,10 +366,6 @@ export default function YouthBulletinPage() {
                   </div>
                 )}
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
-    </main>
-  );
+    );
+  }
 }
