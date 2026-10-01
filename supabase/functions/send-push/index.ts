@@ -173,10 +173,10 @@ Deno.serve(async (req) => {
       if (record.district === "청년부") notification.url = "/board?youth=1";
     }
   } else if (table === "youth_notices") {
-    // 청년부 관리자가 보내는 청년부 공지 — 청년부 회원에게만(보낸 사람 제외).
+    // 청년부 관리자가 보내는 청년부 공지 — 청년부 회원에게만. 보낸 사람도 발송 확인용으로
+    // 받는다(청년부가 아닌 관리자·목회자가 보내도 본인에게는 오도록 함께 넣음).
     const { data: members } = await supabase.from("profiles").select("id").eq("district", "청년부");
-    recipientIds = (members ?? []).map((m) => m.id);
-    excludeUserId = record.created_by;
+    recipientIds = [...new Set([...(members ?? []).map((m) => m.id), record.created_by].filter(Boolean))];
     notification = {
       title: "길가는교회 청년부",
       body: `📢 ${record.title}`,
