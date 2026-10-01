@@ -94,6 +94,7 @@ export default function CalendarPage() {
     const { data, error } = await supabase
       .from("calendar_events")
       .select("id, event_date, event_end_date, title, description, time_label, link_url, image_url")
+      .is("department", null) // 청년부 일정은 /youth/calendar에서만
       .gte("event_date", start)
       .lt("event_date", end)
       .order("event_date", { ascending: true });

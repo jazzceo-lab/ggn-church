@@ -172,6 +172,16 @@ Deno.serve(async (req) => {
       recipientIds = (members ?? []).map((m) => m.id);
       if (record.district === "청년부") notification.url = "/board?youth=1";
     }
+  } else if (table === "youth_notices") {
+    // 청년부 관리자가 보내는 청년부 공지 — 청년부 회원에게만(보낸 사람 제외).
+    const { data: members } = await supabase.from("profiles").select("id").eq("district", "청년부");
+    recipientIds = (members ?? []).map((m) => m.id);
+    excludeUserId = record.created_by;
+    notification = {
+      title: "길가는교회 청년부",
+      body: `📢 ${record.title}`,
+      url: "/youth",
+    };
   } else {
     return new Response(JSON.stringify({ skipped: true }), {
       headers: { "Content-Type": "application/json" },
