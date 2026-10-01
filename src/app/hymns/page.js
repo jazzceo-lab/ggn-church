@@ -46,6 +46,7 @@ export default function HymnsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [openRange, setOpenRange] = useState(null);
+  const [query, setQuery] = useState("");
   const [fullscreenHymn, setFullscreenHymn] = useState(null);
   const [cameFromBulletin, setCameFromBulletin] = useState(false);
   const [imageUrls, setImageUrls] = useState({});
@@ -78,6 +79,19 @@ export default function HymnsPage() {
     openHymn(num, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // 검색: 숫자면 장 번호 앞자리 일치(25 → 25, 250~259장), 글자면 제목에 포함(띄어쓰기 무시).
+  const searchResults = (() => {
+    const q = query.trim();
+    if (!q) return null;
+    if (/^\d+$/.test(q)) {
+      return Array.from({ length: TOTAL_HYMNS }, (_, i) => i + 1).filter((n) => String(n).startsWith(q));
+    }
+    const key = q.replace(/\s/g, "");
+    return Object.entries(HYMN_TITLES)
+      .filter(([, title]) => title.replace(/\s/g, "").includes(key))
+      .map(([n]) => Number(n));
+  })();
 
   function toggleRange(idx) {
     setOpenRange((prev) => (prev === idx ? null : idx));
@@ -226,7 +240,33 @@ export default function HymnsPage() {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 pt-3 pb-12">
       <h1 className="font-serif text-2xl font-bold text-foreground">찬송가</h1>
-      <p className="mt-2 text-sm text-foreground/50">장 범위를 눌러 목록을 펼쳐보세요.</p>
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="🔍 제목이나 장 번호로 찾기 (예: 나 같은 죄인, 305)"
+        className="mt-3 w-full rounded-full border border-black/10 px-4 py-2.5 text-sm dark:border-white/10 dark:bg-white/10"
+      />
+
+      {searchResults ? (
+        <ul className="mt-4 divide-y divide-black/5 rounded-xl border border-black/10 bg-white/60 dark:divide-white/10 dark:border-white/10 dark:bg-white/5">
+          {searchResults.length === 0 && (
+            <li className="px-4 py-3 text-sm text-foreground/50">찾는 찬송가가 없어요.</li>
+          )}
+          {searchResults.map((num) => (
+            <li key={num}>
+              <button
+                onClick={() => openHymn(num)}
+                className="flex w-full items-center px-4 py-2.5 text-left text-sm text-foreground/80 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+              >
+                {num}장{HYMN_TITLES[num] ? ` - ${HYMN_TITLES[num]}` : ""}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+      <>
+      <p className="mt-3 text-sm text-foreground/50">장 범위를 눌러 목록을 펼쳐보세요.</p>
 
       <div className="mt-4 space-y-2">
         {RANGES.map((range, idx) => (
@@ -261,6 +301,8 @@ export default function HymnsPage() {
           </div>
         ))}
       </div>
+      </>
+      )}
 
       {fullscreenHymn && (
         <div ref={viewerRef} className="fixed inset-0 z-50 flex flex-col bg-background">
