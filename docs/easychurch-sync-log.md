@@ -11,7 +11,7 @@ easychurch-app은 2026-09-13 저녁, church-app 커밋 `5a1cebb`(2026-09-13,
 주 1회 몰아서 easychurch-app에 반영하는 방식. 그래서 이 표는 항상 빠짐없이 최신 상태로
 유지해야 함 — church-app 커밋이 생길 때마다 바로바로 이 문서에 기록.
 
-**다음 정기 포팅 예정일: 2026-10-01 (목) 오후 6시** (9/24분은 미진행 — 이번에 함께 반영) — 매주 목요일 오후 6시 알람 예약됨.
+**다음 정기 포팅 예정일: 2026-10-08 (목) 오후 6시** — 10/1분 반영 완료(🟢 범용 전부 + 보안). 매주 목요일 오후 6시 알람 예약됨.
 그 사이 church-app에 쌓인 새 커밋을 그날 한꺼번에 반영.
 
 **포팅 대상 분류 (2026-09-17 방침 확정):** ggnch.shop(church-app)은 앞으로도 길가는교회
@@ -64,6 +64,21 @@ easychurch-app은 2026-09-13 저녁, church-app 커밋 `5a1cebb`(2026-09-13,
 | `70d5a8c` | `9933e1b` | 다크 테마 기기 라이트/다크 전환 수정 (`color-scheme`) | 2026-09-24 |
 | `11128de` | `9933e1b` | 회원가입 완료 화면 테스트 문구 제거 (easychurch signup에 해당 문구 없음 확인) | 2026-09-24 |
 | `e002141` | `ac5ac1f` | graphify 제거, hasRole 중복 정리 (easychurch 자체 반영) | (사전 반영) |
+| `66b7d06` | `9200f7e` | 🟢 범용 — **버그수정** 그룹채팅(conversation_messages) push 트리거 누락 추가. **easychurch 마이그레이션에도 conversation_messages 트리거 없음 확인(9/27) | 2026-10-01 |
+| `ae588c3` | `e495c38` | 🟢 범용 — 오늘의 성경 카드뷰어 가로모드 전체화면 + 그만보기 버튼 (카드뷰어는 9/24 반영됨, 교회명 동적 처리 부분만 충돌 주의) | 2026-10-01 |
+| `a10969b` | `e495c38` | 🟢 범용 — 여러명 보내기/새 그룹방 첫메시지 입력창에 이모지 버튼 | 2026-10-01 |
+| `94bcc61` | `e495c38` | 🟢 범용 — 메시지 입력창 화면 절반까지 자동확장 + 웹 드래그 크기조절 | 2026-10-01 |
+| `6399a21` | `7776335 (같은 교회만 비활성화)` | 🟢 범용 — 공지사항 예약전송 (DB: popup_notices.scheduled_at + pg_cron + UPDATE 트리거). easychurch에선 트리거/cron을 `private.edge_headers( | 2026-10-01 |
+| `ed538ae` | `7776335 (church_id+RLS)` | 🟢 범용 — GGN톡 1:1/그룹 메시지 예약전송 (DB: scheduled_messages + pg_cron). easychurch에선 `church_id` + 교회별 RLS 추가하고 edge_headers로 재 | 2026-10-01 |
+| `7536de8` | `e495c38` | 🟢 범용 — 교독문·사도신경 글자 확대 (핀치/−＋ 버튼, 배율 기기에 기억) | 2026-10-01 |
+| `8424943` | `4346a24 (약어만, 청년부 제외)` | 🟢 범용(일부) — bibleBooks.js에 splitBibleRefs(자유 텍스트 속 성경구절 자동 링크) + 성경 약어 66권(신·고전·요일 등, 앞에 한글 붙으면 제외해 '오전 10:30' 오인 방지). 청 | 2026-10-01 |
+| `74c5b07` | `4346a24 (게시판 버그만, 청년부 제외)` | 🟡 청년부 게시판 권한(길가는교회 전용). 단 **게시판 ?category= 주소로 열면 boards 로딩 후 'help'로 되돌아가던 버그 수정(requestedCategoryRef)은 🟢 범용** — easy | 2026-10-01 |
+| `e28b9bd` | `9200f7e` | 🟢 범용 — **send-push: 구역 게시판 새 글 알림이 전 교인에게 가서 다른 구역 글 제목이 노출되던 문제** → 해당 구역 회원에게만 발송. easychurch send-push도 같은 구조인지 확인(멀 | 2026-10-01 |
+| `7ac07ea` | `cd0e5ac` | 🟢 범용 — **Android MainActivity: intent:// 링크(카톡 공유)를 인텐트로 열기** (Capacitor 기본 처리는 조용히 실패 → 앱에서 모든 카톡 공유 무반응). easychurch  | 2026-10-01 |
+| `2a9a0a9` | `7caa45c (수정 권한=플랫폼 운영자)` | 🟢 범용 — 앱 새 버전 안내 보완(app_version 테이블 + NativeAppUpdateChecker 비교 + 관리자 입력칸). easychurch는 앱 패키지·링크 다르게 | 2026-10-01 |
+| `ac839d8` | `e495c38` | 🟢 범용 — 찬송가 제목·장번호 검색 + hymnTitles.js 645장 전체 제목(easychurch 찬송가 메뉴 있으면 그대로 사용 가능. 단 상용 배포 시 찬송가 메뉴 제거 방침 참고) | 2026-10-01 |
+| `27ed796` | `6d701f0` | 🟢 범용 — **보안(최우선)** member_directory/bulletins_public 뷰의 anon/authenticated 쓰기권한 회수(뷰가 소유자권한이라 비로그인도 profiles·bulletins  | 2026-10-01 |
+| `06d17a4` | `7caa45c` | 🟢 범용(Android 앱 인프라 묶음) — 앱 자동업데이트, FCM 등록 리스너 순서, 네이티브 🔔 숨김+자동등록, FCM 로그, 배지 정리, 등록 타임아웃. **핵심: `NativePushTapHandler` | 2026-10-01 |
 
 **2026-09-24 수동 포팅 메모:** 이 문서 갱신 없이 easychurch-app `9933e1b`로 일부 항목이 직접
 포팅됐었음 → 2026-09-27 정기 점검 때 커밋 대조로 확인해서 위에 반영.
@@ -87,33 +102,18 @@ send-push, send-daily-verse 엣지함수 재배포. 다음에도 같은 방식(f
 
 | church-app 커밋 | 내용 | 반영일 |
 |---|---|---|
-| `66b7d06` | 🟢 범용 — **버그수정** 그룹채팅(conversation_messages) push 트리거 누락 추가. **easychurch 마이그레이션에도 conversation_messages 트리거 없음 확인(9/27) — 같은 버그 있음, 최우선.** `private.edge_headers()` 사용으로 재작성 필요 | 2026-09-26 |
-| `ae588c3` | 🟢 범용 — 오늘의 성경 카드뷰어 가로모드 전체화면 + 그만보기 버튼 (카드뷰어는 9/24 반영됨, 교회명 동적 처리 부분만 충돌 주의) | 2026-09-24 |
-| `a10969b` | 🟢 범용 — 여러명 보내기/새 그룹방 첫메시지 입력창에 이모지 버튼 | 2026-09-26 |
-| `94bcc61` | 🟢 범용 — 메시지 입력창 화면 절반까지 자동확장 + 웹 드래그 크기조절 | 2026-09-26 |
-| `6399a21` | 🟢 범용 — 공지사항 예약전송 (DB: popup_notices.scheduled_at + pg_cron + UPDATE 트리거). easychurch에선 트리거/cron을 `private.edge_headers()`로 재작성 필요 | 2026-09-26 |
-| `ed538ae` | 🟢 범용 — GGN톡 1:1/그룹 메시지 예약전송 (DB: scheduled_messages + pg_cron). easychurch에선 `church_id` + 교회별 RLS 추가하고 edge_headers로 재작성 필요 | 2026-09-26 |
 | `d045a7e` | ⚪ 판단 필요 — 주보 AI 자동채우기에 기도제목 추출. **easychurch는 주보 v2(`6887198`)로 parse-bulletin을 섹션 id 기반으로 전면 개편해서 cherry-pick 불가** — v2가 이미 커버하는지 확인 후 불필요면 제외 | 2026-09-26 |
 | `4080e3b` | ⚪ 판단 필요 — 주보 예배 인도자 입력칸 + AI 추출. 위와 같은 이유(주보 v2 구조와 다름)로 그대로 못 옮김 — v2에 '인도자' 섹션/필드로 새로 넣을지 결정 필요 | 2026-09-26 |
-| `7536de8` | 🟢 범용 — 교독문·사도신경 글자 확대 (핀치/−＋ 버튼, 배율 기기에 기억) | 2026-09-27 |
 | `db623be` | ⚪ 판단 필요 — 이메일 인증 없이 휴대폰 번호 가입/로그인(내부용 가짜이메일 `{번호}@phone.ggnch.shop`) + 승인제 실제 적용(AuthProvider가 approval_status 조회) + 관리자 비밀번호 초기화. easychurch는 멀티테넌시라 가짜이메일 도메인·번호 중복(교회 간) 처리와 승인제 재설계(`80cd5c5` 항목 참고) 필요 | 2026-09-27 |
 | `2dd890e` | 🚫 포팅 불필요 — 개인 화면 색(테마)은 easychurch에서 church-app으로 역포팅한 것(easychurch 원본: 20260930000000_profile_theme.sql). 같은 커밋의 채팅통계 권한 회수는 위 보안 항목 참고 | — |
 | `21b774f` | 🟡 길가는교회 전용 — 청년부 전용 메뉴(청년부 화면·청년부 주보·youth_officer 역할, can_manage_youth/can_view_youth). 특정 부서명·권한 구성에 맞춘 것이라 easychurch엔 부서 기능으로 일반화하지 않는 한 불필요 | 2026-09-30 |
-| `8424943` | 🟢 범용(일부) — bibleBooks.js에 splitBibleRefs(자유 텍스트 속 성경구절 자동 링크) + 성경 약어 66권(신·고전·요일 등, 앞에 한글 붙으면 제외해 '오전 10:30' 오인 방지). 청년부 첫화면 이동(YouthLanding)은 🟡 전용 | 2026-09-30 |
-| `74c5b07` | 🟡 청년부 게시판 권한(길가는교회 전용). 단 **게시판 ?category= 주소로 열면 boards 로딩 후 'help'로 되돌아가던 버그 수정(requestedCategoryRef)은 🟢 범용** — easychurch board 페이지에도 같은 버그 있는지 확인 | 2026-09-30 |
 | `44e8c18` | 🟡 청년부 신청·설문·주보 표지·카톡공유(길가는교회 전용 권한). 신청·설문 자체는 easychurch 원본에서 가져온 것이라 역포팅 불필요. KakaoShareButton의 imageUrl 옵션만 🟢 범용 | 2026-09-30 |
-| `e28b9bd` | 🟢 범용 — **send-push: 구역 게시판 새 글 알림이 전 교인에게 가서 다른 구역 글 제목이 노출되던 문제** → 해당 구역 회원에게만 발송. easychurch send-push도 같은 구조인지 확인(멀티테넌시면 church_id + district로 좁혀야 함) | 2026-09-30 |
-| `7ac07ea` | 🟢 범용 — **Android MainActivity: intent:// 링크(카톡 공유)를 인텐트로 열기** (Capacitor 기본 처리는 조용히 실패 → 앱에서 모든 카톡 공유 무반응). easychurch Android 앱에도 필수. versionCode 부분은 church-app 전용 | 2026-09-30 |
-| `2a9a0a9` | 🟢 범용 — 앱 새 버전 안내 보완(app_version 테이블 + NativeAppUpdateChecker 비교 + 관리자 입력칸). easychurch는 앱 패키지·링크 다르게 | 2026-10-01 |
-| `ac839d8` | 🟢 범용 — 찬송가 제목·장번호 검색 + hymnTitles.js 645장 전체 제목(easychurch 찬송가 메뉴 있으면 그대로 사용 가능. 단 상용 배포 시 찬송가 메뉴 제거 방침 참고) | 2026-10-01 |
 | `4d07301` | 🟡 청년부 일정(calendar_events.department)·단톡방(join_youth_chat)·공지 알림(youth_notices + send-push 분기) — 길가는교회 전용. 일반화하면 '부서별 일정·단톡방·공지'로 easychurch에 쓸 수 있음 | 2026-10-01 |
-| `27ed796` | 🟢 범용 — **보안(최우선)** member_directory/bulletins_public 뷰의 anon/authenticated 쓰기권한 회수(뷰가 소유자권한이라 비로그인도 profiles·bulletins 수정/삭제 가능했음), 회원명단 비로그인 노출 차단, admin_menu_order RLS. easychurch 뷰도 같은 구멍 있는지 즉시 확인. 승인 RESTRICTIVE 정책 부분은 승인제 도입 여부 따라  (+`2dd890e`: admin_chat_message_count 비로그인 실행권한 회수) | 2026-09-28 |
 | `428c81f` | ⚪ 판단 필요 — 환영 쪽지를 승인 순간에 발송(트리거 2개로 분리), 🔔 안내 문구 제거. 승인제(`db623be`)와 묶어서 판단 | 2026-09-28 |
 | `e41bfb9`/`b2ac599` | ⚪ 판단 필요 — 이용약관/개인정보처리방침 페이지. 9/24 포팅 때 보류됨(easychurch 개인정보처리방침은 이미 자체 수정본, 이용약관은 내용 미정). easychurch용 약관 문구를 정해야 진행 가능 | 2026-09-22 |
 | `80cd5c5` | ⚪ 판단 필요 — 회원가입 관리자 승인제 준비 코드(미적용). 9/24 포팅 때 보류: `app_settings`가 교회별(church_id)이 아닌 전역 설정이고 가입 트리거가 church_id 배정 로직과 충돌 → easychurch는 멀티테넌시용 재설계 필요 | 2026-09-18 |
 | `5b8732d` | 🚫 포팅 불필요 — easychurch AuthProvider엔 애초에 approval_status 조회가 없어서 이 버그 자체가 없음(9/27 확인) | — |
 | `040213c` | 🚫 포팅 불필요 — church-app에서 이용약관이 teams 페이지를 덮어쓴 사고 복구. easychurch엔 약관이 안 들어가서 해당 사고 없음 | — |
-| `06d17a4`, `9a42df0`, `b613997`, `8a0feae`, `7727172`, `f7c11c4`, `888239c`, `2e97e89` | 🟢 범용(Android 앱 인프라 묶음) — 앱 자동업데이트, FCM 등록 리스너 순서, 네이티브 🔔 숨김+자동등록, FCM 로그, 배지 정리, 등록 타임아웃. **핵심: `NativePushTapHandler`는 반드시 `AuthProvider` 안에 둘 것**(`2e97e89` — 밖에 두면 user를 못 받아 등록이 전혀 안 됨). 아래 "Android 앱 배포 인프라" 항목과 함께 포팅. (9/27: easychurch엔 `7379cbe` "Capacitor 안드로이드 앱 뼈대 + 교회 선택 시작 화면"이 이미 자체로 있음 — FCM/Firebase 쪽은 아직 없음, 그 뼈대 위에 얹는 식으로) | 2026-09-23~26 |
 | `7ff611b`, `cc79c26` | 🚫 포팅 불필요 — church-app 전용 versionCode 갱신 | — |
 | `3a7d528`, `c46cb30` | 🚫 포팅 불필요 — 임시 진단 alert (이후 커밋에서 제거됨) | — |
 
@@ -154,5 +154,4 @@ FCM 푸시 채널(`fcm_tokens` 테이블, `supabase/functions/_shared/fcm.ts`, `
 배포하려면 위 "Android 앱 배포 인프라" 항목대로 Capacitor로 바로 가면 됨, TWA를 거칠 필요 없음.
 
 ---
-_마지막 갱신: 2026-09-27 정기 점검, church-app HEAD `8607276`(코드 기준 `4080e3b`), easychurch-app
-HEAD `6887198` 기준. 9/24 수동 포팅(`9933e1b`) 반영 완료, 남은 항목은 위 "아직 반영 안 됨" 표 참고._
+_마지막 갱신: 2026-10-01 정기 포팅 — 🟢 범용·보안 항목 easychurch 반영 완료(easychurch HEAD `7776335`). 남은 것: ⚪ 판단 필요(승인제·휴대폰 가입·주보 AI 기도제목/인도자·이용약관), 🟡 청년부 전용, Android 묶음 중 b613997·f7c11c4·9a42df0·2e97e89·8a0feae는 easychurch 자체 구현으로 대체(294edab/364dea7/f40c8d2)._
