@@ -105,6 +105,7 @@ send-push, send-daily-verse 엣지함수 재배포. 다음에도 같은 방식(f
 | `e28b9bd` | 🟢 범용 — **send-push: 구역 게시판 새 글 알림이 전 교인에게 가서 다른 구역 글 제목이 노출되던 문제** → 해당 구역 회원에게만 발송. easychurch send-push도 같은 구조인지 확인(멀티테넌시면 church_id + district로 좁혀야 함) | 2026-09-30 |
 | `7ac07ea` | 🟢 범용 — **Android MainActivity: intent:// 링크(카톡 공유)를 인텐트로 열기** (Capacitor 기본 처리는 조용히 실패 → 앱에서 모든 카톡 공유 무반응). easychurch Android 앱에도 필수. versionCode 부분은 church-app 전용 | 2026-09-30 |
 | `2a9a0a9` | 🟢 범용 — 앱 새 버전 안내 보완(app_version 테이블 + NativeAppUpdateChecker 비교 + 관리자 입력칸). easychurch는 앱 패키지·링크 다르게 | 2026-10-01 |
+| `ac839d8` | 🟢 범용 — 찬송가 제목·장번호 검색 + hymnTitles.js 645장 전체 제목(easychurch 찬송가 메뉴 있으면 그대로 사용 가능. 단 상용 배포 시 찬송가 메뉴 제거 방침 참고) | 2026-10-01 |
 | `27ed796` | 🟢 범용 — **보안(최우선)** member_directory/bulletins_public 뷰의 anon/authenticated 쓰기권한 회수(뷰가 소유자권한이라 비로그인도 profiles·bulletins 수정/삭제 가능했음), 회원명단 비로그인 노출 차단, admin_menu_order RLS. easychurch 뷰도 같은 구멍 있는지 즉시 확인. 승인 RESTRICTIVE 정책 부분은 승인제 도입 여부 따라  (+`2dd890e`: admin_chat_message_count 비로그인 실행권한 회수) | 2026-09-28 |
 | `428c81f` | ⚪ 판단 필요 — 환영 쪽지를 승인 순간에 발송(트리거 2개로 분리), 🔔 안내 문구 제거. 승인제(`db623be`)와 묶어서 판단 | 2026-09-28 |
 | `e41bfb9`/`b2ac599` | ⚪ 판단 필요 — 이용약관/개인정보처리방침 페이지. 9/24 포팅 때 보류됨(easychurch 개인정보처리방침은 이미 자체 수정본, 이용약관은 내용 미정). easychurch용 약관 문구를 정해야 진행 가능 | 2026-09-22 |
