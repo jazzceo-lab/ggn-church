@@ -11,7 +11,9 @@ on:
 
 jobs:
   backup:
-    runs-on: ubuntu-latest
+    # ubuntu-latest는 2026-10-19부터 Ubuntu 26으로 바뀌는데, PostgreSQL apt 저장소가 새 버전을
+    # 늦게 지원해 pg_dump 설치가 깨질 수 있어 고정한다.
+    runs-on: ubuntu-24.04
     steps:
       - name: Install pg_dump 17 (Supabase DB 버전과 맞춤)
         run: |
