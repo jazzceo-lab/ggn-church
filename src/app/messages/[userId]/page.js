@@ -484,7 +484,7 @@ export default function ConversationPage() {
                       />
                     </a>
                   ) : (
-                    m.attachment_url && (
+                    m.attachment_url ? (
                       <a
                         href={m.attachment_url}
                         target="_blank"
@@ -495,6 +495,10 @@ export default function ConversationPage() {
                       >
                         📎 {m.attachment_name}
                       </a>
+                    ) : (
+                      m.attachment_name && (
+                        <p className="mt-1 text-xs opacity-60">🗂️ 보관 기간(90일)이 지나 삭제된 파일</p>
+                      )
                     )
                   )}
                   </>

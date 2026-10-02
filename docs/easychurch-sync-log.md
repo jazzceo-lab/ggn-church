@@ -132,6 +132,7 @@ FCM 푸시 채널(`fcm_tokens` 테이블, `supabase/functions/_shared/fcm.ts`, `
 `send-daily-verse` 병행 발송 로직)은 코드 자체는 그대로 포팅 가능하나, easychurch 전용 Firebase
 프로젝트의 서비스 계정 JSON을 easychurch Supabase 프로젝트(`tmlmauznjcfqtugytkfd`) 시크릿으로
 새로 등록해야 동작함.
+- **저장소 용량 관리** — 채팅 사진·동영상 90일 자동삭제(`cleanup-chat-attachments` 엣지 함수 + pg_cron, 전달본이 쓰는 파일은 보존), 관리자 대시보드 저장 공간 표시(`storage_usage()` RPC, `StorageUsage.js`), 찬송가 악보 압축 도구(`HymnCompressor.js`, hymns 관리자 쓰기 정책). 마이그레이션 `20261002120000_storage_management.sql`. easychurch는 church_id별 집계와 cron URL/키를 자기 프로젝트 값으로 바꿔야 함.
 
 ## 🚫 의도적으로 포팅 제외됨 (길가는교회 전용)
 

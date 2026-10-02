@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/lib/supabaseClient";
+import StorageUsage from "@/components/StorageUsage";
 
 const DEFAULT_MENU_ITEMS = [
   {
@@ -185,6 +186,8 @@ export default function AdminDashboard() {
         </p>
         {saving && <p className="mt-2 text-xs text-brand">저장 중...</p>}
       </div>
+
+      <StorageUsage />
 
       <div className="grid gap-4 sm:grid-cols-2">
         {menuItems.map((item) => (
