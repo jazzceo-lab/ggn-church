@@ -5,6 +5,7 @@ import { AuthProvider } from "@/components/AuthProvider";
 import PopupNotice from "@/components/PopupNotice";
 import OnboardingBanners from "@/components/OnboardingBanners";
 import KakaoInAppEscape from "@/components/KakaoInAppEscape";
+import BibleAppLinkHandler from "@/components/BibleAppLinkHandler";
 import ScrollFadeBottom from "@/components/ScrollFadeBottom";
 import MessageFab from "@/components/MessageFab";
 import PwaUpdater from "@/components/PwaUpdater";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <PwaUpdater />
         <KakaoInAppEscape />
+        <BibleAppLinkHandler />
         <NativeAppUpdateChecker />
         <AuthProvider>
           <NativePushTapHandler />
