@@ -161,7 +161,7 @@ function BulletinManager() {
         bulletin_date: r.bulletin_date || f.bulletin_date,
         order: r.order?.length ? arrayToPairs(r.order.map((o) => [o.label, o.detail])) : f.order,
         news: r.news?.length ? arrayToLines(r.news) : f.news,
-        prayers: r.prayers?.length ? arrayToLines(r.prayers) : f.prayers,
+        prayers: r.prayers?.length ? arrayToLines(r.prayers.map((p) => p.replace(/^[·•\-\s]+/, ""))) : f.prayers,
         leader: r.leader || f.leader,
       }));
       if (r.events?.length > 0) {
